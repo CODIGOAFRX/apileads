@@ -1,0 +1,25 @@
+# Dependencias
+backend/vendor/
+frontend/node_modules/
+
+# Configuración local y secretos
+backend/.env
+.env
+
+# Generados
+frontend/dist/
+backend/storage/logs/*
+!backend/storage/logs/.gitkeep
+backend/.phpunit.cache/
+backend/storage/*.sqlite
+*.log
+
+# Capturas de trabajo (no son código)
+Claude outputs/
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+.vscode/sftp.json
+.claude/
+_tmp/

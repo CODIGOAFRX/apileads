@@ -1,0 +1,120 @@
+// Definiciones compartidas del flujo comercial (pestañas, estados, acciones).
+
+export const INBOXES = [
+  { id: 'pendientes', label: 'pendientes', title: 'Pendientes', hint: 'Nuevos y los que toca volver a llamar' },
+  { id: 'agendadas', label: 'agendadas', title: 'Agendadas', hint: 'El día y la hora acordados vuelven a pendientes, los primeros y en verde' },
+  { id: 'no-contestan', label: 'no contestan', title: 'No contestan', hint: 'Vuelven solos a pendientes el siguiente día laborable a las 9:00' },
+  { id: 'interesados', label: 'interesados', title: 'Interesados', hint: 'Con interés o cita agendada' },
+  { id: 'matriculados', label: 'matriculados', title: 'Matriculados', hint: 'Leads convertidos' },
+  { id: 'descartados', label: 'descartados', title: 'Descartados', hint: 'No se borran: sirven para campañas de correo' },
+  { id: 'todos', label: 'todos', title: 'Todos los leads', hint: 'Búsqueda en toda la base de datos' },
+]
+
+// AGENDAR no se registra directamente: primero pide el día y la hora.
+export const CALL_OUTCOMES = [
+  { id: 'NO_CONTESTA', label: 'No contesta', hint: 'Te propone correo y WhatsApp · vuelve mañana a las 9:00', tone: 'warn', icon: 'clock' },
+  { id: 'NO_INTERESADO', label: 'Contesta · no interesado', hint: 'Pasa a descartados (no se borra)', tone: 'busy', icon: 'ban' },
+  { id: 'INTERESADO', label: 'Contesta · interesado', hint: 'Pasa a interesados', tone: 'ok', icon: 'check' },
+  { id: 'AGENDAR', label: 'Agendar otra llamada', hint: 'Ese día a esa hora sale el primero, en verde', tone: 'pink', icon: 'calendar' },
+]
+
+export const STATUS_TONE = {
+  NUEVO: 'acc',
+  NO_CONTESTA: 'warn',
+  AGENDADO: 'pink',
+  INTERESADO: 'ok',
+  CITA: 'ok',
+  MATRICULADO: 'purple',
+  DESCARTADO: 'ghost',
+}
+
+export const STUDY_TYPES = [
+  { id: 'GRADO', label: 'Grados' },
+  { id: 'CFGS', label: 'Ciclos (CFGS)' },
+  { id: 'MASTER', label: 'Másteres' },
+  { id: 'CURSO', label: 'Cursos' },
+]
+
+export const ORIGINS = [
+  { id: 'WEB', label: 'Web' },
+  { id: 'FACEBOOK', label: 'Facebook' },
+  { id: 'INSTAGRAM', label: 'Instagram' },
+  { id: 'GOOGLE', label: 'Google' },
+  { id: 'TIKTOK', label: 'TikTok' },
+  { id: 'FERIA', label: 'Feria / evento' },
+  { id: 'TELEFONO', label: 'Teléfono' },
+  { id: 'MANUAL', label: 'Alta manual' },
+  { id: 'OTRO', label: 'Otro' },
+]
+
+export const EMPTY_FILTERS = {
+  q: '',
+  nombre: '',
+  email: '',
+  telefono: '',
+  ubicacion: '',
+  estudio: [],
+  tipo: '',
+  origen: '',
+  sinEstudio: false,
+  desde: '',
+  hasta: '',
+}
+
+/** Número de filtros avanzados activos (el buscador general no cuenta). */
+export function activeFilterCount(filters) {
+  return Object.entries(filters).filter(([key, value]) => {
+    if (key === 'q') return false
+    return Array.isArray(value) ? value.length > 0 : Boolean(value)
+  }).length
+}
+
+/** Parámetros para la API a partir del estado de la pantalla. */
+export function buildLeadQuery({ inbox, filters, page, perPage, sort }) {
+  return {
+    bandeja: inbox,
+    ...filters,
+    q: filters.q.trim(),
+    pagina: page > 1 ? page : undefined,
+    porPagina: perPage,
+    orden: sort?.field && sort.field !== 'entrada' ? sort.field : undefined,
+    dir: sort?.dir === 'asc' ? 'asc' : undefined,
+  }
+}
+
+/**
+ * Nombre propuesto al crear un estudio desde un texto importado: se quitan los
+ * códigos del principio y las mayúsculas ("F250457AA | XX0001 - CURSO DE COCINA" → "Curso de cocina").
+ */
+export function suggestStudyName(text) {
+  const words = String(text || '').split('|').pop().trim().split(/\s+/)
+  while (words.length > 1 && /\d/.test(words[0])) words.shift()
+  const name = words.join(' ').replace(/^[\s\-–—:·]+/, '').trim()
+  return name && name === name.toUpperCase() ? name.charAt(0) + name.slice(1).toLowerCase() : name
+}
+
+export function displayName(lead) {
+  return lead.nombreCompleto || lead.email || lead.telefono || 'Sin nombre'
+}
+
+/**
+ * Qué se ofrece después de registrar una acción: tras «interesado», el correo;
+ * tras «no contesta», el correo y a continuación WhatsApp.
+ */
+export function followUpAfter(outcome, lead) {
+  const can = (action) => lead.acciones.includes(action)
+  if (outcome === 'INTERESADO') return can('enviar-info') ? 'mail' : undefined
+  if (outcome === 'NO_CONTESTA') {
+    if (can('enviar-info')) return can('whatsapp') ? 'mail-whatsapp' : 'mail'
+    if (can('whatsapp')) return 'whatsapp'
+  }
+  return undefined
+}
+
+/** Resumen corto del seguimiento para la columna de estado. */
+export function followUp(lead) {
+  if (lead.estado === 'NO_CONTESTA') return `${lead.intentos} ${lead.intentos === 1 ? 'intento' : 'intentos'}`
+  if (lead.estado === 'DESCARTADO') return lead.motivoDescarte || ''
+  if (lead.estado === 'NUEVO' && lead.intentos > 0) return `${lead.intentos} sin respuesta`
+  return ''
+}

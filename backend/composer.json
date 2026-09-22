@@ -1,0 +1,27 @@
+{
+  "name": "estaciondiseno/apileads",
+  "description": "API PHP de gestión de leads para el equipo comercial de Estación Diseño.",
+  "license": "proprietary",
+  "type": "project",
+  "require": {
+    "php": ">=8.1",
+    "ext-mbstring": "*",
+    "ext-pdo": "*",
+    "ext-pdo_mysql": "*",
+    "firebase/php-jwt": "^7.0",
+    "phpoffice/phpspreadsheet": "^2.2"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^11.5"
+  },
+  "autoload": {
+    "psr-4": { "Leads\\": "src/" }
+  },
+  "autoload-dev": {
+    "psr-4": { "Leads\\Tests\\": "tests/" }
+  },
+  "scripts": {
+    "test": "phpunit",
+    "migrate": "php bin/migrate.php"
+  }
+}

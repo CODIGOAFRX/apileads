@@ -1,0 +1,57 @@
+# Entorno local. Levanta la aplicación entera (web + API + base de datos):
+#
+#   docker compose up --build     → http://localhost:8080 (la primera vez crea datos de ejemplo)
+#   docker compose down           → parar        ·  docker compose down -v  → parar y vaciar la base de datos
+#   docker compose exec app sh -c 'cd backend && vendor/bin/phpunit'        → pruebas (SQLite)
+#
+# Para arrancar sin datos de ejemplo: DEMO=0 docker compose up   (en PowerShell: $env:DEMO=0; docker compose up)
+#
+# Para tocar el frontend con recarga automática: "cd frontend && npm run dev" (http://localhost:5173).
+
+services:
+  app:
+    build: ./backend
+    container_name: apileads_app
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./:/app
+    # El guion de arranque se lee de la carpeta del proyecto: se puede cambiar sin reconstruir la imagen.
+    command: ["sh", "/app/backend/docker/entrypoint.sh"]
+    environment:
+      # Se puede sobreescribir desde fuera, p. ej. para usar SQLite en vez de MariaDB.
+      DB_DSN: "${DB_DSN:-mysql:host=db;port=3306;dbname=apileads;charset=utf8mb4}"
+      DB_USER: "${DB_USER:-apileads}"
+      DB_PASSWORD: "${DB_PASSWORD:-apileads}"
+      JWT_SECRET: bG9jYWwtc29sby1wYXJhLWRlc2Fycm9sbG8tbm8tdXNhci1lbi1wcm9kdWNjaW9u
+      ADMIN_EMAIL: admin@estaciondiseno.es
+      ADMIN_PASSWORD: AdminLocal2026
+      MAIL_TRANSPORT: log
+      APP_DEBUG: "1"
+      CORS_ALLOWED_ORIGINS: http://localhost:5173
+      DEMO: "${DEMO:-1}"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mariadb:10.11
+    container_name: apileads_db
+    environment:
+      MARIADB_DATABASE: apileads
+      MARIADB_USER: apileads
+      MARIADB_PASSWORD: apileads
+      MARIADB_ROOT_PASSWORD: root-local
+    ports:
+      - "3307:3306"
+    volumes:
+      - apileads_db:/var/lib/mysql
+      - ./backend/database/docker-init.sql:/docker-entrypoint-initdb.d/01-test-db.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  apileads_db:

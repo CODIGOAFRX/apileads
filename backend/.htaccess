@@ -1,0 +1,2 @@
+# El backend no debe servirse directamente: solo se usa a través de frontend/dist/backend.php
+Require all denied
