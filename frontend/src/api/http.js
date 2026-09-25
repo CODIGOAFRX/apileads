@@ -53,17 +53,32 @@ async function handle(response) {
   throw new ApiError(message, response.status, body?.detalles || {})
 }
 
-async function send(method, path, body, isForm = false) {
-  let response
+// Si el servidor no contesta, se avisa en lugar de dejar la pantalla esperando para siempre.
+export const TIMEOUT_MS = 30_000
+export const UPLOAD_TIMEOUT_MS = 180_000
+
+/** fetch con tiempo máximo; los fallos de red se convierten en un ApiError legible. */
+async function request(url, options, timeout) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeout)
   try {
-    response = await fetch(`/api${path}`, {
-      method,
-      headers: headers(body && !isForm ? { 'Content-Type': 'application/json' } : {}),
-      body: body ? (isForm ? body : JSON.stringify(body)) : undefined,
-    })
-  } catch {
+    return await fetch(url, { ...options, signal: controller.signal })
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      throw new ApiError('El servidor está tardando demasiado en responder. Inténtalo de nuevo en un momento.', 0)
+    }
     throw new ApiError('Sin conexión con el servidor. Revisa tu conexión a internet.', 0)
+  } finally {
+    clearTimeout(timer)
   }
+}
+
+async function send(method, path, body, isForm = false) {
+  const response = await request(`/api${path}`, {
+    method,
+    headers: headers(body && !isForm ? { 'Content-Type': 'application/json' } : {}),
+    body: body ? (isForm ? body : JSON.stringify(body)) : undefined,
+  }, isForm ? UPLOAD_TIMEOUT_MS : TIMEOUT_MS)
   return handle(response)
 }
 
@@ -76,7 +91,7 @@ export const http = {
 
   /** Descarga un fichero respetando el nombre que envía el servidor. */
   async download(path, params, fallbackName = 'descarga') {
-    const response = await fetch(`/api${path}${toQuery(params)}`, { headers: headers() })
+    const response = await request(`/api${path}${toQuery(params)}`, { headers: headers() }, UPLOAD_TIMEOUT_MS)
     if (!response.ok) return handle(response)
     const disposition = response.headers.get('Content-Disposition') || ''
     const match = /filename\*=UTF-8''([^;]+)/i.exec(disposition) || /filename="([^"]+)"/i.exec(disposition)

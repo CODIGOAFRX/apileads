@@ -3,7 +3,7 @@ import { useApp } from '../../AppContext.js'
 import { Icon } from '../../components/Icon.jsx'
 import { Checkbox, StudyChip } from '../../components/ui.jsx'
 import { plural } from '../../lib/format.js'
-import { ORIGINS, suggestStudyName } from '../../lib/leads.js'
+import { originLabel, suggestStudyName } from '../../lib/leads.js'
 import { StudyModal } from '../settings/CatalogSettings.jsx'
 
 /**
@@ -11,7 +11,7 @@ import { StudyModal } from '../settings/CatalogSettings.jsx'
  * Administración puede crear el estudio ahí mismo si aún no existe.
  */
 export function StudyResolver({ items, studies, value, remember, onChange, onRememberChange }) {
-  const { isAdmin, reloadCatalog } = useApp()
+  const { reloadCatalog } = useApp()
   const [creatingFor, setCreatingFor] = useState(null)
   if (!items.length) return null
 
@@ -53,11 +53,9 @@ export function StudyResolver({ items, studies, value, remember, onChange, onRem
                     {studies.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
                     <option value="0">Ninguno (no es un estudio nuestro)</option>
                   </select>
-                  {isAdmin && (
-                    <button type="button" className="ed-btn ed-btn--sm ed-btn--ghost" style={{ marginTop: 6 }} onClick={() => setCreatingFor(item)}>
-                      <Icon name="plus" size={13} /> Crear estudio nuevo
-                    </button>
-                  )}
+                  <button type="button" className="ed-btn ed-btn--sm ed-btn--ghost" style={{ marginTop: 6 }} onClick={() => setCreatingFor(item)}>
+                    <Icon name="plus" size={13} /> Crear estudio nuevo
+                  </button>
                 </td>
               </tr>
             ))}
@@ -111,6 +109,7 @@ export function ColumnMapping({ columns, fields, overrides, onChange }) {
 
 /** Primeras filas tal como quedarán guardadas. */
 export function SampleTable({ rows, studies }) {
+  const { catalog } = useApp()
   if (!rows.length) return null
   const byId = Object.fromEntries(studies.map((s) => [s.id, s]))
   return (
@@ -132,7 +131,7 @@ export function SampleTable({ rows, studies }) {
                     ? <div className="ed-row" style={{ gap: 4 }}>{row.estudioIds.map((id) => byId[id] && <StudyChip key={id} study={byId[id]} />)}</div>
                     : <span className="ed-muted">{row.interes || '—'}</span>}
                 </td>
-                <td>{ORIGINS.find((o) => o.id === row.origen)?.label ?? row.origen}</td>
+                <td>{originLabel(catalog?.origenes, row.origen)}</td>
                 <td>{row.avisos.length ? <span className="ed-tag ed-tag--warn" title={row.avisos.join('\n')}>{row.avisos.length}</span> : ''}</td>
               </tr>
             ))}

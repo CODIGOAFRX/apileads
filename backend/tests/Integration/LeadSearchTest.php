@@ -50,7 +50,7 @@ final class LeadSearchTest extends DatabaseTestCase
         self::assertEqualsCanonicalizing([$this->ids['andres'], $this->ids['pablo']], $this->search(['tipo' => 'MASTER']));
         self::assertSame([$this->ids['pablo']], $this->search(['estudio' => '1,99']));
         self::assertSame([$this->ids['sin']], $this->search(['sinEstudio' => '1']));
-        self::assertSame([$this->ids['lucia']], $this->search(['origen' => 'FACEBOOK']));
+        self::assertSame([$this->ids['lucia']], $this->search(['origen' => 'REDES_SOCIALES']));
         self::assertSame([$this->ids['andres']], $this->search(['ubicacion' => 'ja']));
     }
 

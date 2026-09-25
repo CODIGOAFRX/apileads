@@ -386,6 +386,7 @@ a { color: inherit; }
   cursor: pointer;
 }
 .ed-studypick button[aria-pressed="true"] { background: var(--sc, var(--acc)); font-weight: 700; box-shadow: 2px 2px 0 var(--ink); }
+.ed-studypick--plain button { padding: 6px 13px; font-size: 13px; }
 
 /* ─── Pestañas: estaciones enlazadas por la línea ────────────────────────── */
 

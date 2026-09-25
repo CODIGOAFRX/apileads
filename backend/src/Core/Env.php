@@ -35,7 +35,7 @@ final class Env
     public static function get(string $key, ?string $default = null): ?string
     {
         $value = $_ENV[$key] ?? getenv($key);
-        if ($value === false || $value === null || $value === '') {
+        if (!is_scalar($value) || $value === false || $value === '') {
             return $default;
         }
 

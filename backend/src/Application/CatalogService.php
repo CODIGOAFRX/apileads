@@ -4,11 +4,20 @@ declare(strict_types=1);
 
 namespace Leads\Application;
 
+use Leads\Core\Clock;
 use Leads\Core\HttpException;
+use Leads\Core\Input;
+use Leads\Domain\Lead\LeadOrigin;
 use Leads\Domain\Shared\Text;
+use Leads\Domain\User\Role;
+use Leads\Infrastructure\Persistence\DbTime;
 use Leads\Infrastructure\Persistence\CatalogRepository;
 
-/** Mantenimiento de centros y estudios (y los alias con que se reconocen). */
+/**
+ * Mantenimiento de centros y estudios (y los alias con que se reconocen).
+ * Cualquier usuario puede crear un estudio que falte (p. ej. un curso corto
+ * nuevo); editarlos, borrarlos y los alias quedan para administración.
+ */
 final class CatalogService
 {
     public const STUDY_TYPES = ['GRADO' => 'Grado', 'CFGS' => 'CFGS', 'MASTER' => 'Máster', 'CURSO' => 'Curso', 'OTRO' => 'Otro'];
@@ -18,8 +27,10 @@ final class CatalogService
         'INFORMATICA' => 'Informática', 'OTRA' => 'Otra',
     ];
 
-    public function __construct(private readonly CatalogRepository $catalog)
-    {
+    public function __construct(
+        private readonly CatalogRepository $catalog,
+        private readonly ?Clock $clock = null,
+    ) {
     }
 
     public function catalog(): array
@@ -29,18 +40,29 @@ final class CatalogService
             'centros' => $this->catalog->centers(),
             'tipos' => self::STUDY_TYPES,
             'areas' => self::AREAS,
+            'origenes' => LeadOrigin::catalog(),
         ];
     }
 
-    public function saveStudy(?int $id, array $data): array
+    /**
+     * Alta (id null) o edición. $viewer: quién lo hace. Una comercial solo da de
+     * alta: el estudio queda activo, en todos los centros si no elige, y al final
+     * de la lista. Si ya existe uno con ese nombre (o con ese alias) se avisa con
+     * 409 y se devuelve, para usarlo en lugar de duplicarlo.
+     */
+    public function saveStudy(?int $id, array $data, ?array $viewer = null): array
     {
         if ($id !== null && $this->catalog->study($id) === null) {
             throw HttpException::notFound('Estudio no encontrado');
         }
-        $name = trim((string) ($data['nombre'] ?? ''));
-        $type = (string) ($data['tipo'] ?? '');
-        $area = (string) ($data['area'] ?? '');
-        $color = strtoupper(trim((string) ($data['color'] ?? '#00FF81')));
+        $isAdmin = $viewer === null || ($viewer['rol'] ?? null) === Role::ADMIN->value;
+        if (!$isAdmin && $id !== null) {
+            throw HttpException::forbidden('Solo administración puede cambiar un estudio');
+        }
+        $name = trim((string) preg_replace('/\s+/u', ' ', Input::text($data, 'nombre')));
+        $type = Input::text($data, 'tipo', $isAdmin ? '' : 'CURSO');
+        $area = Input::text($data, 'area');
+        $color = strtoupper(trim(Input::text($data, 'color', '#00FF81')));
         if ($name === '' || mb_strlen($name) > 160) {
             throw new \InvalidArgumentException('Indica el nombre del estudio');
         }
@@ -53,21 +75,60 @@ final class CatalogService
         if (!preg_match('/^#[0-9A-F]{6}$/', $color)) {
             throw new \InvalidArgumentException('El color debe tener formato #RRGGBB');
         }
-        $centerIds = array_values(array_filter(
-            array_map('intval', (array) ($data['centroIds'] ?? [])),
-            fn (int $c): bool => $this->catalog->centerExists($c)
-        ));
+        $existing = $this->findByName($name);
+        if ($existing !== null && $existing['id'] !== $id) {
+            throw HttpException::conflict("Ya existe «{$existing['nombre']}»: elígelo en lugar de crear otro", ['estudio' => $existing]);
+        }
 
-        $id = $this->catalog->saveStudy($id, [
+        $centerIds = array_values(array_filter(Input::ids($data['centroIds'] ?? []), fn (int $c): bool => $this->catalog->centerExists($c)));
+        if ($id === null && !array_key_exists('centroIds', $data)) {
+            $centerIds = array_column(array_filter($this->catalog->centers(), static fn (array $c): bool => $c['activo']), 'id');
+        }
+        // Posición en las listas: 0-9999 (la columna es INT y no admite cualquier número).
+        $order = filter_var($data['orden'] ?? null, FILTER_VALIDATE_INT);
+        if ($order === false || !$isAdmin) {
+            $order = $id === null ? $this->nextOrder() : 0;
+        }
+        $order = max(0, min(9999, $order));
+        $values = [
             'nombre' => $name,
             'tipo' => $type,
             'area' => $area === '' ? null : $area,
             'color' => $color,
-            'orden' => (int) ($data['orden'] ?? 0),
-            'activo' => filter_var($data['activo'] ?? true, FILTER_VALIDATE_BOOLEAN) ? 1 : 0,
-        ], $centerIds);
+            'orden' => $order,
+            'activo' => !$isAdmin || filter_var($data['activo'] ?? true, FILTER_VALIDATE_BOOLEAN) ? 1 : 0,
+        ];
+        if ($id === null) {
+            $values += ['creado_por' => $viewer === null ? null : (int) $viewer['id'], 'creado_en' => DbTime::toDb($this->clock?->now())];
+        }
 
-        return $this->catalog->study($id);
+        $id = $this->catalog->saveStudy($id, $values, $centerIds);
+
+        return $this->catalog->study($id) ?? throw HttpException::notFound('Estudio no encontrado');
+    }
+
+    /** Estudio con ese nombre (sin mirar tildes, mayúsculas ni signos) o con ese alias. */
+    public function findByName(string $name): ?array
+    {
+        $key = Text::slug($name);
+        if ($key === '') {
+            return null;
+        }
+        $studyId = $this->catalog->aliasMap()[$key] ?? null;
+        foreach ($this->catalog->studies() as $study) {
+            if ($study['id'] === $studyId || Text::slug($study['nombre']) === $key) {
+                return $study;
+            }
+        }
+
+        return null;
+    }
+
+    private function nextOrder(): int
+    {
+        $orders = array_column($this->catalog->studies(), 'orden');
+
+        return $orders === [] ? 1 : max($orders) + 1;
     }
 
     public function deleteStudy(int $id): void
@@ -83,7 +144,8 @@ final class CatalogService
         if ($this->catalog->study($studyId) === null) {
             throw HttpException::notFound('Estudio no encontrado');
         }
-        $key = Text::slug($alias);
+        // Tamaño de la columna estudio_alias.alias.
+        $key = trim(substr(Text::slug($alias), 0, 190));
         if ($key === '') {
             throw new \InvalidArgumentException('El alias está vacío');
         }
@@ -99,7 +161,7 @@ final class CatalogService
 
     public function saveCenter(?int $id, array $data): array
     {
-        $name = trim((string) ($data['nombre'] ?? ''));
+        $name = trim(Input::text($data, 'nombre'));
         if ($name === '') {
             throw new \InvalidArgumentException('Indica el nombre del centro');
         }
@@ -108,8 +170,8 @@ final class CatalogService
         }
         $id = $this->catalog->saveCenter($id, [
             'nombre' => mb_substr($name, 0, 120),
-            'ciudad' => Text::nullIfEmpty((string) ($data['ciudad'] ?? '')),
-            'provincia' => Text::nullIfEmpty((string) ($data['provincia'] ?? '')),
+            'ciudad' => Text::truncate(Text::nullIfEmpty(Input::text($data, 'ciudad')), 120),
+            'provincia' => Text::truncate(Text::nullIfEmpty(Input::text($data, 'provincia')), 120),
             'activo' => filter_var($data['activo'] ?? true, FILTER_VALIDATE_BOOLEAN) ? 1 : 0,
         ]);
 

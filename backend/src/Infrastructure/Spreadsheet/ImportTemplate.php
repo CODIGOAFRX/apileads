@@ -7,14 +7,15 @@ namespace Leads\Infrastructure\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 /** Plantilla descargable para importar leads. */
 final class ImportTemplate
 {
-    public const HEADERS = ['Nombre', 'Apellidos', 'Email', 'Teléfono', 'Ubicación', 'Estudio de interés', 'Origen', 'Campaña', 'Fecha', 'Comentarios'];
+    public const HEADERS = ['Nombre', 'Apellidos', 'Email', 'Teléfono', 'Ubicación', 'Estudio de interés', 'Origen', 'Fecha', 'Comentarios'];
 
-    private const EXAMPLE = ['Lucía', 'Martín Pérez', 'lucia.martin@example.com', '600 12 34 54', 'Granada', 'Grado Diseño Gráfico', 'Web', 'Jornada puertas abiertas', '15/09/2026', 'Quiere información de becas'];
+    private const EXAMPLE = ['Lucía', 'Martín Pérez', 'lucia.martin@example.com', '600 12 34 54', 'Granada', 'Grado Diseño Gráfico', 'Web', '15/09/2026', 'Quiere información de becas'];
 
     /** @param list<string> $studyNames */
     public function xlsx(array $studyNames, array $origins): string
@@ -85,7 +86,7 @@ final class ImportTemplate
         return "\xEF\xBB\xBF" . $content;
     }
 
-    private function addListValidation($sheet, string $range, string $formula): void
+    private function addListValidation(Worksheet $sheet, string $range, string $formula): void
     {
         $validation = new DataValidation();
         $validation->setType(DataValidation::TYPE_LIST);

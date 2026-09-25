@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from '../../components/Icon.jsx'
 import { Checkbox, Field, StudyPicker } from '../../components/ui.jsx'
-import { EMPTY_FILTERS, ORIGINS, STUDY_TYPES, activeFilterCount } from '../../lib/leads.js'
+import { useApp } from '../../AppContext.js'
+import { EMPTY_FILTERS, STUDY_TYPES, activeFilterCount } from '../../lib/leads.js'
 
 /**
  * Buscador: una caja general ("contiene" en nombre, correo, teléfono, ubicación…)
  * y filtros avanzados por campo, estudio, tipo, origen y fechas.
  */
 export function SearchPanel({ filters, onChange, studies }) {
+  const { catalog } = useApp()
   const [open, setOpen] = useState(false)
   const inputRef = useRef(null)
   const active = activeFilterCount(filters)
@@ -80,7 +82,7 @@ export function SearchPanel({ filters, onChange, studies }) {
             <Field label="Origen">
               <select className="ed-select" value={filters.origen} onChange={(e) => set('origen', e.target.value)}>
                 <option value="">Todos</option>
-                {ORIGINS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+                {(catalog.origenes || []).map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
               </select>
             </Field>
             <Field label="Tipo de estudio">

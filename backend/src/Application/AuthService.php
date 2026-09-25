@@ -6,6 +6,7 @@ namespace Leads\Application;
 
 use Leads\Core\Clock;
 use Leads\Core\HttpException;
+use Leads\Core\Input;
 use Leads\Domain\User\Role;
 use Leads\Infrastructure\Persistence\DbTime;
 use Leads\Infrastructure\Persistence\LoginAttemptRepository;
@@ -86,10 +87,10 @@ final class AuthService
 
     public function createUser(array $data): array
     {
-        $name = trim((string) ($data['nombre'] ?? ''));
-        $email = mb_strtolower(trim((string) ($data['email'] ?? '')));
-        $role = Role::tryFrom((string) ($data['rol'] ?? '')) ?? Role::COMERCIAL;
-        $password = (string) ($data['password'] ?? '');
+        $name = trim(Input::text($data, 'nombre'));
+        $email = mb_strtolower(trim(Input::text($data, 'email')));
+        $role = Role::tryFrom(Input::text($data, 'rol')) ?? Role::COMERCIAL;
+        $password = Input::text($data, 'password');
 
         $this->assertValidProfile($name, $email);
         $this->assertValidPassword($password);
@@ -112,9 +113,9 @@ final class AuthService
     public function updateUser(int $id, array $data, int $actingUserId): array
     {
         $user = $this->users->find($id) ?? throw HttpException::notFound('Usuario no encontrado');
-        $name = trim((string) ($data['nombre'] ?? $user['nombre']));
-        $email = mb_strtolower(trim((string) ($data['email'] ?? $user['email'])));
-        $role = Role::tryFrom((string) ($data['rol'] ?? $user['rol'])) ?? Role::COMERCIAL;
+        $name = trim(Input::text($data, 'nombre', $user['nombre']));
+        $email = mb_strtolower(trim(Input::text($data, 'email', $user['email'])));
+        $role = Role::tryFrom(Input::text($data, 'rol', $user['rol'])) ?? Role::COMERCIAL;
         $active = array_key_exists('activo', $data) ? (bool) $data['activo'] : (bool) $user['activo'];
 
         $this->assertValidProfile($name, $email);
@@ -182,7 +183,7 @@ final class AuthService
         if ($name === '' || mb_strlen($name) > 120) {
             throw new \InvalidArgumentException('Indica un nombre (máximo 120 caracteres)');
         }
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($email) > 190) {
             throw new \InvalidArgumentException('Indica un correo válido');
         }
     }

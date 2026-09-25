@@ -19,7 +19,7 @@ final class Router
     public const AUTH = 'auth';
     public const ADMIN = 'admin';
 
-    /** @var list<array{method:string, regex:string, handler:callable, access:string}> */
+    /** @var list<array{method:string, pattern:string, regex:string, handler:callable, access:string}> */
     private array $routes = [];
 
     /** @param callable(?string):?array $authenticate */
@@ -50,7 +50,17 @@ final class Router
     public function add(string $method, string $pattern, callable $handler, string $access = self::AUTH): void
     {
         $regex = '#^' . preg_replace('#\{(\w+)\}#', '(?P<$1>[^/]+)', $pattern) . '$#';
-        $this->routes[] = ['method' => $method, 'regex' => $regex, 'handler' => $handler, 'access' => $access];
+        $this->routes[] = ['method' => $method, 'pattern' => $pattern, 'regex' => $regex, 'handler' => $handler, 'access' => $access];
+    }
+
+    /**
+     * Rutas registradas (para las pruebas que recorren toda la API).
+     *
+     * @return list<array{method: string, pattern: string, access: string}>
+     */
+    public function routes(): array
+    {
+        return array_map(static fn (array $r): array => ['method' => $r['method'], 'pattern' => $r['pattern'], 'access' => $r['access']], $this->routes);
     }
 
     public function dispatch(Request $request): Response

@@ -139,8 +139,7 @@ final class AuditService
             if ($e['usuarioId'] === null) {
                 continue;
             }
-            $s = &$byUser[$e['usuarioId']];
-            $s ??= [
+            $s = $byUser[$e['usuarioId']] ?? [
                 'usuarioId' => $e['usuarioId'], 'usuario' => $e['usuario'], 'primera' => $e['fecha'], 'ultima' => $e['fecha'],
                 'acciones' => 0, 'leads' => [], 'llamadasAbiertas' => 0, 'marcados' => 0, 'llamadas' => 0,
                 'contestan' => 0, 'noContestan' => 0, 'interesados' => 0, 'agendadas' => 0, 'noInteresados' => 0,
@@ -185,7 +184,7 @@ final class AuditService
                     default => null,
                 };
             }
-            unset($s);
+            $byUser[$e['usuarioId']] = $s;
         }
 
         $summary = array_map(static fn (array $s): array => ['leads' => count($s['leads'])] + $s, array_values($byUser));

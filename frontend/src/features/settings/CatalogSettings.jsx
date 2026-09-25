@@ -5,6 +5,7 @@ import { Icon } from '../../components/Icon.jsx'
 import { Modal } from '../../components/Modal.jsx'
 import { useToast } from '../../components/Toasts.jsx'
 import { Alert, Checkbox, Field, Spinner, StudyChip } from '../../components/ui.jsx'
+import { formatDateTime } from '../../lib/format.js'
 
 const PALETTE = ['#00FF81', '#FF79F5', '#FF7A78', '#8A86FF', '#FFFF82', '#8CE5FF', '#D06EFA', '#FFA83D', '#A9E58A', '#FF9E7A', '#5B84E8']
 
@@ -27,7 +28,7 @@ export function CatalogSettings() {
       </div>
       <div className="ed-table-wrap">
         <table className="ed-table">
-          <thead><tr><th>Estudio</th><th>Tipo</th><th>Área</th><th>Centros</th><th>Alias</th><th /></tr></thead>
+          <thead><tr><th>Estudio</th><th>Tipo</th><th>Área</th><th>Centros</th><th>Alias</th><th>Creado por</th><th /></tr></thead>
           <tbody>
             {catalog.estudios.map((s) => (
               <tr key={s.id} style={{ opacity: s.activo ? 1 : 0.5 }}>
@@ -36,6 +37,7 @@ export function CatalogSettings() {
                 <td>{catalog.areas[s.area] ?? '—'}</td>
                 <td>{s.centroIds.map(centerName).join(', ') || '—'}</td>
                 <td className="ed-muted">{s.alias.length}</td>
+                <td className="ed-small">{s.creadoPor ? <span title={s.creadoEn ? formatDateTime(s.creadoEn) : undefined}>{s.creadoPor}</span> : <span className="ed-muted">—</span>}</td>
                 <td style={{ textAlign: 'right' }}>
                   <button type="button" className="ed-icon-btn ed-icon-btn--sm" onClick={() => setStudy(s)} aria-label={`Editar ${s.nombre}`}><Icon name="edit" size={14} /></button>
                 </td>
@@ -75,13 +77,18 @@ export function CatalogSettings() {
   )
 }
 
-/** Alta o edición de un estudio. También se abre desde la ficha de un lead y desde la importación. */
-export function StudyModal({ study, onClose, onSaved, onAliasChange }) {
-  const { catalog } = useApp()
+/**
+ * Alta o edición de un estudio. También se abre desde la ficha de un lead y desde
+ * la importación. Una comercial solo da de alta (p. ej. un curso corto nuevo) con
+ * lo básico; si ya existe uno igual, se le ofrece en lugar de duplicarlo.
+ */
+export function StudyModal({ study, onClose, onSaved, onAliasChange = () => {} }) {
+  const { catalog, isAdmin } = useApp()
   const toast = useToast()
   const isNew = !study.id
+  const [existing, setExisting] = useState(null)
   const [form, setForm] = useState({
-    nombre: study.nombre || '', tipo: study.tipo || 'GRADO', area: study.area || '',
+    nombre: study.nombre || '', tipo: study.tipo || (isAdmin ? 'GRADO' : 'CURSO'), area: study.area || '',
     color: study.color || PALETTE[catalog.estudios.length % PALETTE.length],
     orden: study.orden ?? catalog.estudios.length + 1, activo: study.activo ?? true,
     centroIds: study.centroIds || catalog.centros.map((c) => c.id),
@@ -95,14 +102,23 @@ export function StudyModal({ study, onClose, onSaved, onAliasChange }) {
   const save = async () => {
     setBusy(true)
     setError('')
+    setExisting(null)
     try {
-      const saved = isNew ? await catalogApi.createStudy(form) : await catalogApi.updateStudy(study.id, form)
-      toast.ok('Estudio guardado')
+      // Una comercial no elige orden, centros ni si está activo: lo decide el servidor.
+      const payload = isAdmin ? form : { nombre: form.nombre, tipo: form.tipo, area: form.area, color: form.color }
+      const saved = isNew ? await catalogApi.createStudy(payload) : await catalogApi.updateStudy(study.id, payload)
+      toast.ok(isNew ? `«${saved.nombre}» creado` : 'Estudio guardado')
       onSaved(saved)
     } catch (err) {
-      setError(err.message)
+      if (err.status === 409 && err.details?.estudio) setExisting(err.details.estudio)
+      else setError(err.message)
       setBusy(false)
     }
+  }
+
+  const useExisting = () => {
+    toast.ok(`Se usa «${existing.nombre}», que ya existía`)
+    onSaved(existing)
   }
 
   const remove = async () => {
@@ -136,18 +152,33 @@ export function StudyModal({ study, onClose, onSaved, onAliasChange }) {
   const toggleCenter = (id) => set('centroIds')(form.centroIds.includes(id) ? form.centroIds.filter((c) => c !== id) : [...form.centroIds, id])
 
   return (
-    <Modal title={isNew ? 'Nuevo estudio' : 'Editar estudio'} label={study.nombre} onClose={onClose} section="ajustes" wide
+    <Modal title={isNew ? 'Nuevo estudio' : 'Editar estudio'} label={isNew ? 'Estudios de interés' : study.nombre} onClose={onClose} section="ajustes" wide
       footer={(
         <>
-          {!isNew && <button type="button" className="ed-btn ed-btn--danger" onClick={remove} style={{ marginRight: 'auto' }}><Icon name="trash" size={14} /> Eliminar</button>}
+          {!isNew && isAdmin && <button type="button" className="ed-btn ed-btn--danger" onClick={remove} style={{ marginRight: 'auto' }}><Icon name="trash" size={14} /> Eliminar</button>}
           <button type="button" className="ed-btn" onClick={onClose}>Cancelar</button>
-          <button type="button" className="ed-btn ed-btn--solid" onClick={save} disabled={busy || !form.nombre.trim()}>{busy && <Spinner />} Guardar</button>
+          <button type="button" className="ed-btn ed-btn--solid" onClick={save} disabled={busy || !form.nombre.trim()}>{busy && <Spinner />} {isNew ? 'Crear estudio' : 'Guardar'}</button>
         </>
       )}>
       <div className="ed-stack">
         {error && <Alert tone="error">{error}</Alert>}
+        {existing && (
+          <Alert>
+            Ya existe <strong>{existing.nombre}</strong>. Mejor usar ese para no tener el mismo estudio dos veces.
+            <div style={{ marginTop: 8 }}>
+              <button type="button" className="ed-btn ed-btn--sm ed-btn--solid" onClick={useExisting}>
+                <Icon name="check" size={13} /> Usar «{existing.nombre}»
+              </button>
+            </div>
+          </Alert>
+        )}
+        {isNew && !isAdmin && (
+          <p className="ed-muted" style={{ margin: 0 }}>
+            Para cursos o estudios que aún no están en la lista (p. ej. un curso corto nuevo). Administración puede revisarlo después.
+          </p>
+        )}
         <div className="ed-grid ed-grid--2">
-          <Field label="Nombre"><input className="ed-input" value={form.nombre} onChange={set('nombre')} /></Field>
+          <Field label="Nombre"><input className="ed-input" value={form.nombre} onChange={set('nombre')} data-autofocus placeholder={isAdmin ? '' : 'Ej.: Curso de Procreate para ilustración'} /></Field>
           <Field label="Tipo">
             <select className="ed-select" value={form.tipo} onChange={set('tipo')}>
               {Object.entries(catalog.tipos).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
@@ -159,7 +190,7 @@ export function StudyModal({ study, onClose, onSaved, onAliasChange }) {
               {Object.entries(catalog.areas).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
             </select>
           </Field>
-          <Field label="Orden"><input className="ed-input" type="number" value={form.orden} onChange={set('orden')} /></Field>
+          {isAdmin && <Field label="Orden"><input className="ed-input" type="number" value={form.orden} onChange={set('orden')} /></Field>}
         </div>
         <Field label="Color">
           <div className="ed-row" style={{ gap: 6 }}>
@@ -170,16 +201,16 @@ export function StudyModal({ study, onClose, onSaved, onAliasChange }) {
             <input className="ed-input" style={{ width: 110 }} value={form.color} onChange={set('color')} aria-label="Color en hexadecimal" />
           </div>
         </Field>
-        {catalog.centros.length > 0 && (
+        {isAdmin && catalog.centros.length > 0 && (
           <Field label="Se imparte en">
             <div className="ed-row">
               {catalog.centros.map((c) => <Checkbox key={c.id} checked={form.centroIds.includes(c.id)} onChange={() => toggleCenter(c.id)}>{c.nombre}</Checkbox>)}
             </div>
           </Field>
         )}
-        <Checkbox checked={form.activo} onChange={set('activo')}>Activo (si lo desactivas deja de ofrecerse, pero los leads lo conservan)</Checkbox>
+        {isAdmin && <Checkbox checked={form.activo} onChange={set('activo')}>Activo (si lo desactivas deja de ofrecerse, pero los leads lo conservan)</Checkbox>}
 
-        {!isNew && (
+        {!isNew && isAdmin && (
           <div className="ed-panel ed-panel--bone ed-stack ed-stack--sm">
             <h3 className="ed-label">Alias al importar</h3>
             <div className="ed-row" style={{ gap: 6 }}>

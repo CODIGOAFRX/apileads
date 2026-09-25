@@ -38,7 +38,9 @@ export function MailSettings() {
   useEffect(() => {
     setForm({ asunto: template?.asunto ?? '', cuerpoHtml: template?.cuerpoHtml ?? '' })
     setError('')
-  }, [selected, data]) // «template» se deriva de estos dos
+    // «template» se deriva de estos dos: con él como dependencia se borraría lo escrito en cada render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected, data])
 
   if (!data) return <Loading />
 

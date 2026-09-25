@@ -76,7 +76,8 @@ final class Routes
 
         // Catálogo (lectura para todos, cambios solo administración)
         $router->get('/api/catalogo', $c(CatalogController::class, 'index'));
-        $router->post('/api/estudios', $logged('Crea el estudio «{nombre}»', $c(CatalogController::class, 'createStudy')), Router::ADMIN);
+        // Cualquiera puede crear un estudio que falte (cursos cortos…); cambiarlo, solo administración.
+        $router->post('/api/estudios', $logged('Crea el estudio «{nombre}»', $c(CatalogController::class, 'createStudy')));
         $router->put('/api/estudios/{id}', $logged('Edita el estudio «{nombre}»', $c(CatalogController::class, 'updateStudy')), Router::ADMIN);
         $router->delete('/api/estudios/{id}', $logged('Borra un estudio', $c(CatalogController::class, 'deleteStudy')), Router::ADMIN);
         $router->post('/api/estudios/{id}/alias', $logged('Añade el alias «{alias}» a un estudio', $c(CatalogController::class, 'addAlias')), Router::ADMIN);

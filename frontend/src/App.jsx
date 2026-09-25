@@ -5,6 +5,7 @@ import { clearSession, loadSession } from './auth/session.js'
 import { LoginPage } from './auth/LoginPage.jsx'
 import { AppContext } from './AppContext.js'
 import { Icon } from './components/Icon.jsx'
+import { ErrorBoundary } from './components/ErrorBoundary.jsx'
 import { ToastProvider } from './components/Toasts.jsx'
 import { Loading } from './components/ui.jsx'
 import { LeadsPage } from './features/leads/LeadsPage.jsx'
@@ -35,12 +36,14 @@ export default function App() {
 
   const reloadCatalog = useCallback(() => catalogApi.get().then(setCatalog), [])
 
+  // Solo al iniciar sesión (cambia el token), no cada vez que cambia el objeto de sesión.
+  const token = session?.token
   useEffect(() => {
-    if (!session) return
+    if (!token) return
     // Refresca los datos del usuario (rol o nombre pueden haber cambiado) y el catálogo.
     authApi.me().then((usuario) => setSession((s) => (s ? { ...s, usuario } : s))).catch(() => {})
     reloadCatalog().catch(() => {})
-  }, [session?.token, reloadCatalog]) // solo al iniciar sesión, no cada vez que cambia el objeto
+  }, [token, reloadCatalog])
 
   const context = useMemo(() => ({
     user: session?.usuario,
@@ -83,12 +86,13 @@ export default function App() {
 
           <main className="ed-container ed-main">
             {!catalog ? <Loading /> : (
-              <>
+              // key: al cambiar de sección se sale del aviso de error.
+              <ErrorBoundary key={page}>
                 {page === 'leads' && <LeadsPage />}
                 {page === 'importar' && <ImportPage onDone={() => setPage('leads')} />}
                 {page === 'ajustes' && <SettingsPage />}
                 {page === 'actividad' && session.usuario.rol === 'ADMIN' && <ActivityPage />}
-              </>
+              </ErrorBoundary>
             )}
           </main>
         </div>

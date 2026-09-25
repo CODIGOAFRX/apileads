@@ -82,12 +82,12 @@ final class StudyMatcherTest extends TestCase
         ];
         $matcher = new StudyMatcher($studies, ['comm0023' => 20, 'comt0411' => 21, 'ctrd0018' => 22, 'mf1002 2' => 23, 'ilustracion' => 5]);
 
-        $none = ['pendientes' => []];
-        self::assertSame(['ids' => [20]] + $none, $matcher->match('ARTES GRÁFICAS (F250454AA) | COMM0023 – Instagram para tu Negocio'));
-        self::assertSame(['ids' => [21]] + $none, $matcher->match('2025/18/47/EDD1/0270 | COMT0411 GESTIÓN COMERCIAL DE VENTAS'));
-        self::assertSame(['ids' => [23]] + $none, $matcher->match('2025/18/47/EDD1/0270 MF1002_2 Inglés profesional para actividades comerciales'));
-        self::assertSame(['ids' => [22]] + $none, $matcher->match('F250454AA | CTRD0018 - WHATSHAPP BUSINESS PARA MEJORAR LA COMUNICACIÓN'), 'por el código, aunque el nombre traiga una errata');
-        self::assertSame(['ids' => [20]] + $none, $matcher->match('Curso: Instagram para tu negocio'), 'por el nombre, sin código');
+        $found = static fn (int $id): array => ['ids' => [$id], 'pendientes' => []];
+        self::assertSame($found(20), $matcher->match('ARTES GRÁFICAS (F250454AA) | COMM0023 – Instagram para tu Negocio'));
+        self::assertSame($found(21), $matcher->match('2025/18/47/EDD1/0270 | COMT0411 GESTIÓN COMERCIAL DE VENTAS'));
+        self::assertSame($found(23), $matcher->match('2025/18/47/EDD1/0270 MF1002_2 Inglés profesional para actividades comerciales'));
+        self::assertSame($found(22), $matcher->match('F250454AA | CTRD0018 - WHATSHAPP BUSINESS PARA MEJORAR LA COMUNICACIÓN'), 'por el código, aunque el nombre traiga una errata');
+        self::assertSame($found(20), $matcher->match('Curso: Instagram para tu negocio'), 'por el nombre, sin código');
 
         // Un alias de una sola palabra no se busca dentro de otros textos: sería adivinar.
         self::assertSame(['ciclo ilustracion y comic'], array_column($matcher->match('Ciclo ilustración y cómic')['pendientes'], 'clave'));

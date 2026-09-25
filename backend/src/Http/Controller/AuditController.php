@@ -12,12 +12,12 @@ final class AuditController extends Controller
 {
     public function day(Request $request): Response
     {
-        return Response::json($this->app->audit()->day($request->query('fecha'), $this->optionalId($request->query('usuario'))));
+        return Response::json($this->app->audit()->day($request->queryText('fecha'), $this->optionalId($request->query('usuario'))));
     }
 
     public function export(Request $request): Response
     {
-        $date = (string) ($request->query('fecha') ?: '') ?: null;
+        $date = $request->queryText('fecha') ?: null;
 
         return Response::download(
             $this->app->audit()->csv($date, $this->optionalId($request->query('usuario'))),

@@ -12,7 +12,8 @@ final class CatalogRepository extends BaseRepository
     public function studies(bool $onlyActive = false): array
     {
         $rows = $this->all(
-            'SELECT * FROM estudio' . ($onlyActive ? ' WHERE activo = 1' : '') . ' ORDER BY orden, nombre'
+            'SELECT e.*, u.nombre AS creado_por_nombre FROM estudio e LEFT JOIN usuario u ON u.id = e.creado_por'
+            . ($onlyActive ? ' WHERE e.activo = 1' : '') . ' ORDER BY e.orden, e.nombre'
         );
         $centers = $this->all('SELECT estudio_id, centro_id FROM estudio_centro');
         $aliases = $this->all('SELECT id, estudio_id, alias FROM estudio_alias ORDER BY alias');
@@ -27,6 +28,9 @@ final class CatalogRepository extends BaseRepository
                 'color' => $row['color'],
                 'orden' => (int) $row['orden'],
                 'activo' => (bool) $row['activo'],
+                // Solo en los que ha creado alguien desde la aplicación (no en los de fábrica).
+                'creadoPor' => $row['creado_por_nombre'] ?? null,
+                'creadoEn' => DbTime::toApi($row['creado_en'] ?? null),
                 'centroIds' => array_values(array_map(
                     'intval',
                     array_column(array_filter($centers, static fn ($c) => (int) $c['estudio_id'] === $id), 'centro_id')

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Leads\Application;
 
 use Leads\Core\Clock;
+use Leads\Core\Input;
 use Leads\Domain\Import\ColumnMapper;
 use Leads\Domain\Import\ColumnMapping;
 use Leads\Domain\Import\DateParser;
@@ -114,7 +115,7 @@ final class ImportService
             'yaExisten' => $duplicatesInDb,
             'repetidosEnFichero' => $duplicatesInFile,
             'avisos' => $warnings,
-            'estudiosSinReconocer' => array_values($pending),
+            'estudiosSinReconocer' => $pending,
             'muestra' => $sample,
             'faltan' => $this->missingEssentials($mapping),
             'estudioDesde' => $mapping->studyFallbackHeader(),
@@ -177,7 +178,7 @@ final class ImportService
     {
         return (new ImportTemplate())->xlsx(
             array_column($this->catalog->studies(onlyActive: true), 'nombre'),
-            array_map(static fn (LeadOrigin $o) => $o->label(), array_filter(LeadOrigin::cases(), static fn ($o) => $o !== LeadOrigin::MANUAL))
+            array_map(static fn (LeadOrigin $o) => $o->label(), LeadOrigin::selectable())
         );
     }
 
@@ -234,12 +235,12 @@ final class ImportService
 
     private function defaultOrigin(ColumnMapping $mapping, array $options): LeadOrigin
     {
-        $chosen = LeadOrigin::tryFrom((string) ($options['origen'] ?? ''));
+        $chosen = LeadOrigin::tryFrom(Input::text($options, 'origen'));
         if ($chosen !== null) {
             return $chosen;
         }
 
-        return $mapping->looksLikeFacebook ? LeadOrigin::FACEBOOK : LeadOrigin::OTRO;
+        return $mapping->looksLikeFacebook ? LeadOrigin::REDES_SOCIALES : LeadOrigin::OTRO;
     }
 
     /** @return array<string,int> */

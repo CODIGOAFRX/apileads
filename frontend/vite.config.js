@@ -13,4 +13,10 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
   },
+  // Pruebas de componentes (npm test): navegador simulado con jsdom.
+  test: {
+    environment: 'jsdom',
+    include: ['test/**/*.test.jsx'],
+    setupFiles: ['test/setup.js'],
+  },
 })

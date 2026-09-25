@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Leads\Tests\Integration;
 
+use Leads\Domain\Import\Table;
 use Leads\Infrastructure\Spreadsheet\SpreadsheetReader;
 
 final class ImportServiceTest extends DatabaseTestCase
@@ -18,7 +19,7 @@ final class ImportServiceTest extends DatabaseTestCase
     Correo;Malo;correo-malo@;622333444;;Informática;;;
     CSV;
 
-    private function table(string $csv = self::CSV)
+    private function table(string $csv = self::CSV): Table
     {
         return (new SpreadsheetReader())->readCsvString($csv);
     }
@@ -70,7 +71,7 @@ final class ImportServiceTest extends DatabaseTestCase
         self::assertSame('WEB', $lucia['origen'], 'el origen de la columna manda sobre el elegido');
         self::assertSame('2026-09-15T07:12:00Z', $lucia['fechaOrigen']);
 
-        self::assertSame('INSTAGRAM', $byEmail['pablo@example.com']['origen']);
+        self::assertSame('REDES_SOCIALES', $byEmail['pablo@example.com']['origen']);
         self::assertSame([4], array_column($byEmail['pablo@example.com']['estudios'], 'id'));
 
         $marta = array_values(array_filter($leads, static fn ($l) => $l['nombre'] === 'Marta'))[0];
@@ -98,7 +99,7 @@ final class ImportServiceTest extends DatabaseTestCase
             . "l:1\t2026-09-14T20:00:00+0200\tMáster Moda 26\tf:1\tIrene Soto\tirene@example.com\tp:+34655000111\tllamar tarde\n";
 
         $preview = $this->app->imports()->preview($this->table($csv), []);
-        self::assertSame('FACEBOOK', $preview['origenDetectado']);
+        self::assertSame('REDES_SOCIALES', $preview['origenDetectado']);
         self::assertNotContains('estudio', $preview['faltan']);
         self::assertSame('ad_name', $preview['estudioDesde'], 'sin columna de estudio, se deduce del anuncio');
         self::assertSame([6], $preview['muestra'][0]['estudioIds']);
@@ -108,7 +109,7 @@ final class ImportServiceTest extends DatabaseTestCase
         self::assertSame(1, $report['creados']);
 
         $lead = $this->app->leads()->search(['bandeja' => 'todos', 'q' => 'irene'], $this->comercial)['items'][0];
-        self::assertSame('FACEBOOK', $lead['origen']);
+        self::assertSame('REDES_SOCIALES', $lead['origen']);
         self::assertSame([6], array_column($lead['estudios'], 'id'));
         self::assertSame('llamar tarde', $lead['comentarios']);
         self::assertSame('l:1', $lead['extra']['id']);
@@ -129,7 +130,7 @@ final class ImportServiceTest extends DatabaseTestCase
         self::assertSame([], $preview['faltan']);
         self::assertSame('Formulario', $preview['estudioDesde']);
         self::assertSame([], $preview['estudiosSinReconocer']);
-        self::assertSame('FACEBOOK', $preview['origenDetectado'], 'formulario + propietario + WhatsApp = Meta');
+        self::assertSame('REDES_SOCIALES', $preview['origenDetectado'], 'formulario + propietario + WhatsApp = Meta');
         self::assertSame('2026-09-20 22:25', $preview['muestra'][0]['fecha']);
         self::assertSame([$ids['Dirección por objetivos y gestión del desempeño']], $preview['muestra'][0]['estudioIds']);
         self::assertSame([$ids['Instagram para tu negocio']], $preview['muestra'][1]['estudioIds']);
@@ -141,7 +142,7 @@ final class ImportServiceTest extends DatabaseTestCase
 
         $ana = $this->app->leads()->search(['bandeja' => 'todos', 'q' => 'ana.prueba'], $this->comercial)['items'][0];
         self::assertSame('Ana Prueba Uno', $ana['nombreCompleto']);
-        self::assertSame('FACEBOOK', $ana['origen']);
+        self::assertSame('REDES_SOCIALES', $ana['origen']);
         self::assertEqualsCanonicalizing(
             [$ids['Dirección por objetivos y gestión del desempeño'], $ids['Competencias para el desarrollo de los recursos humanos de la empresa']],
             array_column($ana['estudios'], 'id'),

@@ -1,0 +1,78 @@
+# Comprobaciones automáticas en cada push y pull request: si algo se rompe, GitHub lo marca en rojo.
+name: Pruebas
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend · PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 8.1 es el mínimo que admite el servidor (Plesk); 8.4 la más nueva.
+        php: ['8.1', '8.3', '8.4']
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_DATABASE: apileads_test
+          MARIADB_USER: apileads
+          MARIADB_PASSWORD: apileads
+          MARIADB_ROOT_PASSWORD: root
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, pdo_mysql, pdo_sqlite, zip, gd, openssl
+          coverage: none
+      - name: Dependencias
+        run: composer install --no-interaction --no-progress
+      - name: Las dependencias de producción funcionan en este PHP
+        run: composer check-platform-reqs --no-dev
+      - name: Pruebas (SQLite)
+        run: vendor/bin/phpunit
+      - name: Pruebas (MariaDB, el motor del servidor)
+        env:
+          TEST_DB_DSN: mysql:host=127.0.0.1;port=3306;dbname=apileads_test;charset=utf8mb4
+          TEST_DB_USER: apileads
+          TEST_DB_PASSWORD: apileads
+        run: vendor/bin/phpunit
+      - name: Análisis estático (PHPStan)
+        if: matrix.php == '8.3'
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Revisión del código (ESLint)
+        run: npm run lint
+      - name: Pruebas (lógica y componentes)
+        run: npm test
+      - name: Compilación
+        run: npm run build

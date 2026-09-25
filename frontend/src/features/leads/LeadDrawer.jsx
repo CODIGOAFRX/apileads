@@ -144,7 +144,6 @@ export function LeadDrawer({ id, section, onClose, onChanged }) {
             {lead.interes && <div className="ed-tiny ed-muted" style={{ marginTop: 4 }}>Escribió: «{lead.interes}»</div>}
           </dd>
           {lead.centro && <><dt>Centro</dt><dd>{lead.centro.nombre}</dd></>}
-          {lead.campana && <><dt>Campaña</dt><dd>{lead.campana}</dd></>}
           <dt>Entrada</dt><dd>{formatDateTime(lead.entrada)}{lead.fechaOrigen && <span className="ed-muted"> · rellenó el formulario el {formatDateTime(lead.fechaOrigen)}</span>}</dd>
           {lead.ultimaLlamada && <><dt>Última llamada</dt><dd>{formatDateTime(lead.ultimaLlamada)}</dd></>}
           {lead.estado === 'NO_CONTESTA' && lead.proximaLlamada && <><dt>Volver a llamar</dt><dd>{formatRelative(lead.proximaLlamada)}</dd></>}

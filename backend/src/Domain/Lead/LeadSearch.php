@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Leads\Domain\Lead;
 
+use Leads\Core\Input;
 use Leads\Domain\Shared\Text;
 
 /**
@@ -39,32 +40,28 @@ final class LeadSearch
 
     public static function fromQuery(array $q): self
     {
-        $studyIds = $q['estudio'] ?? [];
-        if (is_string($studyIds)) {
-            $studyIds = explode(',', $studyIds);
-        }
         $date = static fn ($v): ?string => is_string($v) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $v) ? $v : null;
         $sort = in_array($q['orden'] ?? '', self::SORTS, true) ? $q['orden'] : 'entrada';
 
         return new self(
-            inbox: Inbox::tryFrom((string) ($q['bandeja'] ?? '')) ?? Inbox::PENDIENTES,
-            text: mb_substr(trim((string) ($q['q'] ?? '')), 0, 120),
-            name: mb_substr(trim((string) ($q['nombre'] ?? '')), 0, 120),
-            email: mb_substr(trim((string) ($q['email'] ?? '')), 0, 120),
-            phoneDigits: self::digitsOf((string) ($q['telefono'] ?? '')),
-            studyIds: array_values(array_filter(array_map('intval', (array) $studyIds))),
+            inbox: Inbox::tryFrom(Input::text($q, 'bandeja')) ?? Inbox::PENDIENTES,
+            text: mb_substr(trim(Input::text($q, 'q')), 0, 120),
+            name: mb_substr(trim(Input::text($q, 'nombre')), 0, 120),
+            email: mb_substr(trim(Input::text($q, 'email')), 0, 120),
+            phoneDigits: self::digitsOf(Input::text($q, 'telefono')),
+            studyIds: Input::ids($q['estudio'] ?? []),
             studyType: in_array($q['tipo'] ?? null, ['GRADO', 'CFGS', 'MASTER', 'CURSO', 'OTRO'], true) ? $q['tipo'] : null,
             withoutStudy: filter_var($q['sinEstudio'] ?? false, FILTER_VALIDATE_BOOLEAN),
-            origin: LeadOrigin::tryFrom((string) ($q['origen'] ?? ''))?->value,
-            centerId: isset($q['centro']) && (int) $q['centro'] > 0 ? (int) $q['centro'] : null,
-            location: mb_substr(trim((string) ($q['ubicacion'] ?? '')), 0, 120),
-            status: LeadStatus::tryFrom((string) ($q['estado'] ?? ''))?->value,
+            origin: LeadOrigin::tryFrom(Input::text($q, 'origen'))?->value,
+            centerId: Input::id($q['centro'] ?? null),
+            location: mb_substr(trim(Input::text($q, 'ubicacion')), 0, 120),
+            status: LeadStatus::tryFrom(Input::text($q, 'estado'))?->value,
             from: $date($q['desde'] ?? null),
             to: $date($q['hasta'] ?? null),
             sort: $sort,
-            direction: strtolower((string) ($q['dir'] ?? '')) === 'asc' ? 'asc' : 'desc',
-            page: max(1, (int) ($q['pagina'] ?? 1)),
-            perPage: min(200, max(10, (int) ($q['porPagina'] ?? 50))),
+            direction: strtolower(Input::text($q, 'dir')) === 'asc' ? 'asc' : 'desc',
+            page: min(100000, Input::id($q['pagina'] ?? null) ?? 1),
+            perPage: min(200, max(10, Input::id($q['porPagina'] ?? null) ?? 50)),
         );
     }
 

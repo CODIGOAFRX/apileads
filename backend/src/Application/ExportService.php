@@ -16,7 +16,7 @@ use Leads\Infrastructure\Spreadsheet\CsvWriter;
 /** Exporta a CSV el resultado del buscador (p. ej. descartados para campañas de correo). */
 final class ExportService
 {
-    private const HEADERS = ['ID', 'Nombre', 'Apellidos', 'Email', 'Teléfono', 'Ubicación', 'Estudios', 'Interés (texto)', 'Origen', 'Campaña', 'Estado', 'Intentos', 'Motivo descarte', 'Entrada', 'Última llamada', 'Comentarios'];
+    private const HEADERS = ['ID', 'Nombre', 'Apellidos', 'Email', 'Teléfono', 'Ubicación', 'Estudios', 'Interés (texto)', 'Origen', 'Estado', 'Intentos', 'Motivo descarte', 'Entrada', 'Última llamada', 'Comentarios'];
 
     public function __construct(
         private readonly LeadRepository $leads,
@@ -43,7 +43,6 @@ final class ExportService
                     implode(', ', array_column($row['estudios'], 'nombre')),
                     $row['interes_texto'],
                     (LeadOrigin::tryFrom((string) $row['origen']) ?? LeadOrigin::OTRO)->label(),
-                    $row['campana'],
                     LeadStatus::from($row['estado'])->label(),
                     $row['intentos_sin_respuesta'],
                     $row['motivo_descarte'],

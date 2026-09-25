@@ -16,12 +16,12 @@ final class CatalogController extends Controller
 
     public function createStudy(Request $request): Response
     {
-        return Response::json($this->app->catalog()->saveStudy(null, $request->body()), 201);
+        return Response::json($this->app->catalog()->saveStudy(null, $request->body(), $request->user()), 201);
     }
 
     public function updateStudy(Request $request): Response
     {
-        return Response::json($this->app->catalog()->saveStudy($request->intParam('id'), $request->body()));
+        return Response::json($this->app->catalog()->saveStudy($request->intParam('id'), $request->body(), $request->user()));
     }
 
     public function deleteStudy(Request $request): Response
@@ -35,7 +35,7 @@ final class CatalogController extends Controller
     {
         return Response::json($this->app->catalog()->addAlias(
             $request->intParam('id'),
-            (string) $request->input('alias', ''),
+            $request->text('alias'),
             $this->app->clock()->now(),
         ), 201);
     }

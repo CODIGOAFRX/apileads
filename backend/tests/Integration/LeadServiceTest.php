@@ -175,20 +175,21 @@ final class LeadServiceTest extends DatabaseTestCase
     public function testAltaManualAvisaDeDuplicadosYPermiteFusionar(): void
     {
         $service = $this->app->leads();
-        $created = $service->create(['nombre' => 'LUCÍA', 'telefono' => '600 12 34 54', 'estudioIds' => [2, 999]], $this->comercial);
+        $created = $service->create(['nombre' => 'LUCÍA', 'telefono' => '600 12 34 54', 'estudioIds' => [2, 999], 'origen' => 'COLEGIOS'], $this->comercial);
         self::assertSame('Lucía', $created['lead']['nombre']);
-        self::assertSame('MANUAL', $created['lead']['origen']);
+        self::assertSame('COLEGIOS', $created['lead']['origen']);
+        self::assertSame('Colegios', $created['lead']['origenLabel']);
         self::assertSame([2], array_column($created['lead']['estudios'], 'id'));
 
         try {
-            $service->create(['nombre' => 'Lucía M.', 'telefono' => '+34600123454', 'email' => 'lucia@example.com'], $this->comercial);
+            $service->create(['nombre' => 'Lucía M.', 'telefono' => '+34600123454', 'email' => 'lucia@example.com', 'origen' => 'WEB'], $this->comercial);
             self::fail('Debía detectar el duplicado');
         } catch (HttpException $e) {
             self::assertSame(409, $e->status());
             self::assertSame($created['lead']['id'], $e->details()['duplicado']['id']);
         }
 
-        $merged = $service->create(['nombre' => 'Lucía M.', 'telefono' => '+34600123454', 'email' => 'lucia@example.com', 'estudioIds' => [5], 'fusionar' => true], $this->comercial);
+        $merged = $service->create(['nombre' => 'Lucía M.', 'telefono' => '+34600123454', 'email' => 'lucia@example.com', 'estudioIds' => [5], 'origen' => 'WEB', 'fusionar' => true], $this->comercial);
         self::assertSame('fusionado', $merged['accion']);
         self::assertSame($created['lead']['id'], $merged['lead']['id']);
         self::assertSame('Lucía', $merged['lead']['nombre'], 'no se pisa lo que ya había');
@@ -198,8 +199,44 @@ final class LeadServiceTest extends DatabaseTestCase
 
     public function testAltaManualSinDatosDeContacto(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->app->leads()->create(['ubicacion' => 'Granada'], $this->comercial);
+        $this->expectExceptionMessage('al menos un nombre, un correo o un teléfono');
+        $this->app->leads()->create(['ubicacion' => 'Granada', 'origen' => 'WEB'], $this->comercial);
+    }
+
+    public function testElOrigenEsObligatorioYSoloUnoDeLosDiez(): void
+    {
+        $service = $this->app->leads();
+        foreach ([[], ['origen' => ''], ['origen' => 'OTRO'], ['origen' => 'FACEBOOK'], ['origen' => ['WEB', 'FERIA']]] as $origin) {
+            try {
+                $service->create(['nombre' => 'Eva', 'telefono' => '612345678'] + $origin, $this->comercial);
+                self::fail('Debía pedir el origen: ' . json_encode($origin));
+            } catch (\InvalidArgumentException $e) {
+                self::assertStringContainsString('origen', $e->getMessage());
+            }
+        }
+
+        $lead = $service->create(['nombre' => 'Eva', 'telefono' => '612345678', 'origen' => 'APRENDEMAS'], $this->comercial)['lead'];
+        self::assertSame(['APRENDEMAS', 'AprendeMás'], [$lead['origen'], $lead['origenLabel']]);
+    }
+
+    public function testEditarUnLeadAntiguoConservaSuOrigenYSuCampana(): void
+    {
+        $service = $this->app->leads();
+        // Importado sin origen reconocible y con el formulario de Meta como campaña.
+        $id = $this->lead(['nombre' => 'Eva', 'telefono' => '612345678', 'origen' => 'teléfono', 'campana' => 'F250454AA | COMM0023']);
+        $row = $this->app->leadRepository()->find($id);
+        self::assertSame(['OTRO', 'F250454AA | COMM0023'], [$row['origen'], $row['campana']]);
+
+        $edited = $service->update($id, ['nombre' => 'Eva María', 'telefono' => '612345678', 'origen' => 'OTRO'], $this->comercial);
+        self::assertSame(['OTRO', 'Sin indicar'], [$edited['origen'], $edited['origenLabel']], 'puede quedarse sin indicar');
+        self::assertSame('F250454AA | COMM0023', $this->app->leadRepository()->find($id)['campana'], 'la campaña no se borra al editar');
+
+        $service->update($id, ['nombre' => 'Eva María', 'telefono' => '612345678'], $this->comercial);
+        self::assertSame('OTRO', $this->app->leadRepository()->find($id)['origen'], 'sin enviar origen se mantiene');
+
+        self::assertSame('EMAGISTER', $service->update($id, ['nombre' => 'Eva María', 'telefono' => '612345678', 'origen' => 'EMAGISTER'], $this->comercial)['origen']);
+        $this->expectExceptionMessage('origen');
+        $service->update($id, ['nombre' => 'Eva María', 'telefono' => '612345678', 'origen' => 'OTRO'], $this->comercial);
     }
 
     public function testEdicionRegistraLosCamposCambiados(): void

@@ -113,7 +113,8 @@ final class LeadWorkflow
     public function discard(LeadState $state, string $reason): Transition
     {
         $this->assertOpen($state);
-        $reason = trim($reason) === '' ? 'Descartado manualmente' : trim($reason);
+        // motivo_descarte es VARCHAR(255).
+        $reason = trim($reason) === '' ? 'Descartado manualmente' : mb_substr(trim($reason), 0, 255);
 
         return new Transition(
             $state->with([

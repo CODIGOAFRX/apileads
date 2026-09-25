@@ -7,6 +7,7 @@ namespace Leads\Application;
 use DateTimeImmutable;
 use Leads\Core\Clock;
 use Leads\Core\HttpException;
+use Leads\Core\Input;
 use Leads\Domain\Lead\ActivityType;
 use Leads\Domain\Mail\Attachment;
 use Leads\Domain\Mail\MailException;
@@ -242,7 +243,7 @@ final class MailService
     {
         $studies = $lead['estudios'] ?? [];
         $names = array_column($studies, 'nombre');
-        $sender = (string) ($viewer['nombre'] ?? 'Equipo de admisiones');
+        $sender = Input::text($viewer, 'nombre', 'Equipo de admisiones');
         $variables = [
             'nombre' => $lead['nombre'],
             'nombre_completo' => trim($lead['nombre'] . ' ' . $lead['apellidos']),

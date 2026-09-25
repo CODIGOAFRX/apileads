@@ -69,8 +69,8 @@ final class LeadController extends Controller
     {
         return Response::json($this->app->leads()->registerCall(
             $request->intParam('id'),
-            (string) $request->input('resultado', ''),
-            $request->input('nota'),
+            $request->text('resultado'),
+            $request->optionalText('nota'),
             $request->user(),
         ));
     }
@@ -79,8 +79,8 @@ final class LeadController extends Controller
     {
         return Response::json($this->app->leads()->scheduleCall(
             $request->intParam('id'),
-            (string) $request->input('fecha', ''),
-            $request->input('nota'),
+            $request->text('fecha'),
+            $request->optionalText('nota'),
             $request->user(),
         ));
     }
@@ -94,20 +94,20 @@ final class LeadController extends Controller
     {
         return Response::json($this->app->leads()->scheduleAppointment(
             $request->intParam('id'),
-            (string) $request->input('fecha', ''),
-            $request->input('nota'),
+            $request->text('fecha'),
+            $request->optionalText('nota'),
             $request->user(),
         ));
     }
 
     public function enroll(Request $request): Response
     {
-        return Response::json($this->app->leads()->enroll($request->intParam('id'), $request->input('nota'), $request->user()));
+        return Response::json($this->app->leads()->enroll($request->intParam('id'), $request->optionalText('nota'), $request->user()));
     }
 
     public function discard(Request $request): Response
     {
-        return Response::json($this->app->leads()->discard($request->intParam('id'), (string) $request->input('motivo', ''), $request->user()));
+        return Response::json($this->app->leads()->discard($request->intParam('id'), $request->text('motivo'), $request->user()));
     }
 
     public function reopen(Request $request): Response
@@ -117,7 +117,7 @@ final class LeadController extends Controller
 
     public function note(Request $request): Response
     {
-        return Response::json($this->app->leads()->addNote($request->intParam('id'), (string) $request->input('texto', ''), $request->user()));
+        return Response::json($this->app->leads()->addNote($request->intParam('id'), $request->text('texto'), $request->user()));
     }
 
     public function whatsapp(Request $request): Response
@@ -127,8 +127,8 @@ final class LeadController extends Controller
 
     public function export(Request $request): Response
     {
-        $name = 'leads-' . ($request->query('bandeja') ?: 'pendientes') . '-' . date('Y-m-d') . '.csv';
-        $this->audit($request, AuditService::EXPORTACION, 'Exporta leads a CSV (' . ($request->query('bandeja') ?: 'pendientes') . ')', ['filtros' => $request->allQuery()]);
+        $name = 'leads-' . ($request->queryText('bandeja') ?: 'pendientes') . '-' . date('Y-m-d') . '.csv';
+        $this->audit($request, AuditService::EXPORTACION, 'Exporta leads a CSV (' . ($request->queryText('bandeja') ?: 'pendientes') . ')', ['filtros' => $request->allQuery()]);
 
         return Response::download($this->app->exports()->csv($request->allQuery()), $name, 'text/csv; charset=utf-8');
     }

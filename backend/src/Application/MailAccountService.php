@@ -6,6 +6,7 @@ namespace Leads\Application;
 
 use Leads\Core\Clock;
 use Leads\Core\HttpException;
+use Leads\Core\Input;
 use Leads\Infrastructure\Mail\ImapClient;
 use Leads\Infrastructure\Mail\ImapSettings;
 use Leads\Infrastructure\Mail\MimeBuilder;
@@ -49,7 +50,7 @@ final class MailAccountService
         $this->assertUser($userId);
         $existing = $this->accounts->findByUser($userId);
         $values = $this->validate($data);
-        $password = (string) ($data['password'] ?? '');
+        $password = Input::text($data, 'password');
         if ($password === '' && $existing === null) {
             throw new \InvalidArgumentException('Escribe la contraseña del buzón');
         }
@@ -75,7 +76,7 @@ final class MailAccountService
     {
         $this->assertUser($userId);
         $values = $this->validate($data);
-        $password = (string) ($data['password'] ?? '');
+        $password = Input::text($data, 'password');
         if ($password === '') {
             $existing = $this->accounts->findByUser($userId) ?? throw new \InvalidArgumentException('Escribe la contraseña del buzón');
             $password = $this->password($existing);
@@ -117,28 +118,28 @@ final class MailAccountService
     /** Datos del formulario (API) → columnas de cuenta_correo. */
     private function validate(array $data): array
     {
-        $email = mb_strtolower(trim((string) ($data['email'] ?? '')));
+        $email = mb_strtolower(trim(Input::text($data, 'email')));
         if (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($email) > 190) {
             throw new \InvalidArgumentException('Indica una dirección de correo válida');
         }
-        $username = trim((string) ($data['usuario'] ?? '')) ?: $email;
+        $username = trim(Input::text($data, 'usuario')) ?: $email;
         if (mb_strlen($username) > 190 || preg_match('/[\x00-\x1F]/', $username)) {
             throw new \InvalidArgumentException('El nombre de usuario del buzón no es válido');
         }
 
         $smtpHost = self::host($data['smtpHost'] ?? '', 'Indica el servidor de correo saliente (p. ej. estaciondiseno.es)');
         $smtpPort = self::port($data['smtpPuerto'] ?? 465, 'saliente');
-        $encryption = (string) ($data['smtpCifrado'] ?? '') ?: ($smtpPort === 465 ? 'ssl' : 'tls');
+        $encryption = Input::text($data, 'smtpCifrado') ?: ($smtpPort === 465 ? 'ssl' : 'tls');
         if (!in_array($encryption, SmtpTransport::ENCRYPTIONS, true)) {
             throw new \InvalidArgumentException('La seguridad del servidor saliente debe ser SSL, STARTTLS o ninguna');
         }
 
         $saveCopy = (bool) ($data['guardarEnviados'] ?? false);
-        $imapHost = trim((string) ($data['imapHost'] ?? ''));
+        $imapHost = trim(Input::text($data, 'imapHost'));
         if ($imapHost !== '' || $saveCopy) {
             $imapHost = self::host($imapHost, 'Indica el servidor de correo entrante para guardar la copia en Enviados');
         }
-        $folder = trim((string) ($data['carpetaEnviados'] ?? ''));
+        $folder = trim(Input::text($data, 'carpetaEnviados'));
         if (mb_strlen($folder) > 190 || preg_match('/[\x00-\x1F"\\\\]/', $folder)) {
             throw new \InvalidArgumentException('El nombre de la carpeta de Enviados no es válido');
         }

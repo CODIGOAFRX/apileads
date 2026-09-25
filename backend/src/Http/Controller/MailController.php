@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Leads\Http\Controller;
 
 use Leads\Core\HttpException;
+use Leads\Core\Input;
 use Leads\Core\Request;
 use Leads\Core\Response;
 
@@ -37,9 +38,9 @@ final class MailController extends Controller
     {
         $this->app->mail()->saveTemplate(
             $this->optionalId($request->input('estudioId')),
-            (string) $request->input('asunto', ''),
-            (string) $request->input('cuerpoHtml', ''),
-            ($request->input('clave') ?? '') === '' ? null : (string) $request->input('clave'),
+            $request->text('asunto'),
+            $request->text('cuerpoHtml'),
+            $request->optionalText('clave') ?: null,
         );
 
         return Response::json($this->app->mail()->templates());
@@ -67,7 +68,7 @@ final class MailController extends Controller
         return Response::json($this->app->mail()->attachToTemplate(
             $request->intParam('id'),
             (string) $file['tmp_name'],
-            (string) ($file['name'] ?? 'dossier.pdf'),
+            Input::text($file, 'name', 'dossier.pdf'),
         ));
     }
 

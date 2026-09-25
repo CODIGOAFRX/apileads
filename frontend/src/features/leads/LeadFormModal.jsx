@@ -4,13 +4,13 @@ import { useApp } from '../../AppContext.js'
 import { Icon } from '../../components/Icon.jsx'
 import { Modal } from '../../components/Modal.jsx'
 import { useToast } from '../../components/Toasts.jsx'
-import { Alert, Field, Spinner, StudyPicker } from '../../components/ui.jsx'
-import { ORIGINS, displayName } from '../../lib/leads.js'
+import { Alert, ChoicePicker, Field, Spinner, StudyPicker } from '../../components/ui.jsx'
+import { displayName, selectableOrigins } from '../../lib/leads.js'
 import { StudyModal } from '../settings/CatalogSettings.jsx'
 
 const EMPTY = {
   nombre: '', apellidos: '', email: '', telefono: '', ubicacion: '', interes: '',
-  estudioIds: [], origen: 'TELEFONO', campana: '', centroId: '', comentarios: '',
+  estudioIds: [], origen: '', centroId: '', comentarios: '',
 }
 
 function fromLead(lead) {
@@ -23,7 +23,6 @@ function fromLead(lead) {
     interes: lead.interes || '',
     estudioIds: (lead.estudios || []).map((s) => s.id),
     origen: lead.origen,
-    campana: lead.campana || '',
     centroId: lead.centro?.id || '',
     comentarios: lead.comentarios || '',
   }
@@ -31,7 +30,7 @@ function fromLead(lead) {
 
 /** Alta manual y edición. Si el correo o el teléfono ya existen, ofrece abrir o completar el existente. */
 export function LeadFormModal({ lead, section, onClose, onSaved, onOpenExisting }) {
-  const { catalog, reloadCatalog, isAdmin } = useApp()
+  const { catalog, reloadCatalog } = useApp()
   const toast = useToast()
   const editing = Boolean(lead)
   const [form, setForm] = useState(() => (editing ? fromLead(lead) : EMPTY))
@@ -45,12 +44,17 @@ export function LeadFormModal({ lead, section, onClose, onSaved, onOpenExisting 
   const studyCreated = async (study) => {
     setNewStudy(false)
     await reloadCatalog().catch(() => {})
-    setForm((current) => ({ ...current, estudioIds: [...current.estudioIds, study.id] }))
+    // Nuevo o ya existente (si lo había), queda marcado en el lead, sin repetirlo.
+    setForm((current) => ({ ...current, estudioIds: [...new Set([...current.estudioIds, study.id])] }))
   }
 
   const hasContact = form.nombre.trim() || form.apellidos.trim() || form.email.trim() || form.telefono.trim()
 
   const save = async (merge = false) => {
+    if (!form.origen) {
+      setError('Elige de dónde viene el lead (origen)')
+      return
+    }
     setBusy(true)
     setError('')
     try {
@@ -117,12 +121,6 @@ export function LeadFormModal({ lead, section, onClose, onSaved, onOpenExisting 
           </Field>
           <Field label="Correo"><input className="ed-input" type="email" value={form.email} onChange={set('email')} autoComplete="off" /></Field>
           <Field label="Ubicación"><input className="ed-input" value={form.ubicacion} onChange={set('ubicacion')} placeholder="Ciudad o provincia" /></Field>
-          <Field label="Origen">
-            <select className="ed-select" value={form.origen} onChange={set('origen')}>
-              {ORIGINS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
-            </select>
-          </Field>
-          <Field label="Campaña / formulario"><input className="ed-input" value={form.campana} onChange={set('campana')} /></Field>
           {centers.length > 1 && (
             <Field label="Centro">
               <select className="ed-select" value={form.centroId} onChange={set('centroId')}>
@@ -133,15 +131,18 @@ export function LeadFormModal({ lead, section, onClose, onSaved, onOpenExisting 
           )}
         </div>
 
+        <Field label="Origen (elige uno)" hint={form.origen === 'OTRO' ? 'Lead antiguo sin origen: puedes dejarlo así o elegir uno' : undefined}>
+          <ChoicePicker label="Origen" options={selectableOrigins(catalog.origenes)} value={form.origen}
+            onChange={(origen) => { setForm({ ...form, origen }); setError('') }} />
+        </Field>
+
         <Field label="Estudios de interés">
           <StudyPicker studies={activeStudies} value={form.estudioIds} onChange={set('estudioIds')} />
-          {isAdmin && (
-            <div>
-              <button type="button" className="ed-btn ed-btn--sm" onClick={() => setNewStudy(true)}>
-                <Icon name="plus" size={13} /> Nuevo estudio
-              </button>
-            </div>
-          )}
+          <div>
+            <button type="button" className="ed-btn ed-btn--sm" onClick={() => setNewStudy(true)}>
+              <Icon name="plus" size={13} /> No está en la lista: crear estudio
+            </button>
+          </div>
         </Field>
         {newStudy && <StudyModal study={{}} onClose={() => setNewStudy(false)} onSaved={studyCreated} />}
         {editing && form.interes && (

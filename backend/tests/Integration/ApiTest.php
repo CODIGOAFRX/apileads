@@ -63,7 +63,7 @@ final class ApiTest extends DatabaseTestCase
         $admin = $this->token('admin@test.es');
 
         self::assertSame(403, $this->call('GET', '/api/usuarios', [], $comercial)->status());
-        self::assertSame(403, $this->call('POST', '/api/estudios', ['nombre' => 'X'], $comercial)->status());
+        self::assertSame(403, $this->call('PUT', '/api/estudios/1', ['nombre' => 'X', 'tipo' => 'GRADO'], $comercial)->status());
         self::assertSame(200, $this->call('GET', '/api/usuarios', [], $admin)->status());
         self::assertSame(200, $this->call('GET', '/api/catalogo', [], $comercial)->status());
 
@@ -79,11 +79,11 @@ final class ApiTest extends DatabaseTestCase
     {
         $token = $this->token('marta@test.es');
 
-        $created = $this->call('POST', '/api/leads', ['nombre' => 'Eva', 'telefono' => '612345678', 'estudioIds' => [5]], $token);
+        $created = $this->call('POST', '/api/leads', ['nombre' => 'Eva', 'telefono' => '612345678', 'estudioIds' => [5], 'origen' => 'FERIA'], $token);
         self::assertSame(201, $created->status());
         $id = $created->data()['lead']['id'];
 
-        $duplicate = $this->call('POST', '/api/leads', ['nombre' => 'Eva 2', 'telefono' => '+34612345678'], $token);
+        $duplicate = $this->call('POST', '/api/leads', ['nombre' => 'Eva 2', 'telefono' => '+34612345678', 'origen' => 'WEB'], $token);
         self::assertSame(409, $duplicate->status());
         self::assertSame($id, $duplicate->data()['detalles']['duplicado']['id']);
 
@@ -154,4 +154,21 @@ final class ApiTest extends DatabaseTestCase
         self::assertSame($dossier['tamano'], strlen($pdf->body()));
         self::assertSame(404, $this->call('GET', '/api/adjuntos/9999', [], $comercial)->status());
     }
+
+    public function testUnaComercialPuedeCrearEstudiosPeroNoCambiarlos(): void
+    {
+        $comercial = $this->token('marta@test.es');
+        $created = $this->call('POST', '/api/estudios', ['nombre' => 'Curso de Figma', 'tipo' => 'CURSO'], $comercial);
+        self::assertSame(201, $created->status());
+        $id = $created->data()['id'];
+
+        self::assertSame(409, $this->call('POST', '/api/estudios', ['nombre' => 'curso de figma'], $comercial)->status());
+        self::assertSame(403, $this->call('PUT', "/api/estudios/{$id}", ['nombre' => 'X', 'tipo' => 'CURSO'], $comercial)->status());
+        self::assertSame(403, $this->call('DELETE', "/api/estudios/{$id}", [], $comercial)->status());
+        self::assertSame(403, $this->call('POST', "/api/estudios/{$id}/alias", ['alias' => 'figma'], $comercial)->status());
+
+        $catalog = array_column($this->call('GET', '/api/catalogo', [], $comercial)->data()['estudios'], null, 'id');
+        self::assertSame('Marta Comercial', $catalog[$id]['creadoPor']);
+    }
 }
+

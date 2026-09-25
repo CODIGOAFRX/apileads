@@ -1,4 +1,5 @@
 // Piezas pequeñas de interfaz reutilizadas en toda la aplicación.
+import { cloneElement, isValidElement, useId } from 'react'
 import { Icon } from './Icon.jsx'
 import { cn } from '../lib/cn.js'
 import { STATUS_TONE } from '../lib/leads.js'
@@ -24,11 +25,16 @@ export function Alert({ tone = 'warn', children }) {
   )
 }
 
+/** Campo con su etiqueta. Si dentro hay un solo input/select/textarea, la etiqueta queda asociada a él. */
 export function Field({ label, hint, error, children, htmlFor }) {
+  const autoId = useId()
+  const single = isValidElement(children) && ['input', 'select', 'textarea'].includes(children.type)
+  const id = htmlFor ?? (single ? children.props.id ?? autoId : undefined)
+  const control = single && !children.props.id ? cloneElement(children, { id }) : children
   return (
     <div className="ed-field">
-      {label && <label className="ed-label" htmlFor={htmlFor}>{label}</label>}
-      {children}
+      {label && <label className="ed-label" htmlFor={id}>{label}</label>}
+      {control}
       {error ? <span className="ed-error-text">{error}</span> : hint && <span className="ed-hint">{hint}</span>}
     </div>
   )
@@ -71,6 +77,20 @@ export function StudyList({ lead, max = 3 }) {
 
 export function StatusTag({ lead }) {
   return <span className={`ed-tag ed-tag--${STATUS_TONE[lead.estado] || 'ghost'}`}>{lead.estadoLabel}</span>
+}
+
+/** Elección de una sola opción entre botones (p. ej. el origen del lead). */
+export function ChoicePicker({ options, value, onChange, label }) {
+  return (
+    <div className="ed-studypick ed-studypick--plain" role="radiogroup" aria-label={label}>
+      {options.map((option) => (
+        <button key={option.id} type="button" role="radio" aria-checked={value === option.id} aria-pressed={value === option.id}
+          onClick={() => onChange(option.id)}>
+          {option.label}
+        </button>
+      ))}
+    </div>
+  )
 }
 
 /** Selector de estudios con los colores de cada titulación. */

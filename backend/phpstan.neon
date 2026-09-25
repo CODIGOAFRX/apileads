@@ -1,0 +1,21 @@
+# Análisis estático: encuentra errores sin ejecutar el código.
+#   docker compose exec app sh -c 'cd backend && vendor/bin/phpstan'
+includes:
+    - vendor/phpstan/phpstan-phpunit/extension.neon
+
+parameters:
+    level: 6
+    # El servidor (Plesk) puede tener PHP 8.1: nada de funciones o sintaxis más nuevas en src.
+    phpVersion: 80100
+    paths:
+        - src
+        - bin
+        - database/migrations
+        - public
+        - tests
+    tmpDir: storage/phpstan
+    # Los datos llegan de PDO, JSON y ficheros: los @return de los comentarios no garantizan nada.
+    treatPhpDocTypesAsCertain: false
+    ignoreErrors:
+        # Tipar el contenido de cada array (array<string, mixed>…) no aporta aquí: los datos vienen de PDO y JSON.
+        - identifier: missingType.iterableValue

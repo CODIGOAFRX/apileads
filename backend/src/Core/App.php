@@ -200,7 +200,7 @@ final class App
 
     public function catalog(): CatalogService
     {
-        return $this->once(CatalogService::class, fn () => new CatalogService($this->catalogRepository()));
+        return $this->once(CatalogService::class, fn () => new CatalogService($this->catalogRepository(), $this->clock()));
     }
 
     public function exports(): ExportService

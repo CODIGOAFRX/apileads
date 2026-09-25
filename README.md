@@ -34,7 +34,9 @@ de la web, Facebook, Instagram, ferias… Misma estética y arquitectura que la
 | **Duplicados**: mismo correo o teléfono → se completa el lead existente (y si estaba descartado vuelve a pendientes) | `LeadService::ingest` |
 | **Plantilla** descargable en Excel (con desplegables) y CSV | `Infrastructure/Spreadsheet/ImportTemplate.php` |
 | Historial por lead (quién, cuándo, qué) y notas | `lead_actividad` |
-| Usuarios (admin / comercial), estudios con color, centros y plantillas de correo por estudio. Administración también puede crear un estudio nuevo desde el alta de un lead o desde la importación | `features/settings/*` |
+| Usuarios (admin / comercial), estudios con color, centros y plantillas de correo por estudio | `features/settings/*` |
+| **Origen** del lead: se elige uno (Web, Redes sociales, Referencias, Año pasado, Feria, Colegios, AprendeMás, Emagister, TuMaster, EducaWeb). Es obligatorio al dar de alta; los antiguos sin origen salen como «Sin indicar». Al importar se reconoce aunque venga escrito de otra forma («Facebook», «IG», «educaweb.com»…) | `Domain/Lead/LeadOrigin.php` |
+| **Crear estudios que falten** (p. ej. cursos cortos): cualquier usuario, desde el alta del lead, la importación o Ajustes → Estudios. Si ya existe (sin mirar tildes ni mayúsculas, o por un alias) se ofrece ese en lugar de duplicarlo. Se guarda quién lo creó; cambiar o borrar estudios es de administración | `CatalogService::saveStudy`, `StudyModal` |
 
 Preparado para el reparto por centros: tablas `centro` y `estudio_centro` y campo `centro_id` en cada lead.
 
@@ -83,21 +85,32 @@ DB_DSN="sqlite:$PWD/backend/storage/local.sqlite" JWT_SECRET=bG9jYWwtc29sby1wYXJ
 En Windows (PowerShell) es lo mismo con `$env:DB_DSN="sqlite:$PWD\backend\storage\local.sqlite"` y las demás
 variables antes de cada comando. SQLite solo para verlo en local: en el servidor se usa MariaDB.
 
-## Pruebas
+## Pruebas y comprobaciones
 
 ```bash
-# Backend (SQLite en memoria)
+# Backend: pruebas (SQLite en memoria) y análisis estático
 docker compose exec app sh -c 'cd backend && vendor/bin/phpunit'
+docker compose exec app sh -c 'cd backend && vendor/bin/phpstan'
 
 # Backend contra MariaDB real (el mismo motor que el servidor)
-docker compose exec -e TEST_DB_DSN="mysql:host=db;dbname=apileads_test;charset=utf8mb4" \
-  -e TEST_DB_USER=apileads -e TEST_DB_PASSWORD=apileads app sh -c 'cd backend && vendor/bin/phpunit'
+docker compose exec -e TEST_DB_DSN="mysql:host=db;dbname=apileads_test;charset=utf8mb4"   -e TEST_DB_USER=apileads -e TEST_DB_PASSWORD=apileads app sh -c 'cd backend && vendor/bin/phpunit'
 
-# Frontend (lógica pura)
-cd frontend && npm test
+# Frontend: revisión (ESLint), pruebas de lógica y de componentes (Vitest + jsdom) y compilación
+cd frontend && npm run check
 ```
+
+En GitHub se ejecuta todo en cada push (`.github/workflows/ci.yml`): backend en PHP 8.1, 8.3 y 8.4 con SQLite y
+MariaDB, PHPStan y el frontend completo.
 
 Las pruebas cubren los puntos clave: flujo de llamadas y fechas de vuelta (incluido fin de semana,
 festivos y cambio de hora), botones disponibles, buscador, importación (Facebook UTF-16, Excel,
 Windows-1252, sin cabecera, filas de título, duplicados, errores por fila), correo (plantillas,
-SMTP, inyección de cabeceras), sesión, permisos y límite de intentos de acceso.
+dossieres, SMTP, IMAP, límite de envíos, inyección de cabeceras), registro de actividad, sesión,
+permisos y límite de intentos de acceso. Además:
+
+- **Resistencia de la API** (`ApiRobustnessTest`): todas las rutas reciben datos mal formados (listas donde va
+  un texto, nulos, números enormes, textos de 20.000 caracteres, inyecciones, UTF-8 roto, ids inexistentes) y
+  ninguna puede responder con un error 500 ni provocar un aviso de PHP. Cada ruta parte del mismo estado.
+- **Ficheros basura al importar** (`ImportRobustnessTest`): vacíos, binarios, zips rotos, HTML con extensión xls…
+- **Componentes** (frontend): alta de lead y orígenes, menú de llamada (teclas, doble clic, reserva), envío de
+  correo (cuenta atrás, modo pruebas, errores), creación de estudios, red de seguridad y cliente HTTP.

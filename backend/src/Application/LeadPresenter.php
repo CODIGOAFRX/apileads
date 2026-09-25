@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Leads\Application;
 
+use Leads\Core\Input;
 use Leads\Domain\Lead\Inbox;
 use Leads\Domain\Lead\LeadActionPolicy;
 use Leads\Domain\Lead\LeadOrigin;
@@ -88,7 +89,7 @@ final class LeadPresenter
 
         return strtr($this->whatsappTemplate, [
             '{nombre}' => $row['nombre'] !== '' ? $row['nombre'] : '',
-            '{comercial}' => strtok((string) ($viewer['nombre'] ?? ''), ' ') ?: '',
+            '{comercial}' => strtok(Input::text($viewer, 'nombre'), ' ') ?: '',
             '{estudio}' => $studyNames !== '' ? $studyNames : 'nuestros estudios',
         ]);
     }

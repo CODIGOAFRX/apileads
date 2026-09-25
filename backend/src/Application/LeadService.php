@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Leads\Core\Clock;
 use Leads\Core\HttpException;
+use Leads\Core\Input;
 use Leads\Domain\Lead\ActivityType;
 use Leads\Domain\Lead\CallOutcome;
 use Leads\Domain\Lead\LeadInput;
@@ -83,7 +84,7 @@ final class LeadService
      */
     public function create(array $data, array $viewer): array
     {
-        $input = $this->inputFromForm($data, LeadOrigin::MANUAL);
+        $input = $this->inputFromForm($data, $this->formOrigin($data, null));
         if (!$input->hasContactData()) {
             throw new \InvalidArgumentException('Indica al menos un nombre, un correo o un teléfono');
         }
@@ -103,7 +104,7 @@ final class LeadService
     public function update(int $id, array $data, array $viewer): array
     {
         $current = $this->findOrFail($id);
-        $input = $this->inputFromForm($data, LeadOrigin::tryFrom((string) $current['origen']) ?? LeadOrigin::OTRO);
+        $input = $this->inputFromForm($data, $this->formOrigin($data, LeadOrigin::tryFrom((string) $current['origen']) ?? LeadOrigin::OTRO));
         if (!$input->hasContactData()) {
             throw new \InvalidArgumentException('Indica al menos un nombre, un correo o un teléfono');
         }
@@ -115,7 +116,7 @@ final class LeadService
         }
 
         $now = $this->clock->now();
-        $values = $this->contactColumns($input) + [
+        $values = array_diff_key($this->contactColumns($input), ['campana' => true]) + [
             'origen' => $input->origin->value,
             'comentarios' => $input->comments,
             'centro_id' => $input->centerId,
@@ -374,10 +375,27 @@ final class LeadService
         }
     }
 
-    private function inputFromForm(array $data, LeadOrigin $defaultOrigin): LeadInput
+    /**
+     * Origen elegido en el formulario: uno de los seleccionables. Al editar un lead
+     * antiguo «Sin indicar» puede quedarse como está (o no enviarse).
+     */
+    private function formOrigin(array $data, ?LeadOrigin $current): LeadOrigin
     {
-        $studyIds = $this->catalog->existingStudyIds(array_map('intval', (array) ($data['estudioIds'] ?? [])));
-        $centerId = isset($data['centroId']) && (int) $data['centroId'] > 0 ? (int) $data['centroId'] : null;
+        if (!array_key_exists('origen', $data) && $current !== null) {
+            return $current;
+        }
+        $origin = is_string($data['origen'] ?? null) ? LeadOrigin::tryFrom($data['origen']) : null;
+        if ($origin !== null && ($origin->isSelectable() || $origin === $current)) {
+            return $origin;
+        }
+
+        throw new \InvalidArgumentException('Elige de dónde viene el lead (origen)');
+    }
+
+    private function inputFromForm(array $data, LeadOrigin $origin): LeadInput
+    {
+        $studyIds = $this->catalog->existingStudyIds(Input::ids($data['estudioIds'] ?? []));
+        $centerId = Input::id($data['centroId'] ?? null);
         if ($centerId !== null && !$this->catalog->centerExists($centerId)) {
             throw new \InvalidArgumentException('El centro indicado no existe');
         }
@@ -390,8 +408,7 @@ final class LeadService
             'ubicacion' => $data['ubicacion'] ?? null,
             'interes' => $data['interes'] ?? null,
             'estudioIds' => $studyIds,
-            'origen' => LeadOrigin::tryFrom((string) ($data['origen'] ?? '')) ?? $defaultOrigin,
-            'campana' => $data['campana'] ?? null,
+            'origen' => $origin,
             'comentarios' => $data['comentarios'] ?? null,
             'centroId' => $centerId,
         ]);

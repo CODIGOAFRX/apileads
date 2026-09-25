@@ -35,17 +35,18 @@ export const STUDY_TYPES = [
   { id: 'CURSO', label: 'Cursos' },
 ]
 
-export const ORIGINS = [
-  { id: 'WEB', label: 'Web' },
-  { id: 'FACEBOOK', label: 'Facebook' },
-  { id: 'INSTAGRAM', label: 'Instagram' },
-  { id: 'GOOGLE', label: 'Google' },
-  { id: 'TIKTOK', label: 'TikTok' },
-  { id: 'FERIA', label: 'Feria / evento' },
-  { id: 'TELEFONO', label: 'Teléfono' },
-  { id: 'MANUAL', label: 'Alta manual' },
-  { id: 'OTRO', label: 'Otro' },
-]
+// Los orígenes vienen del servidor (catalog.origenes): [{ id, label, seleccionable }].
+
+/** Los que se pueden elegir al dar de alta un lead (uno solo). */
+export function selectableOrigins(origins) {
+  return (origins || []).filter((o) => o.seleccionable)
+}
+
+/** Nombre de un origen; los antiguos que ya no existen salen como «Sin indicar». */
+export function originLabel(origins, id) {
+  if (!id) return '—'
+  return (origins || []).find((o) => o.id === id)?.label ?? 'Sin indicar'
+}
 
 export const EMPTY_FILTERS = {
   q: '',

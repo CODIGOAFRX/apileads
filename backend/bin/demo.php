@@ -57,7 +57,7 @@ $intereses = [
     'Gráfica audiovisual', 'animación 3D', 'Máster profesional gráfico', 'gráfica interactiva',
     'Máster moda', 'ilustración', 'diseño gráfico', 'Informática', '',
 ];
-$origenes = ['WEB', 'WEB', 'WEB', 'FACEBOOK', 'FACEBOOK', 'INSTAGRAM', 'GOOGLE', 'FERIA'];
+$origenes = ['WEB', 'WEB', 'WEB', 'REDES_SOCIALES', 'REDES_SOCIALES', 'REFERENCIAS', 'ANO_PASADO', 'FERIA', 'COLEGIOS', 'EMAGISTER', 'EDUCAWEB'];
 $campanas = ['Captación 26/27', 'Jornada puertas abiertas', 'Remarketing septiembre', null];
 $comentarios = ['Pregunta por becas', 'Quiere ver las aulas', 'Viene de otro ciclo', 'Solo por la tarde', null, null];
 

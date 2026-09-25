@@ -46,3 +46,17 @@ test('nombre propuesto para un estudio nuevo', () => {
   assert.equal(suggestStudyName('2025/18/47/EDD1/0270 MF1002_2 Inglés profesional'), 'Inglés profesional')
   assert.equal(suggestStudyName('Máster en Fotografía'), 'Máster en Fotografía')
 })
+
+test('orígenes: solo se eligen los seleccionables y los antiguos salen como «Sin indicar»', async () => {
+  const { originLabel, selectableOrigins } = await import('../src/lib/leads.js')
+  const origins = [
+    { id: 'WEB', label: 'Web', seleccionable: true },
+    { id: 'EDUCAWEB', label: 'EducaWeb', seleccionable: true },
+    { id: 'OTRO', label: 'Sin indicar', seleccionable: false },
+  ]
+  assert.deepEqual(selectableOrigins(origins).map((o) => o.id), ['WEB', 'EDUCAWEB'])
+  assert.deepEqual(selectableOrigins(undefined), [])
+  assert.equal(originLabel(origins, 'EDUCAWEB'), 'EducaWeb')
+  assert.equal(originLabel(origins, 'FACEBOOK'), 'Sin indicar')
+  assert.equal(originLabel(origins, ''), '—')
+})

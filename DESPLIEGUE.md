@@ -19,6 +19,7 @@ Igual que la Biblioteca: se sube la carpeta del proyecto por FTP/SFTP y la raíz
 ## Primera instalación
 
 1. **Subdominio** en Plesk, p. ej. `leads.estaciondiseno.es`, con PHP 8.1 o superior (FPM) y SSL (Let's Encrypt).
+   Las dependencias están fijadas para PHP 8.1 (`config.platform` en `composer.json`) y se prueban en 8.1, 8.3 y 8.4.
    Extensiones necesarias: `pdo_mysql`, `mbstring`, `zip`, `xml`, `gd` (vienen activas por defecto en Plesk).
 2. **Base de datos** MariaDB: Plesk → Bases de datos → Añadir (`apileads`, usuario `apileads`).
 3. **Buzón** para enviar la información, p. ej. `admisiones@estaciondiseno.es` (Plesk → Correo).
@@ -53,6 +54,7 @@ Igual que la Biblioteca: se sube la carpeta del proyecto por FTP/SFTP y la raíz
    Los dossieres PDF van dentro de la base de datos (tabla `adjunto`): la migración de correos los carga
    desde `backend/database/correos/`, así que esa carpeta tiene que subirse antes de ejecutarla.
 3. Si cambiaron las dependencias PHP: `composer install --no-dev --optimize-autoloader` y sube `backend/vendor`.
+   **Siempre con `--no-dev`**: las herramientas de pruebas (PHPUnit, PHPStan) no van al servidor.
 
 ## Nunca se sube
 

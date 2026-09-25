@@ -12,6 +12,7 @@ backend/storage/logs/*
 !backend/storage/logs/.gitkeep
 backend/.phpunit.cache/
 backend/storage/*.sqlite
+backend/storage/phpstan/
 *.log
 
 # Capturas de trabajo (no son código)

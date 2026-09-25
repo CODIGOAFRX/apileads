@@ -5,7 +5,7 @@ import { Icon } from '../../components/Icon.jsx'
 import { useToast } from '../../components/Toasts.jsx'
 import { Alert, Field, Loading, Spinner } from '../../components/ui.jsx'
 import { formatDateTime, plural } from '../../lib/format.js'
-import { ORIGINS } from '../../lib/leads.js'
+import { originLabel, selectableOrigins } from '../../lib/leads.js'
 import { ColumnMapping, SampleTable, StudyResolver } from './ImportPreview.jsx'
 
 const ACCEPT = '.csv,.txt,.tsv,.xlsx,.xls,.xlsm,.ods'
@@ -178,7 +178,7 @@ export function ImportPage({ onDone }) {
               <Field label="Origen de estos leads" hint="Se usa en las filas que no indican su origen">
                 <select className="ed-select" value={options.origen} onChange={(e) => updateOptions({ origen: e.target.value }, true)}>
                   <option value="">Sin especificar</option>
-                  {ORIGINS.filter((o) => o.id !== 'MANUAL').map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+                  {selectableOrigins(catalog.origenes).map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
                 </select>
               </Field>
               {catalog.centros.length > 1 && (
@@ -264,7 +264,7 @@ export function ImportPage({ onDone }) {
                     <tr key={item.id}>
                       <td>{formatDateTime(item.fecha)}</td>
                       <td>{item.archivo}</td>
-                      <td>{ORIGINS.find((o) => o.id === item.origen)?.label ?? '—'}</td>
+                      <td>{originLabel(catalog.origenes, item.origen)}</td>
                       <td>{item.usuario ?? '—'}</td>
                       <td>{item.totalFilas}</td>
                       <td>{item.creados}</td>

@@ -114,6 +114,24 @@ final class Request
         return $this->body;
     }
 
+    /** Campo del cuerpo como texto ('' si no viene). Ver Input. */
+    public function text(string $key, string $default = ''): string
+    {
+        return Input::text($this->body, $key, $default);
+    }
+
+    /** Campo del cuerpo como texto, o null si no viene. */
+    public function optionalText(string $key): ?string
+    {
+        return Input::optionalText($this->body, $key);
+    }
+
+    /** Parámetro de la URL como texto, o null si no viene. */
+    public function queryText(string $key): ?string
+    {
+        return Input::optionalText($this->query, $key);
+    }
+
     public function header(string $name): ?string
     {
         return $this->headers[strtolower($name)] ?? null;

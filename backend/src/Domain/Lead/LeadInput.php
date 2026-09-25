@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Leads\Domain\Lead;
 
 use DateTimeImmutable;
+use Leads\Core\Input;
 use Leads\Domain\Shared\Email;
 use Leads\Domain\Shared\PhoneNumber;
 use Leads\Domain\Shared\Text;
@@ -38,26 +39,26 @@ final class LeadInput
     /** Construye la entrada a partir de valores sueltos, limpiándolos. */
     public static function fromValues(array $v): self
     {
-        $rawPhone = Text::nullIfEmpty(isset($v['telefono']) ? (string) $v['telefono'] : null);
-        $studyIds = array_values(array_unique(array_filter(array_map('intval', (array) ($v['estudioIds'] ?? [])))));
+        $rawPhone = Text::nullIfEmpty(Input::optionalText($v, 'telefono'));
+        $studyIds = Input::ids($v['estudioIds'] ?? []);
 
         return new self(
-            firstName: Text::truncate(Text::properName((string) ($v['nombre'] ?? '')), 160) ?? '',
-            lastName: Text::truncate(Text::properName((string) ($v['apellidos'] ?? '')), 160) ?? '',
-            email: Text::truncate(Email::clean(isset($v['email']) ? (string) $v['email'] : null), 190),
+            firstName: Text::truncate(Text::properName(Input::text($v, 'nombre')), 160) ?? '',
+            lastName: Text::truncate(Text::properName(Input::text($v, 'apellidos')), 160) ?? '',
+            email: Text::truncate(Email::clean(Input::optionalText($v, 'email')), 190),
             phone: PhoneNumber::tryParse($rawPhone),
             rawPhone: Text::truncate($rawPhone, 40),
-            location: Text::truncate(Text::nullIfEmpty(isset($v['ubicacion']) ? (string) $v['ubicacion'] : null), 190),
-            interestText: Text::truncate(Text::nullIfEmpty(isset($v['interes']) ? (string) $v['interes'] : null), 255),
+            location: Text::truncate(Text::nullIfEmpty(Input::optionalText($v, 'ubicacion')), 190),
+            interestText: Text::truncate(Text::nullIfEmpty(Input::optionalText($v, 'interes')), 255),
             studyIds: $studyIds,
             origin: ($v['origen'] ?? null) instanceof LeadOrigin
                 ? $v['origen']
-                : (LeadOrigin::fromText(isset($v['origen']) ? (string) $v['origen'] : null) ?? LeadOrigin::OTRO),
-            campaign: Text::truncate(Text::nullIfEmpty(isset($v['campana']) ? (string) $v['campana'] : null), 190),
-            comments: Text::nullIfEmpty(isset($v['comentarios']) ? (string) $v['comentarios'] : null),
+                : (LeadOrigin::fromText(Input::optionalText($v, 'origen')) ?? LeadOrigin::OTRO),
+            campaign: Text::truncate(Text::nullIfEmpty(Input::optionalText($v, 'campana')), 190),
+            comments: Text::nullIfEmpty(Input::optionalText($v, 'comentarios')),
             extra: is_array($v['extra'] ?? null) ? $v['extra'] : [],
             sourceDate: $v['fechaOrigen'] ?? null,
-            centerId: isset($v['centroId']) && (int) $v['centroId'] > 0 ? (int) $v['centroId'] : null,
+            centerId: Input::id($v['centroId'] ?? null),
         );
     }
 

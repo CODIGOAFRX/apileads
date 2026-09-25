@@ -7,6 +7,7 @@ namespace Leads\Http\Controller;
 use Leads\Core\App;
 use Leads\Core\Env;
 use Leads\Core\HttpException;
+use Leads\Core\Input;
 use Leads\Core\Request;
 use Leads\Domain\Import\Table;
 
@@ -35,7 +36,7 @@ abstract class Controller
         if ((int) $file['size'] > $maxBytes) {
             throw HttpException::badRequest('El fichero supera el máximo de ' . Env::int('IMPORT_MAX_MB', 10) . ' MB');
         }
-        $name = basename((string) ($file['name'] ?? 'leads.csv'));
+        $name = basename(Input::text($file, 'name', 'leads.csv'));
 
         return [$this->app->spreadsheetReader()->read((string) $file['tmp_name'], $name), $name];
     }

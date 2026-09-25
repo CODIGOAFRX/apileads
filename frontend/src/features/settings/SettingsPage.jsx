@@ -4,9 +4,12 @@ import { AccountSettings } from './AccountSettings.jsx'
 import { UsersSettings } from './UsersSettings.jsx'
 import { CatalogSettings } from './CatalogSettings.jsx'
 import { MailSettings } from './MailSettings.jsx'
+import { StudiesOverview } from './StudiesOverview.jsx'
 
 const SECTIONS = [
   { id: 'cuenta', label: 'Mi cuenta', admin: false, Component: AccountSettings },
+  // Las comerciales ven los estudios y pueden añadir los que falten; administración los gestiona en «Estudios y centros».
+  { id: 'estudios-lista', label: 'Estudios', admin: false, onlyTeam: true, Component: StudiesOverview },
   { id: 'usuarios', label: 'Usuarios', admin: true, Component: UsersSettings },
   { id: 'estudios', label: 'Estudios y centros', admin: true, Component: CatalogSettings },
   { id: 'correos', label: 'Correos', admin: true, Component: MailSettings },
@@ -14,7 +17,7 @@ const SECTIONS = [
 
 export function SettingsPage() {
   const { isAdmin } = useApp()
-  const available = SECTIONS.filter((s) => isAdmin || !s.admin)
+  const available = SECTIONS.filter((s) => (isAdmin ? !s.onlyTeam : !s.admin))
   const [active, setActive] = useState(available[isAdmin ? 1 : 0].id)
   const { Component } = available.find((s) => s.id === active)
 
