@@ -10,7 +10,8 @@ export const authApi = {
 export const leadsApi = {
   list: (query) => http.get('/leads', query),
   counters: () => http.get('/leads/contadores'),
-  get: (id) => http.get(`/leads/${id}`),
+  // vista: la comercial abre la ficha (queda en el registro de actividad).
+  get: (id, vista = false) => http.get(`/leads/${id}`, { vista }),
   create: (data) => http.post('/leads', data),
   update: (id, data) => http.put(`/leads/${id}`, data),
   lock: (id) => http.post(`/leads/${id}/bloqueo`),
@@ -24,10 +25,17 @@ export const leadsApi = {
   reopen: (id) => http.post(`/leads/${id}/reapertura`),
   note: (id, texto) => http.post(`/leads/${id}/notas`, { texto }),
   whatsapp: (id) => http.post(`/leads/${id}/whatsapp`),
+  // Ha pulsado el número para llamar (enlace tel:).
+  dial: (id) => http.post(`/leads/${id}/marcar`),
   mailPreview: (id) => http.get(`/leads/${id}/correo`),
   // asunto y html solo si la comercial ha retocado este correo.
   sendMail: (id, asunto, html) => http.post(`/leads/${id}/correo`, { asunto, html }),
   export: (query) => http.download('/leads/exportar', query, 'leads.csv'),
+}
+
+export const activityApi = {
+  day: (fecha, usuario) => http.get('/actividad', { fecha, usuario }),
+  export: (fecha, usuario) => http.download('/actividad/exportar', { fecha, usuario }, `actividad-${fecha}.csv`),
 }
 
 export const importApi = {

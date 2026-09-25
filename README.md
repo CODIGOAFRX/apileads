@@ -20,8 +20,10 @@ de la web, Facebook, Instagram, ferias… Misma estética y arquitectura que la
 | **Tick verde** en la fila para marcar interesado sin llamar (p. ej. si ha contestado por WhatsApp) | `LeadWorkflow::markInterested` |
 | Sin teléfono → solo **enviar información por correo** | `LeadActionPolicy.php` |
 | **Interesado** → pasa a interesados y se ofrece enviar el correo con la información de sus estudios. Si no sabemos qué quiere estudiar se envía el correo **«Sin estudio»** (Ajustes → Correos) | `Application/MailService.php` |
-| **Dossier adjunto**: cada plantilla lleva su PDF (Grado Diseño Gráfico, Grado Diseño Moda, CFGS Ilustración y Máster Ilustración ya vienen con el texto de la comercial y el dossier 26-27). Con varios estudios se envía la genérica con el bloque y el dossier de cada uno | `MailService::compose`, `database/correos/`, Ajustes → Correos |
+| **Dossier adjunto**: cada plantilla lleva su PDF (Grado Diseño Gráfico, Grado Diseño Moda, CFGS Ilustración, Máster Oficial de Ilustración y los másteres profesionales de Diseño Gráfico Digital e IA, Moda e Ilustración Avanzada ya vienen con el texto de la comercial y el dossier 26-27). Con varios estudios se envía la genérica con el bloque y el dossier de cada uno | `MailService::compose`, `database/correos/`, Ajustes → Correos |
 | **Buzón de cada comercial**: administración le asigna su correo (Ajustes → Usuarios → icono de correo, con los datos de Plesk). Sus correos salen de su dirección y se guarda copia en su carpeta de Enviados por IMAP. Botón «Probar conexión». Sin buzón, sale del general (`MAIL_*`) | `MailAccountService`, `Infrastructure/Mail/PersonalMailbox.php`, `ImapClient.php` |
+| **Un correo cada 72 segundos** en toda la aplicación (el servidor admite 50 por hora y así no acabamos en spam). No hay cola: el botón muestra cuánto falta. Configurable con `MAIL_SEGUNDOS_ENTRE_ENVIOS` | `MailService::takeTurn`, `ThrottleRepository` |
+| **Actividad** (solo administración): qué ha hecho cada comercial cada día. Resumen por persona (primera y última acción, llamadas y resultados, WhatsApp, correos, notas, interesados, citas…) y cada acción con su hora: entrar, abrir la ficha, abrir la llamada, pulsar el teléfono, resultado, WhatsApp, correo, notas, cambios de estado, importaciones, exportaciones y cambios de ajustes. Exportable a CSV | `AuditService`, `AuditRepository`, `features/activity/ActivityPage.jsx` |
 | Antes de enviar, el **correo se puede retocar** (texto y asunto) solo para ese envío, p. ej. «la matrícula cierra el viernes» | `MailService::personalize`, `components/HtmlPreview.jsx` |
 | **No interesado** → descartados. Nunca se borra; se puede exportar a CSV y reabrir | `LeadWorkflow::registerCall` |
 | Cita agendada y matriculado (embudo completo) | `LeadWorkflow` |
@@ -62,8 +64,8 @@ Se crean solos la base de datos, los 10 estudios con sus colores y **45 leads de
   `set DB_DSN=sqlite:/app/backend/storage/local.sqlite` y luego `docker compose up` (en PowerShell:
   `$env:DB_DSN="sqlite:/app/backend/storage/local.sqlite"`).
 - **Empezar sin datos de ejemplo:** `DEMO=0 docker compose up` (en PowerShell: `$env:DEMO=0; docker compose up`)
-- Los correos no se envían: se escriben en `backend/storage/logs/correos.log` (también los de las comerciales con buzón propio;
-  «Probar conexión» sí conecta de verdad con su servidor, sin enviar nada).
+- Los correos del buzón general no se envían (`MAIL_TRANSPORT=log`): se escriben en `backend/storage/logs/correos.log` y la
+  aplicación avisa de que no han salido. **Los de un usuario con buzón propio sí salen de verdad**, también en local.
 - Para tocar el diseño con recarga automática: `cd frontend && npm install && npm run dev` → http://localhost:5173
   (envía `/api` al contenedor). Al terminar, `npm run build` regenera `frontend/dist`, que es lo que se sube al servidor.
 

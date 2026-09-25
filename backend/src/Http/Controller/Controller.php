@@ -51,6 +51,12 @@ abstract class Controller
         return Request::decodeJson((string) ($raw ?? ''));
     }
 
+    /** Anota en el registro de actividad lo que acaba de hacer quien llama. */
+    protected function audit(Request $request, string $type, string $summary, array $detail = [], ?int $leadId = null, int $dedupeSeconds = 0): void
+    {
+        $this->app->audit()->record($request->userId(), $type, $summary, $detail, $leadId, $request->ip(), $dedupeSeconds);
+    }
+
     protected function optionalId(mixed $value): ?int
     {
         return $value === null || $value === '' || (int) $value <= 0 ? null : (int) $value;

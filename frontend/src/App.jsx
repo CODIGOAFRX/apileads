@@ -10,11 +10,13 @@ import { Loading } from './components/ui.jsx'
 import { LeadsPage } from './features/leads/LeadsPage.jsx'
 import { ImportPage } from './features/import/ImportPage.jsx'
 import { SettingsPage } from './features/settings/SettingsPage.jsx'
+import { ActivityPage } from './features/activity/ActivityPage.jsx'
 import isotipo from './assets/isotipo-estacion.png'
 
 const PAGES = [
   { id: 'leads', label: 'Leads', icon: 'list' },
   { id: 'importar', label: 'Importar', icon: 'upload' },
+  { id: 'actividad', label: 'Actividad', icon: 'clock', admin: true },
   { id: 'ajustes', label: 'Ajustes', icon: 'settings' },
 ]
 
@@ -64,7 +66,7 @@ export default function App() {
                 <span className="ed-display ed-header__title">Leads</span>
               </button>
               <nav className="ed-header__nav" aria-label="Secciones">
-                {PAGES.map((p) => (
+                {PAGES.filter((p) => !p.admin || session.usuario.rol === 'ADMIN').map((p) => (
                   <button key={p.id} type="button" className="ed-btn ed-btn--sm" data-on={page === p.id} onClick={() => setPage(p.id)}
                     aria-current={page === p.id ? 'page' : undefined}>
                     <Icon name={p.icon} size={14} />
@@ -85,6 +87,7 @@ export default function App() {
                 {page === 'leads' && <LeadsPage />}
                 {page === 'importar' && <ImportPage onDone={() => setPage('leads')} />}
                 {page === 'ajustes' && <SettingsPage />}
+                {page === 'actividad' && session.usuario.rol === 'ADMIN' && <ActivityPage />}
               </>
             )}
           </main>

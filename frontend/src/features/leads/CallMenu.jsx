@@ -123,7 +123,7 @@ export function CallMenu({ lead, anchor, onClose, onDone, onMail }) {
         <p className="ed-label">Llamada · intento {lead.intentos + 1}</p>
         <p className="ed-strong" style={{ fontSize: 18, margin: '2px 0 0' }}>{displayName(lead)}</p>
         <div className="ed-row" style={{ gap: 6, marginTop: 8 }}>
-          <a href={lead.telUrl} className="ed-btn ed-btn--sm ed-btn--acc">
+          <a href={lead.telUrl} className="ed-btn ed-btn--sm ed-btn--acc" onClick={() => leadsApi.dial(lead.id).catch(() => {})}>
             <Icon name="phone" size={13} /> {lead.telefono}
           </a>
           {can('whatsapp') && (

@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Leads\Tests\Integration;
 
+use Leads\Core\App;
 use Leads\Core\HttpException;
+use Leads\Domain\Mail\MailException;
+use Leads\Domain\Mail\MailTransport;
+use Leads\Domain\Mail\Message;
 
 final class MailServiceTest extends DatabaseTestCase
 {
@@ -75,16 +79,23 @@ final class MailServiceTest extends DatabaseTestCase
         self::assertSame(['Dossier Grado Diseño Gráfico 26-27.pdf'], $lead['historial'][0]['detalle']['adjuntos']);
     }
 
-    public function testLosCuatroEstudiosTienenTextoYDossier(): void
+    public function testCadaEstudioConCorreoTieneSuTextoYSuDossier(): void
     {
         $templates = array_column($this->app->mail()->templates()['plantillas'], null, 'estudioId');
+        $avanzada = (int) $this->pdo->query("SELECT id FROM estudio WHERE nombre = 'Máster Profesional Ilustración Avanzada'")->fetchColumn();
 
-        foreach ([1 => 'Moda', 2 => 'Gráfico', 4 => 'Ilustración', 5 => 'Máster'] as $studyId => $word) {
+        foreach ([1 => 'Moda', 2 => 'Gráfico', 4 => 'Ilustración', 5 => 'Máster', 6 => 'Moda', 7 => 'Digital e IA', $avanzada => 'Ilustración Avanzada'] as $studyId => $word) {
             self::assertStringContainsString($word, $templates[$studyId]['asunto']);
             self::assertStringContainsString('{{inicio_bloque}}', $templates[$studyId]['cuerpoHtml']);
             self::assertStringEndsWith('.pdf', $templates[$studyId]['adjunto']['nombre']);
             self::assertGreaterThan(500_000, $templates[$studyId]['adjunto']['tamano']);
         }
+        self::assertStringContainsString('titulación propia (no reglada)', $templates[7]['cuerpoHtml']);
+        self::assertSame(
+            $avanzada,
+            (int) $this->pdo->query("SELECT estudio_id FROM estudio_alias WHERE alias = 'master ilustracion avanzada'")->fetchColumn(),
+            'las importaciones lo reconocen',
+        );
     }
 
     public function testSubirCambiarYQuitarElDossier(): void
@@ -101,10 +112,10 @@ final class MailServiceTest extends DatabaseTestCase
         $templates = array_column($mail->templates()['plantillas'], null, 'estudioId');
         self::assertSame('Dossier Audiovisual 26-27.pdf', $templates[3]['adjunto']['nombre']);
         self::assertSame("%PDF-1.4\nprueba", $mail->attachment($templates[3]['adjunto']['id'])['contenido']);
-        self::assertSame(5, (int) $this->pdo->query('SELECT COUNT(*) FROM adjunto')->fetchColumn(), 'el sustituido se borra');
+        self::assertSame(8, (int) $this->pdo->query('SELECT COUNT(*) FROM adjunto')->fetchColumn(), 'el sustituido se borra');
 
         $mail->detachFromTemplate($template['id']);
-        self::assertSame(4, (int) $this->pdo->query('SELECT COUNT(*) FROM adjunto')->fetchColumn());
+        self::assertSame(7, (int) $this->pdo->query('SELECT COUNT(*) FROM adjunto')->fetchColumn());
 
         file_put_contents($file, 'no soy un pdf');
         try {
@@ -230,6 +241,53 @@ final class MailServiceTest extends DatabaseTestCase
         $mail->sendInfo($id, $this->comercial, null, '<p><br></p>');
     }
 
+    public function testComoMuchoUnCorreoCada72SegundosEnTodaLaAplicacion(): void
+    {
+        $mail = $this->app->mail();
+        $eva = $this->lead(['nombre' => 'Eva', 'email' => 'eva@example.com', 'estudioIds' => [2]]);
+        $luis = $this->lead(['nombre' => 'Luis', 'email' => 'luis@example.com', 'estudioIds' => [1]]);
+        self::assertSame(0, $mail->preview($eva, $this->comercial)['esperaSegundos']);
+
+        $mail->sendInfo($eva, $this->comercial);
+        self::assertSame(72, $mail->preview($luis, $this->admin)['esperaSegundos'], 'el turno es de toda la aplicación');
+
+        $this->clock->advance('+71 seconds');
+        try {
+            $mail->sendInfo($luis, $this->admin);
+            self::fail('Debía esperar');
+        } catch (HttpException $e) {
+            self::assertSame(429, $e->status());
+            self::assertSame(['esperaSegundos' => 1], $e->details());
+            self::assertStringContainsString('un correo cada 72 segundos', $e->getMessage());
+        }
+        self::assertCount(1, $this->mailer->sent, 'no se encola nada');
+
+        $this->clock->advance('+1 second');
+        $mail->sendInfo($luis, $this->admin);
+        self::assertCount(2, $this->mailer->sent);
+    }
+
+    public function testSiElEnvioFallaSeDevuelveElTurno(): void
+    {
+        $failing = new class implements MailTransport {
+            public function send(Message $message): void
+            {
+                throw new MailException('Connection refused');
+            }
+        };
+        $app = new App(dirname(__DIR__, 2), $this->pdo, $this->clock, $failing);
+        $id = $this->lead(['nombre' => 'Eva', 'email' => 'eva@example.com', 'estudioIds' => [2]]);
+
+        try {
+            $app->mail()->sendInfo($id, $this->comercial);
+            self::fail('Debía fallar');
+        } catch (HttpException $e) {
+            self::assertSame(502, $e->status());
+        }
+        self::assertSame(0, $app->mail()->preview($id, $this->comercial)['esperaSegundos']);
+        self::assertSame('ERROR', $this->pdo->query('SELECT estado FROM envio_correo')->fetchColumn());
+    }
+
     public function testEvitaDoblesEnviosYCorreosNoValidos(): void
     {
         $mail = $this->app->mail();
@@ -259,12 +317,12 @@ final class MailServiceTest extends DatabaseTestCase
         $mail->saveTemplate(3, 'Audiovisual 2', '<p>y</p>');
 
         $templates = $mail->templates()['plantillas'];
-        self::assertCount(7, $templates);
-        self::assertSame([null, 'sin-estudio', null, null, null, null, null], array_column($templates, 'clave'));
-        self::assertSame([null, null, 1, 2, 3, 4, 5], array_column($templates, 'estudioId'));
+        self::assertCount(10, $templates);
+        self::assertSame([null, 'sin-estudio'], array_slice(array_column($templates, 'clave'), 0, 2));
+        self::assertSame([null, null, 1, 2, 3, 4, 5, 6, 7], array_slice(array_column($templates, 'estudioId'), 0, 9));
         self::assertSame('Audiovisual 2', $templates[4]['asunto']);
 
         $mail->deleteTemplate(3);
-        self::assertCount(6, $mail->templates()['plantillas']);
+        self::assertCount(9, $mail->templates()['plantillas']);
     }
 }

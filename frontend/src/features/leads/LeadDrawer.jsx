@@ -24,7 +24,11 @@ export function LeadDrawer({ id, section, onClose, onChanged }) {
   const callButton = useRef(null)
 
   const load = useCallback(() => leadsApi.get(id).then(setLead).catch((err) => setError(err.message)), [id])
-  useEffect(() => { setLead(null); load() }, [load])
+  // Al abrir la ficha se anota en el registro; las recargas tras una acción, no.
+  useEffect(() => {
+    setLead(null)
+    leadsApi.get(id, true).then(setLead).catch((err) => setError(err.message))
+  }, [id])
 
   const apply = (updated, message) => {
     setLead(updated)
@@ -128,7 +132,7 @@ export function LeadDrawer({ id, section, onClose, onChanged }) {
       <section className="ed-panel ed-panel--flat ed-drawer__section">
         <dl className="ed-kv">
           <dt>Teléfono</dt>
-          <dd>{lead.telefono ? (lead.telUrl ? <a href={lead.telUrl}>{lead.telefono}</a> : <span className="ed-lead__invalid">{lead.telefono} (no reconocido)</span>) : '—'}</dd>
+          <dd>{lead.telefono ? (lead.telUrl ? <a href={lead.telUrl} onClick={() => leadsApi.dial(lead.id).catch(() => {})}>{lead.telefono}</a> : <span className="ed-lead__invalid">{lead.telefono} (no reconocido)</span>) : '—'}</dd>
           <dt>Correo</dt>
           <dd>{lead.email ? <span className={lead.emailValido ? '' : 'ed-lead__invalid'}>{lead.email}{!lead.emailValido && ' (formato dudoso)'}</span> : '—'}</dd>
           <dt>Ubicación</dt><dd>{lead.ubicacion || '—'}</dd>

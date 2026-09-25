@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Leads\Http\Controller;
 
+use Leads\Application\AuditService;
 use Leads\Core\Request;
 use Leads\Core\Response;
 
@@ -20,7 +21,16 @@ final class ImportController extends Controller
     {
         [$table, $name] = $this->uploadedTable($request);
 
-        return Response::json($this->app->imports()->import($table, $name, $this->jsonField($request, 'opciones'), $request->userId()), 201);
+        $result = $this->app->imports()->import($table, $name, $this->jsonField($request, 'opciones'), $request->userId());
+        $this->audit($request, AuditService::IMPORTACION, sprintf(
+            'Importa %s: %d nuevos, %d repetidos, %d omitidos',
+            $name,
+            $result['creados'],
+            $result['fusionados'],
+            $result['omitidos'],
+        ), ['importacion' => $result['importacionId']]);
+
+        return Response::json($result, 201);
     }
 
     public function template(Request $request): Response

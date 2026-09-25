@@ -123,7 +123,8 @@ final class MailRepository extends BaseRepository
         $this->execute('DELETE FROM adjunto WHERE id NOT IN (SELECT adjunto_id FROM plantilla_correo WHERE adjunto_id IS NOT NULL)');
     }
 
-    public function logDelivery(int $leadId, ?int $userId, string $to, string $subject, ?string $error, DateTimeImmutable $at, ?string $from = null): void
+    /** $simulated: MAIL_TRANSPORT=log, no ha salido de verdad (no cuenta como enviado). */
+    public function logDelivery(int $leadId, ?int $userId, string $to, string $subject, ?string $error, DateTimeImmutable $at, ?string $from = null, bool $simulated = false): void
     {
         $this->insert('envio_correo', [
             'lead_id' => $leadId,
@@ -131,7 +132,7 @@ final class MailRepository extends BaseRepository
             'remitente' => $from,
             'destinatario' => $to,
             'asunto' => mb_substr($subject, 0, 190),
-            'estado' => $error === null ? 'ENVIADO' : 'ERROR',
+            'estado' => $error !== null ? 'ERROR' : ($simulated ? 'SIMULADO' : 'ENVIADO'),
             'error' => $error === null ? null : mb_substr($error, 0, 500),
             'creado_en' => DbTime::toDb($at),
         ]);

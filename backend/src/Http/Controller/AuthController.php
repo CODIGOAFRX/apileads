@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Leads\Http\Controller;
 
+use Leads\Application\AuditService;
 use Leads\Core\Request;
 use Leads\Core\Response;
 
@@ -11,11 +12,14 @@ final class AuthController extends Controller
 {
     public function login(Request $request): Response
     {
-        return Response::json($this->app->auth()->login(
+        $session = $this->app->auth()->login(
             (string) $request->input('email', ''),
             (string) $request->input('password', ''),
             $request->ip(),
-        ));
+        );
+        $this->app->audit()->record($session['usuario']['id'], AuditService::ENTRADA, 'Entra en la aplicación', [], null, $request->ip());
+
+        return Response::json($session);
     }
 
     public function me(Request $request): Response

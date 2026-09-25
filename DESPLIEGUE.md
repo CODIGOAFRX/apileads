@@ -38,6 +38,9 @@ Igual que la Biblioteca: se sube la carpeta del proyecto por FTP/SFTP y la raíz
    SMTP 465, IMAP 993) más la contraseña del buzón. Pulsa **Probar conexión** antes de guardar. Si da error
    de certificado «no de confianza», desmarca «Comprobar el certificado». La contraseña se guarda cifrada con
    `MAIL_ACCOUNTS_KEY` (o `JWT_SECRET`): si cambias esa clave, hay que volver a escribirlas.
+   La aplicación envía como mucho un correo cada 72 segundos (`MAIL_SEGUNDOS_ENTRE_ENVIOS`): si Plesk tiene otro
+   límite de envíos por hora, ajústalo (3600 / límite).
+10. **Actividad** (menú superior, solo administración): lo que ha hecho cada comercial cada día.
 
 > **No hace falta ninguna tarea programada para "las 9:00"**: la vuelta de los que no contestaron se
 > calcula en cada consulta, y el listado se refresca solo cada minuto.

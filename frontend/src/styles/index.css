@@ -70,6 +70,7 @@
 [data-section="todos"] { --acc: var(--peri); }
 [data-section="importar"] { --acc: var(--orange); }
 [data-section="ajustes"] { --acc: var(--lime); }
+[data-section="actividad"] { --acc: var(--cyan); }
 
 * { box-sizing: border-box; }
 html { scrollbar-gutter: stable; }

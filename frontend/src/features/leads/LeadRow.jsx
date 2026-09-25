@@ -67,7 +67,9 @@ function LeadRowView({ lead, onOpen, onChanged, onFollowUp }) {
         {lead.telefono && (
           <div className={`ed-lead__line ${lead.telefonoValido ? '' : 'ed-lead__invalid'}`}>
             <Icon name="phone" size={13} />
-            {lead.telUrl ? <a href={lead.telUrl}>{lead.telefono}</a> : <span title="Número no reconocido">{lead.telefono}</span>}
+            {lead.telUrl
+              ? <a href={lead.telUrl} onClick={() => leadsApi.dial(lead.id).catch(() => {})}>{lead.telefono}</a>
+              : <span title="Número no reconocido">{lead.telefono}</span>}
           </div>
         )}
         {lead.email && (

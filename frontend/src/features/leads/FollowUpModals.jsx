@@ -22,10 +22,23 @@ function openWhatsapp(lead) {
   leadsApi.whatsapp(lead.id).catch(() => {})
 }
 
+/** Cuenta atrás en segundos hasta 0 (para el turno de envío de correos). */
+function useCountdown() {
+  const [seconds, setSeconds] = useState(0)
+  useEffect(() => {
+    if (seconds <= 0) return undefined
+    const timer = setTimeout(() => setSeconds((s) => Math.max(0, s - 1)), 1000)
+    return () => clearTimeout(timer)
+  }, [seconds])
+  return [seconds, setSeconds]
+}
+
 /**
  * Vista previa y envío del correo de información según los estudios del lead.
  * Con «andWhatsapp», al aceptar se abre también WhatsApp. Se abre en el mismo
  * clic (antes de esperar al envío) para que el navegador no lo bloquee.
+ * Toda la aplicación envía como mucho un correo cada 72 s: si no toca, el
+ * botón muestra cuánto falta (no se encola nada).
  */
 export function MailModal({ lead, section, onClose, onSent, andWhatsapp = false }) {
   const toast = useToast()
@@ -37,11 +50,17 @@ export function MailModal({ lead, section, onClose, onSent, andWhatsapp = false 
   const [subject, setSubject] = useState(null)
   const [html, setHtml] = useState(null)
   const [version, setVersion] = useState(0)
+  const [wait, setWait] = useCountdown()
   const edited = (subject !== null && subject !== preview?.asunto) || html !== null
 
   useEffect(() => {
-    leadsApi.mailPreview(lead.id).then(setPreview).catch((err) => setError(err.message))
-  }, [lead.id])
+    leadsApi.mailPreview(lead.id)
+      .then((data) => {
+        setPreview(data)
+        setWait(data.esperaSegundos || 0)
+      })
+      .catch((err) => setError(err.message))
+  }, [lead.id, setWait])
 
   const undoChanges = () => {
     setSubject(null)
@@ -50,6 +69,7 @@ export function MailModal({ lead, section, onClose, onSent, andWhatsapp = false 
   }
 
   const send = async () => {
+    if (wait > 0) return
     if (andWhatsapp && !whatsappOpened) {
       openWhatsapp(lead)
       setWhatsappOpened(true)
@@ -62,10 +82,17 @@ export function MailModal({ lead, section, onClose, onSent, andWhatsapp = false 
         subject !== null && subject !== preview.asunto ? subject : undefined,
         html ?? undefined,
       )
-      toast.ok(`Información enviada a ${preview.para}`)
+      if (updated.envio?.simulado) {
+        toast.error('Modo pruebas: el correo NO ha salido (MAIL_TRANSPORT=log). Configura tu buzón en Ajustes → Usuarios.')
+      } else {
+        toast.ok(`Información enviada a ${preview.para}`)
+      }
+      if (updated.envio?.aviso) toast.info(updated.envio.aviso)
       onSent(updated)
     } catch (err) {
-      setError(err.message)
+      // Otra comercial acaba de enviar uno: se muestra la cuenta atrás, no un error.
+      if (err.status === 429) setWait(err.details?.esperaSegundos || preview.intervaloSegundos || 72)
+      else setError(err.message)
       setSending(false)
     }
   }
@@ -78,22 +105,22 @@ export function MailModal({ lead, section, onClose, onSent, andWhatsapp = false 
   const footer = !andWhatsapp ? (
     <>
       <button type="button" className="ed-btn" onClick={onClose}>Ahora no</button>
-      <button type="button" className="ed-btn ed-btn--solid" onClick={send} disabled={!preview || sending} data-autofocus>
-        {sending ? <Spinner /> : <Icon name="send" size={14} />} Enviar correo
+      <button type="button" className="ed-btn ed-btn--solid" onClick={send} disabled={!preview || sending || wait > 0} data-autofocus>
+        {sending ? <Spinner /> : <Icon name={wait > 0 ? 'clock' : 'send'} size={14} />} {wait > 0 ? `Enviar en ${wait} s` : 'Enviar correo'}
       </button>
     </>
   ) : whatsappOpened ? (
     <>
       <button type="button" className="ed-btn" onClick={onClose}>Cerrar</button>
-      <button type="button" className="ed-btn ed-btn--solid" onClick={send} disabled={!preview || sending}>
-        {sending ? <Spinner /> : <Icon name="send" size={14} />} Reintentar envío
+      <button type="button" className="ed-btn ed-btn--solid" onClick={send} disabled={!preview || sending || wait > 0}>
+        {sending ? <Spinner /> : <Icon name={wait > 0 ? 'clock' : 'send'} size={14} />} {wait > 0 ? `Reintentar en ${wait} s` : 'Reintentar envío'}
       </button>
     </>
   ) : (
     <>
       <button type="button" className="ed-btn" onClick={onlyWhatsapp}><Icon name="whatsapp" size={14} /> Solo WhatsApp</button>
-      <button type="button" className="ed-btn ed-btn--solid" onClick={send} disabled={!preview || sending} data-autofocus>
-        {sending ? <Spinner /> : <Icon name="send" size={14} />} Enviar y abrir WhatsApp
+      <button type="button" className="ed-btn ed-btn--solid" onClick={send} disabled={!preview || sending || wait > 0} data-autofocus>
+        {sending ? <Spinner /> : <Icon name={wait > 0 ? 'clock' : 'send'} size={14} />} {wait > 0 ? `Enviar en ${wait} s` : 'Enviar y abrir WhatsApp'}
       </button>
     </>
   )
@@ -133,6 +160,17 @@ export function MailModal({ lead, section, onClose, onSent, andWhatsapp = false 
               ) : <span className="ed-muted">Sin dossier</span>}
             </dd>
           </dl>
+          {preview.simulado && (
+            <Alert tone="error">
+              Modo pruebas: este correo <strong>no saldrá de verdad</strong> (no tienes buzón propio y el servidor tiene MAIL_TRANSPORT=log).
+              Pide a administración que configure tu buzón en Ajustes → Usuarios.
+            </Alert>
+          )}
+          {wait > 0 && (
+            <Alert tone="info">
+              Para que no nos marquen como spam, la aplicación envía como mucho un correo cada {preview.intervaloSegundos} segundos. Podrás enviar este en {wait} s.
+            </Alert>
+          )}
           {preview.ultimoEnvio && <Alert>Ya se le envió información el {formatDateTime(preview.ultimoEnvio)}.</Alert>}
           <div className="ed-row ed-row--between">
             <span className="ed-hint">Puedes escribir en el correo (p. ej. «la matrícula cierra el viernes»): el cambio solo vale para este envío.</span>

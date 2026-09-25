@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Leads\Core;
 
+use Leads\Application\AuditService;
 use Leads\Application\AuthService;
 use Leads\Application\CatalogService;
 use Leads\Application\ExportService;
@@ -26,6 +27,7 @@ use Leads\Infrastructure\Mail\NativeMailTransport;
 use Leads\Infrastructure\Mail\SmtpSettings;
 use Leads\Infrastructure\Mail\SmtpTransport;
 use Leads\Infrastructure\Persistence\ActivityRepository;
+use Leads\Infrastructure\Persistence\AuditRepository;
 use Leads\Infrastructure\Persistence\CatalogRepository;
 use Leads\Infrastructure\Persistence\Database;
 use Leads\Infrastructure\Persistence\ImportRepository;
@@ -33,6 +35,7 @@ use Leads\Infrastructure\Persistence\LeadRepository;
 use Leads\Infrastructure\Persistence\LoginAttemptRepository;
 use Leads\Infrastructure\Persistence\MailAccountRepository;
 use Leads\Infrastructure\Persistence\MailRepository;
+use Leads\Infrastructure\Persistence\ThrottleRepository;
 use Leads\Infrastructure\Persistence\UserRepository;
 use Leads\Infrastructure\Security\JwtService;
 use Leads\Infrastructure\Security\SecretBox;
@@ -167,8 +170,21 @@ final class App
             $this->clock(),
             Env::get('MAIL_REPLY_TO'),
             $this->mailAccounts(),
-            // En local (MAIL_TRANSPORT=log) tampoco sale nada por los buzones de las comerciales.
-            !$this->transportInjected && Env::get('MAIL_TRANSPORT', 'log') !== 'log',
+            // El buzón de una comercial envía siempre de verdad (también en local).
+            !$this->transportInjected,
+            new ThrottleRepository($this->pdo()),
+            Env::int('MAIL_SEGUNDOS_ENTRE_ENVIOS', 72),
+            !$this->transportInjected && Env::get('MAIL_TRANSPORT', 'log') === 'log',
+        ));
+    }
+
+    public function audit(): AuditService
+    {
+        return $this->once(AuditService::class, fn () => new AuditService(
+            new AuditRepository($this->pdo()),
+            new UserRepository($this->pdo()),
+            $this->clock(),
+            $this->timezone(),
         ));
     }
 

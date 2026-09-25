@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Leads\Application;
 
+use DateTimeImmutable;
 use Leads\Core\Clock;
 use Leads\Core\HttpException;
 use Leads\Domain\Lead\ActivityType;
@@ -17,6 +18,7 @@ use Leads\Infrastructure\Mail\PersonalMailbox;
 use Leads\Infrastructure\Persistence\ActivityRepository;
 use Leads\Infrastructure\Persistence\CatalogRepository;
 use Leads\Infrastructure\Persistence\MailRepository;
+use Leads\Infrastructure\Persistence\ThrottleRepository;
 
 /**
  * Correo de información: elige la plantilla según los estudios de interés del
@@ -28,6 +30,9 @@ final class MailService
     /** Evita envíos duplicados por doble clic. */
     private const RESEND_GUARD = '-2 minutes';
 
+    /** Turno de envío compartido por toda la aplicación (ver ThrottleRepository). */
+    private const THROTTLE_KEY = 'correo';
+
     /** Parte de la plantilla de un estudio que se copia en el correo de varios estudios. */
     private const BLOCK = '/\{\{\s*inicio_bloque\s*\}\}(.*?)\{\{\s*fin_bloque\s*\}\}/s';
 
@@ -36,7 +41,12 @@ final class MailService
 
     /**
      * $personalDelivery = false: aunque la comercial tenga buzón, se envía por
-     * $transport (en local con MAIL_TRANSPORT=log y en las pruebas no sale nada).
+     * $transport (solo en las pruebas).
+     * $simulated = true: $transport no envía de verdad (MAIL_TRANSPORT=log); se
+     * dice claramente en lugar de darlo por enviado.
+     * $secondsBetween: como mucho un correo cada tantos segundos en toda la
+     * aplicación, para no pasar del límite del servidor (50 por hora) ni acabar
+     * como spam. Sin cola: si no toca, se avisa de cuánto falta.
      */
     public function __construct(
         private readonly MailRepository $mails,
@@ -49,6 +59,9 @@ final class MailService
         private readonly ?string $replyTo = null,
         private readonly ?MailAccountService $accounts = null,
         private readonly bool $personalDelivery = false,
+        private readonly ?ThrottleRepository $throttle = null,
+        private readonly int $secondsBetween = 72,
+        private readonly bool $simulated = false,
     ) {
     }
 
@@ -56,6 +69,7 @@ final class MailService
     {
         $lead = $this->leads->findOrFail($leadId);
         [$message, $attachmentIds] = $this->compose($lead, $viewer);
+        $personal = $this->personalDelivery && $message->from !== null;
 
         return [
             'de' => $message->from,
@@ -64,7 +78,21 @@ final class MailService
             'html' => $message->html,
             'adjuntos' => $this->attachmentList($attachmentIds),
             'ultimoEnvio' => $this->mails->lastSentAt($leadId),
+            'esperaSegundos' => $this->secondsToWait(),
+            'intervaloSegundos' => $this->secondsBetween,
+            'simulado' => $this->simulated && !$personal,
         ];
+    }
+
+    /** Segundos que faltan para poder enviar otro correo (0 = ya se puede). */
+    public function secondsToWait(): int
+    {
+        $last = $this->throttle?->last(self::THROTTLE_KEY);
+        if ($last === null || $this->secondsBetween <= 0) {
+            return 0;
+        }
+
+        return max(0, $this->secondsBetween - ($this->clock->now()->getTimestamp() - $last->getTimestamp()));
     }
 
     /**
@@ -86,23 +114,58 @@ final class MailService
         $message = $this->personalize($message, $subject, $html)->with(['attachments' => $this->attachments($attachmentIds)]);
         $userId = (int) $viewer['id'];
         $transport = $this->transportFor($userId);
+        $simulated = $this->simulated && !$transport instanceof PersonalMailbox;
+
+        $previous = $this->takeTurn($now);
         try {
             $transport->send($message);
         } catch (MailException $e) {
+            if ($previous !== null) {
+                $this->throttle?->release(self::THROTTLE_KEY, $now, $previous);
+            }
             $this->mails->logDelivery($leadId, $userId, $message->to, $message->subject, $e->getMessage(), $now, $message->from);
             $this->activity->log($leadId, $userId, ActivityType::CORREO, 'Error al enviar la información', ['error' => $e->getMessage()], $now);
             throw new HttpException('No se pudo enviar el correo: ' . $e->getMessage(), 502);
         }
 
-        $this->mails->logDelivery($leadId, $userId, $message->to, $message->subject, null, $now, $message->from);
+        $this->mails->logDelivery($leadId, $userId, $message->to, $message->subject, null, $now, $message->from, $simulated);
         $personalized = $html !== null && trim($html) !== '';
-        $detail = ['para' => $message->to, 'de' => $message->from, 'adjuntos' => array_map(static fn (Attachment $a): string => $a->name, $message->attachments)];
-        if ($transport instanceof PersonalMailbox && $transport->warning !== null) {
-            $detail['aviso'] = $transport->warning;
-        }
-        $this->activity->log($leadId, $userId, ActivityType::CORREO, 'Información enviada' . ($personalized ? ' (retocada)' : '') . ': ' . $message->subject, array_filter($detail), $now);
+        $warning = $transport instanceof PersonalMailbox ? $transport->warning : null;
+        $detail = [
+            'para' => $message->to,
+            'de' => $message->from,
+            'adjuntos' => array_map(static fn (Attachment $a): string => $a->name, $message->attachments),
+            'aviso' => $warning,
+        ];
+        $summary = $simulated
+            ? 'Correo NO enviado (modo pruebas, MAIL_TRANSPORT=log): ' . $message->subject
+            : 'Información enviada' . ($personalized ? ' (retocada)' : '') . ': ' . $message->subject;
+        $this->activity->log($leadId, $userId, ActivityType::CORREO, $summary, array_filter($detail), $now);
 
-        return $this->leads->get($leadId, $viewer);
+        return $this->leads->get($leadId, $viewer) + ['envio' => ['simulado' => $simulated, 'aviso' => $warning]];
+    }
+
+    /**
+     * Reserva el turno de envío o avisa de cuánto falta (429).
+     *
+     * @return ?DateTimeImmutable el envío anterior, para devolver el turno si este falla
+     */
+    private function takeTurn(DateTimeImmutable $now): ?DateTimeImmutable
+    {
+        if ($this->throttle === null || $this->secondsBetween <= 0) {
+            return null;
+        }
+        $previous = $this->throttle->last(self::THROTTLE_KEY);
+        if (!$this->throttle->acquire(self::THROTTLE_KEY, $now, $now->modify("-{$this->secondsBetween} seconds"))) {
+            $wait = max(1, $this->secondsToWait());
+            throw new HttpException(
+                "Para que no nos marquen como spam, se envía como mucho un correo cada {$this->secondsBetween} segundos. Podrás enviarlo en {$wait} s.",
+                429,
+                ['esperaSegundos' => $wait],
+            );
+        }
+
+        return $previous;
     }
 
     public function templates(): array

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Leads\Http\Controller;
 
+use Leads\Application\AuditService;
 use Leads\Core\Request;
 use Leads\Core\Response;
 
@@ -21,7 +22,13 @@ final class LeadController extends Controller
 
     public function show(Request $request): Response
     {
-        return Response::json($this->app->leads()->get($request->intParam('id'), $request->user()));
+        $lead = $this->app->leads()->get($request->intParam('id'), $request->user());
+        // ?vista=1 solo cuando la comercial abre la ficha (no en cada recarga tras una acción).
+        if ($request->query('vista')) {
+            $this->audit($request, AuditService::FICHA, 'Abre la ficha', [], $lead['id'], 120);
+        }
+
+        return Response::json($lead);
     }
 
     public function store(Request $request): Response
@@ -36,7 +43,19 @@ final class LeadController extends Controller
 
     public function lock(Request $request): Response
     {
-        return Response::json($this->app->leads()->lock($request->intParam('id'), $request->user()));
+        $lead = $this->app->leads()->lock($request->intParam('id'), $request->user());
+        $this->audit($request, AuditService::LLAMADA_ABIERTA, 'Abre la llamada', [], $lead['id'], 60);
+
+        return Response::json($lead);
+    }
+
+    /** Ha pulsado el número de teléfono (enlace tel:) para llamar. */
+    public function dial(Request $request): Response
+    {
+        $lead = $this->app->leads()->findOrFail($request->intParam('id'));
+        $this->audit($request, AuditService::MARCADO, 'Pulsa el teléfono para llamar', ['telefono' => $lead['telefono']], (int) $lead['id'], 10);
+
+        return Response::noContent();
     }
 
     public function unlock(Request $request): Response
@@ -109,6 +128,7 @@ final class LeadController extends Controller
     public function export(Request $request): Response
     {
         $name = 'leads-' . ($request->query('bandeja') ?: 'pendientes') . '-' . date('Y-m-d') . '.csv';
+        $this->audit($request, AuditService::EXPORTACION, 'Exporta leads a CSV (' . ($request->query('bandeja') ?: 'pendientes') . ')', ['filtros' => $request->allQuery()]);
 
         return Response::download($this->app->exports()->csv($request->allQuery()), $name, 'text/csv; charset=utf-8');
     }
