@@ -31,60 +31,74 @@ final class SmtpTransport implements MailTransport
                 $settings->port,
                 $settings->encryption === 'ssl',
                 $settings->timeout,
+                $settings->verifyPeer,
             );
     }
 
     public function send(Message $message): void
     {
-        $connection = ($this->connect)();
-        try {
-            $this->conversation($connection, $message);
-        } finally {
-            $connection->close();
-        }
+        $this->deliver($message->to, $this->mime->raw($message, $this->domain()));
     }
 
-    private function conversation(SmtpConnection $smtp, Message $message): void
+    /** Envía un mensaje ya construido (ver MimeBuilder::raw) a $to. */
+    public function deliver(string $to, string $raw): void
     {
-        $from = $this->settings->fromEmail;
-        $domain = substr((string) strrchr($from, '@'), 1) ?: 'localhost';
+        $this->session(function (SmtpConnection $smtp) use ($to, $raw): void {
+            $this->command($smtp, "MAIL FROM:<{$this->clean($this->settings->fromEmail)}>", [250]);
+            $this->command($smtp, "RCPT TO:<{$this->clean($to)}>", [250, 251]);
+            $this->command($smtp, 'DATA', [354]);
+            $this->command($smtp, $this->payload($raw) . "\r\n.", [250], 'DATA');
+        });
+    }
 
-        $this->expect($smtp, [220]);
-        $this->command($smtp, "EHLO {$domain}", [250]);
+    /** Comprueba conexión, cifrado y usuario/contraseña sin enviar nada. */
+    public function verify(): void
+    {
+        $this->session(static function (): void {
+        });
+    }
 
-        if ($this->settings->encryption === 'tls') {
-            $this->command($smtp, 'STARTTLS', [220]);
-            $smtp->enableTls();
+    /** Saludo, cifrado y autenticación; después $work y, al final, QUIT. */
+    private function session(callable $work): void
+    {
+        $smtp = ($this->connect)();
+        try {
+            $domain = $this->domain();
+            $this->expect($smtp, [220]);
             $this->command($smtp, "EHLO {$domain}", [250]);
-        }
 
-        if ($this->settings->username !== '') {
-            $this->command($smtp, 'AUTH LOGIN', [334]);
-            $this->command($smtp, base64_encode($this->settings->username), [334], '(usuario)');
-            $this->command($smtp, base64_encode($this->settings->password), [235], '(contraseña)');
-        }
+            if ($this->settings->encryption === 'tls') {
+                $this->command($smtp, 'STARTTLS', [220]);
+                $smtp->enableTls();
+                $this->command($smtp, "EHLO {$domain}", [250]);
+            }
 
-        $this->command($smtp, "MAIL FROM:<{$this->clean($from)}>", [250]);
-        $this->command($smtp, "RCPT TO:<{$this->clean($message->to)}>", [250, 251]);
-        $this->command($smtp, 'DATA', [354]);
-        $this->command($smtp, $this->payload($message, $domain) . "\r\n.", [250], 'DATA');
+            if ($this->settings->username !== '') {
+                $this->command($smtp, 'AUTH LOGIN', [334]);
+                $this->command($smtp, base64_encode($this->settings->username), [334], '(usuario)');
+                $this->command($smtp, base64_encode($this->settings->password), [235], '(contraseña)');
+            }
 
-        try {
-            $this->command($smtp, 'QUIT', [221]);
-        } catch (MailException) {
-            // El mensaje ya está aceptado; un QUIT fallido no es un error de envío.
+            $work($smtp);
+
+            try {
+                $this->command($smtp, 'QUIT', [221]);
+            } catch (MailException) {
+                // El mensaje ya está aceptado; un QUIT fallido no es un error de envío.
+            }
+        } finally {
+            $smtp->close();
         }
     }
 
-    private function payload(Message $message, string $domain): string
+    private function domain(): string
     {
-        $mime = $this->mime->build($message, $domain);
-        $data = '';
-        foreach ($mime['headers'] as $name => $value) {
-            $data .= "{$name}: {$value}\r\n";
-        }
-        $data .= "\r\n" . $mime['body'];
-        $data = str_replace(["\r\n", "\n"], ["\n", "\r\n"], rtrim($data, "\r\n"));
+        return substr((string) strrchr($this->settings->fromEmail, '@'), 1) ?: 'localhost';
+    }
+
+    private function payload(string $raw): string
+    {
+        $data = str_replace(["\r\n", "\n"], ["\n", "\r\n"], rtrim($raw, "\r\n"));
 
         // Transparencia SMTP: las líneas que empiezan por punto se duplican.
         return (string) preg_replace('/^\./m', '..', $data);

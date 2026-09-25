@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Leads\Infrastructure\Persistence;
 
 use DateTimeImmutable;
+use PDO;
 
 /**
- * Plantillas de correo y registro de envíos. Cada plantilla es de un estudio,
- * la genérica (sin estudio ni clave) o una especial identificada por su clave.
+ * Plantillas de correo, sus adjuntos (el dossier) y registro de envíos. Cada
+ * plantilla es de un estudio, la genérica (sin estudio ni clave) o una especial
+ * identificada por su clave.
  */
 final class MailRepository extends BaseRepository
 {
@@ -25,11 +27,24 @@ final class MailRepository extends BaseRepository
             'estudio' => $r['estudio'],
             'asunto' => $r['asunto'],
             'cuerpoHtml' => $r['cuerpo_html'],
+            'adjunto' => $r['adjunto_id'] === null ? null : [
+                'id' => (int) $r['adjunto_id'],
+                'nombre' => $r['adjunto_nombre'],
+                'tamano' => (int) $r['adjunto_tamano'],
+            ],
             'actualizado' => DbTime::toApi($r['actualizado_en']),
         ], $this->all(
-            'SELECT p.*, e.nombre AS estudio FROM plantilla_correo p LEFT JOIN estudio e ON e.id = p.estudio_id
+            'SELECT p.*, e.nombre AS estudio, a.nombre AS adjunto_nombre, a.tamano AS adjunto_tamano
+             FROM plantilla_correo p
+             LEFT JOIN estudio e ON e.id = p.estudio_id
+             LEFT JOIN adjunto a ON a.id = p.adjunto_id
              ORDER BY CASE WHEN p.estudio_id IS NOT NULL THEN 2 WHEN p.clave IS NULL THEN 0 ELSE 1 END, e.orden, e.nombre'
         ));
+    }
+
+    public function template(int $id): ?array
+    {
+        return $this->one('SELECT * FROM plantilla_correo WHERE id = :id', ['id' => $id]);
     }
 
     /** Plantilla de un estudio o, si $studyId es null, la genérica. */
@@ -59,13 +74,61 @@ final class MailRepository extends BaseRepository
     public function deleteTemplate(int $studyId): void
     {
         $this->execute('DELETE FROM plantilla_correo WHERE estudio_id = :id', ['id' => $studyId]);
+        $this->purgeAttachments();
     }
 
-    public function logDelivery(int $leadId, ?int $userId, string $to, string $subject, ?string $error, DateTimeImmutable $at): void
+    /** Guarda el fichero y lo deja como adjunto de la plantilla (sustituye al anterior). */
+    public function attach(int $templateId, string $name, string $type, string $content, DateTimeImmutable $now): void
+    {
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO adjunto (nombre, tipo, tamano, contenido, creado_en) VALUES (:nombre, :tipo, :tamano, :contenido, :creado)'
+        );
+        $stmt->bindValue('nombre', $name);
+        $stmt->bindValue('tipo', $type);
+        $stmt->bindValue('tamano', strlen($content), PDO::PARAM_INT);
+        $stmt->bindValue('contenido', $content, PDO::PARAM_LOB);
+        $stmt->bindValue('creado', DbTime::toDb($now));
+        $stmt->execute();
+
+        $this->update('plantilla_correo', $templateId, ['adjunto_id' => (int) $this->pdo->lastInsertId()]);
+        $this->purgeAttachments();
+    }
+
+    public function detach(int $templateId): void
+    {
+        $this->update('plantilla_correo', $templateId, ['adjunto_id' => null]);
+        $this->purgeAttachments();
+    }
+
+    /** Datos del adjunto sin el contenido. */
+    public function attachmentInfo(int $id): ?array
+    {
+        return $this->one('SELECT id, nombre, tipo, tamano FROM adjunto WHERE id = :id', ['id' => $id]);
+    }
+
+    /** Adjunto con su contenido. */
+    public function attachment(int $id): ?array
+    {
+        $row = $this->one('SELECT * FROM adjunto WHERE id = :id', ['id' => $id]);
+        if ($row !== null && is_resource($row['contenido'])) {
+            $row['contenido'] = (string) stream_get_contents($row['contenido']);
+        }
+
+        return $row;
+    }
+
+    /** Borra los adjuntos que ya no usa ninguna plantilla. */
+    private function purgeAttachments(): void
+    {
+        $this->execute('DELETE FROM adjunto WHERE id NOT IN (SELECT adjunto_id FROM plantilla_correo WHERE adjunto_id IS NOT NULL)');
+    }
+
+    public function logDelivery(int $leadId, ?int $userId, string $to, string $subject, ?string $error, DateTimeImmutable $at, ?string $from = null): void
     {
         $this->insert('envio_correo', [
             'lead_id' => $leadId,
             'usuario_id' => $userId,
+            'remitente' => $from,
             'destinatario' => $to,
             'asunto' => mb_substr($subject, 0, 190),
             'estado' => $error === null ? 'ENVIADO' : 'ERROR',

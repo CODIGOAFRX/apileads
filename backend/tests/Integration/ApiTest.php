@@ -124,4 +124,34 @@ final class ApiTest extends DatabaseTestCase
         self::assertStringContainsString("'=HYPERLINK", $csv->body(), 'evita inyección de fórmulas');
         self::assertStringStartsWith("\xEF\xBB\xBFID;Nombre;", $csv->body());
     }
+
+    public function testBuzonDeCorreoDeCadaUsuarioYDossier(): void
+    {
+        $comercial = $this->token('marta@test.es');
+        $admin = $this->token('admin@test.es');
+        $path = '/api/usuarios/' . $this->comercial['id'] . '/correo';
+        $account = ['email' => 'marta@estaciondiseno.es', 'password' => 'clave', 'smtpHost' => 'estaciondiseno.es', 'smtpPuerto' => 465];
+
+        self::assertSame(403, $this->call('PUT', $path, $account, $comercial)->status());
+        self::assertNull($this->call('GET', $path, [], $admin)->data()['cuenta']);
+
+        $saved = $this->call('PUT', $path, $account, $admin);
+        self::assertSame(200, $saved->status());
+        self::assertSame('marta@estaciondiseno.es', $saved->data()['cuenta']['email']);
+        self::assertStringNotContainsString('clave', $saved->body());
+
+        $users = array_column($this->call('GET', '/api/usuarios', [], $admin)->data(), 'correoEnvio', 'email');
+        self::assertSame(['admin@test.es' => null, 'marta@test.es' => 'marta@estaciondiseno.es'], $users);
+
+        self::assertSame(204, $this->call('DELETE', $path, [], $admin)->status());
+        self::assertSame(422, $this->call('PUT', $path, ['email' => 'no'] + $account, $admin)->status());
+
+        // Las comerciales pueden ver el dossier que se adjunta.
+        $templates = $this->call('GET', '/api/plantillas', [], $admin)->data()['plantillas'];
+        $dossier = array_column($templates, 'adjunto', 'estudioId')[5];
+        $pdf = $this->call('GET', '/api/adjuntos/' . $dossier['id'], [], $comercial);
+        self::assertSame('application/pdf', $pdf->headers()['Content-Type']);
+        self::assertSame($dossier['tamano'], strlen($pdf->body()));
+        self::assertSame(404, $this->call('GET', '/api/adjuntos/9999', [], $comercial)->status());
+    }
 }

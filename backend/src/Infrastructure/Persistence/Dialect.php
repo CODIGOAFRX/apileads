@@ -14,6 +14,7 @@ use PDO;
  *   {TABLE}   opciones de tabla (motor y cotejamiento)
  *   {BOOL}    booleano
  *   {JSON}    texto largo con JSON
+ *   {BLOB}    fichero binario (hasta 4 GB en MariaDB)
  */
 final class Dialect
 {
@@ -24,6 +25,7 @@ final class Dialect
             '{TABLE}' => 'ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
             '{BOOL}' => 'TINYINT(1)',
             '{JSON}' => 'LONGTEXT',
+            '{BLOB}' => 'LONGBLOB',
         ],
         'sqlite' => [
             '{PK}' => 'INTEGER PRIMARY KEY AUTOINCREMENT',
@@ -31,6 +33,7 @@ final class Dialect
             '{TABLE}' => '',
             '{BOOL}' => 'INTEGER',
             '{JSON}' => 'TEXT',
+            '{BLOB}' => 'BLOB',
         ],
     ];
 

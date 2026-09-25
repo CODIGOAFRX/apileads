@@ -17,8 +17,11 @@ final class TemplateRenderer
         'nombre_completo' => 'Nombre y apellidos',
         'estudio' => 'Estudio (si solo hay uno) o lista',
         'estudios' => 'Lista de estudios de interés',
-        'comercial' => 'Nombre de quien envía',
+        'comercial' => 'Nombre y apellidos de quien envía',
+        'comercial_nombre' => 'Solo el nombre de quien envía («Soy Verónica…»)',
         'bloques_estudios' => 'Contenido de las plantillas de cada estudio (solo en la genérica)',
+        'inicio_bloque' => 'En la plantilla de un estudio: desde aquí se copia en el correo de varios estudios',
+        'fin_bloque' => 'En la plantilla de un estudio: hasta aquí se copia en el correo de varios estudios',
     ];
 
     /** @param array<string,string> $variables */

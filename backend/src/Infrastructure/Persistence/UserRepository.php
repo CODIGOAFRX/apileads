@@ -18,7 +18,10 @@ final class UserRepository extends BaseRepository
 
     public function listAll(): array
     {
-        return $this->all('SELECT id, nombre, email, rol, activo, ultimo_acceso, creado_en FROM usuario ORDER BY nombre');
+        return $this->all(
+            'SELECT u.id, u.nombre, u.email, u.rol, u.activo, u.ultimo_acceso, u.creado_en, c.email AS correo_envio
+             FROM usuario u LEFT JOIN cuenta_correo c ON c.usuario_id = u.id ORDER BY u.nombre'
+        );
     }
 
     public function create(array $values): int

@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
-import { leadsApi } from '../../api/endpoints.js'
+import { leadsApi, mailApi } from '../../api/endpoints.js'
 import { Icon } from '../../components/Icon.jsx'
 import { Modal } from '../../components/Modal.jsx'
 import { useToast } from '../../components/Toasts.jsx'
 import { Alert, Loading, Spinner } from '../../components/ui.jsx'
 import { EditableHtml } from '../../components/HtmlPreview.jsx'
-import { formatDateTime, plural } from '../../lib/format.js'
+import { formatBytes, formatDateTime, plural } from '../../lib/format.js'
 import { displayName } from '../../lib/leads.js'
 
 /**
@@ -115,9 +115,23 @@ export function MailModal({ lead, section, onClose, onSent, andWhatsapp = false 
             <p style={{ margin: 0 }}>Al enviarlo se abrirá WhatsApp con un mensaje ya escrito para {lead.telefono}.</p>
           )}
           <dl className="ed-kv" style={{ alignItems: 'center' }}>
+            <dt>De</dt><dd>{preview.de ?? <span className="ed-muted">Buzón general de la escuela</span>}</dd>
             <dt>Para</dt><dd>{preview.para}</dd>
             <dt>Asunto</dt>
             <dd><input className="ed-input" aria-label="Asunto" value={subject ?? preview.asunto} onChange={(e) => setSubject(e.target.value)} /></dd>
+            <dt>Adjuntos</dt>
+            <dd>
+              {preview.adjuntos.length ? (
+                <span className="ed-row" style={{ gap: 6 }}>
+                  {preview.adjuntos.map((a) => (
+                    <button key={a.id} type="button" className="ed-btn ed-btn--sm ed-btn--ghost" style={{ textTransform: 'none', letterSpacing: 0 }}
+                      onClick={() => mailApi.download(a).catch(toast.error)} title="Ver el dossier">
+                      <Icon name="file" size={13} /> {a.nombre} <span className="ed-muted">· {formatBytes(a.tamano)}</span>
+                    </button>
+                  ))}
+                </span>
+              ) : <span className="ed-muted">Sin dossier</span>}
+            </dd>
           </dl>
           {preview.ultimoEnvio && <Alert>Ya se le envió información el {formatDateTime(preview.ultimoEnvio)}.</Alert>}
           <div className="ed-row ed-row--between">

@@ -52,12 +52,25 @@ export const mailApi = {
   templates: () => http.get('/plantillas'),
   save: (estudioId, asunto, cuerpoHtml, clave = null) => http.put('/plantillas', { estudioId, asunto, cuerpoHtml, clave }),
   remove: (estudioId) => http.delete(`/plantillas/${estudioId}`),
+  // Dossier que se adjunta al correo de la plantilla.
+  attach: (plantillaId, file) => {
+    const data = new FormData()
+    data.append('archivo', file)
+    return http.upload(`/plantillas/${plantillaId}/adjunto`, data)
+  },
+  detach: (plantillaId) => http.delete(`/plantillas/${plantillaId}/adjunto`),
+  download: (adjunto) => http.download(`/adjuntos/${adjunto.id}`, {}, adjunto.nombre),
 }
 
 export const usersApi = {
   list: () => http.get('/usuarios'),
   create: (data) => http.post('/usuarios', data),
   update: (id, data) => http.put(`/usuarios/${id}`, data),
+  // Buzón desde el que envía sus correos.
+  mailAccount: (id) => http.get(`/usuarios/${id}/correo`),
+  saveMailAccount: (id, data) => http.put(`/usuarios/${id}/correo`, data),
+  removeMailAccount: (id) => http.delete(`/usuarios/${id}/correo`),
+  testMailAccount: (id, data) => http.post(`/usuarios/${id}/correo/prueba`, data),
 }
 
 function formData(file, opciones) {

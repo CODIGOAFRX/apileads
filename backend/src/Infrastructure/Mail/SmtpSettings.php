@@ -14,6 +14,8 @@ final class SmtpSettings
         public readonly string $password,
         public readonly string $fromEmail,
         public readonly int $timeout = 20,
+        // false solo si el servidor usa un certificado autofirmado o de otro dominio.
+        public readonly bool $verifyPeer = true,
     ) {
         if (!in_array($encryption, SmtpTransport::ENCRYPTIONS, true)) {
             throw new \InvalidArgumentException('MAIL_ENCRYPTION debe ser ssl, tls o none');

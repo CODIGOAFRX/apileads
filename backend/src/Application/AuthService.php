@@ -161,7 +161,7 @@ final class AuthService
 
     public static function present(array $user): array
     {
-        return [
+        $presented = [
             'id' => (int) $user['id'],
             'nombre' => $user['nombre'],
             'email' => $user['email'],
@@ -169,6 +169,12 @@ final class AuthService
             'activo' => (bool) $user['activo'],
             'ultimoAcceso' => DbTime::toApi($user['ultimo_acceso'] ?? null),
         ];
+        // Solo en el listado de usuarios: buzón desde el que envía (null = el general).
+        if (array_key_exists('correo_envio', $user)) {
+            $presented['correoEnvio'] = $user['correo_envio'];
+        }
+
+        return $presented;
     }
 
     private function assertValidProfile(string $name, string $email): void

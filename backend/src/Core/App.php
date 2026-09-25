@@ -10,6 +10,7 @@ use Leads\Application\ExportService;
 use Leads\Application\ImportService;
 use Leads\Application\LeadPresenter;
 use Leads\Application\LeadService;
+use Leads\Application\MailAccountService;
 use Leads\Application\MailService;
 use Leads\Domain\Import\ColumnMapper;
 use Leads\Domain\Import\DateParser;
@@ -30,9 +31,11 @@ use Leads\Infrastructure\Persistence\Database;
 use Leads\Infrastructure\Persistence\ImportRepository;
 use Leads\Infrastructure\Persistence\LeadRepository;
 use Leads\Infrastructure\Persistence\LoginAttemptRepository;
+use Leads\Infrastructure\Persistence\MailAccountRepository;
 use Leads\Infrastructure\Persistence\MailRepository;
 use Leads\Infrastructure\Persistence\UserRepository;
 use Leads\Infrastructure\Security\JwtService;
+use Leads\Infrastructure\Security\SecretBox;
 use Leads\Infrastructure\Spreadsheet\SpreadsheetReader;
 use PDO;
 
@@ -43,6 +46,8 @@ use PDO;
 final class App
 {
     private array $instances = [];
+    /** Con un transporte inyectado (pruebas) nunca se envía por el buzón de nadie. */
+    private readonly bool $transportInjected;
 
     public function __construct(
         private readonly string $rootDir,
@@ -50,6 +55,7 @@ final class App
         private ?Clock $clock = null,
         private ?MailTransport $mailTransport = null,
     ) {
+        $this->transportInjected = $mailTransport !== null;
     }
 
     public function rootDir(): string
@@ -160,6 +166,19 @@ final class App
             new TemplateRenderer(),
             $this->clock(),
             Env::get('MAIL_REPLY_TO'),
+            $this->mailAccounts(),
+            // En local (MAIL_TRANSPORT=log) tampoco sale nada por los buzones de las comerciales.
+            !$this->transportInjected && Env::get('MAIL_TRANSPORT', 'log') !== 'log',
+        ));
+    }
+
+    public function mailAccounts(): MailAccountService
+    {
+        return $this->once(MailAccountService::class, fn () => new MailAccountService(
+            new MailAccountRepository($this->pdo()),
+            new UserRepository($this->pdo()),
+            new SecretBox(Env::get('MAIL_ACCOUNTS_KEY') ?? Env::required('JWT_SECRET')),
+            $this->clock(),
         ));
     }
 

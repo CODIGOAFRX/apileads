@@ -23,12 +23,15 @@ final class LogTransport implements MailTransport
         if ($this->file === null) {
             return;
         }
+        $attachments = array_map(static fn ($a): string => $a->name, $message->attachments);
         $entry = sprintf(
-            "=== %s\nPara: %s <%s>\nAsunto: %s\n\n%s\n\n",
+            "=== %s\nDe: %s\nPara: %s <%s>\nAsunto: %s\nAdjuntos: %s\n\n%s\n\n",
             gmdate('c'),
+            $message->from ?? '(remitente general)',
             $message->toName,
             $message->to,
             $message->subject,
+            $attachments === [] ? '—' : implode(', ', $attachments),
             $message->text()
         );
         @mkdir(dirname($this->file), 0775, true);

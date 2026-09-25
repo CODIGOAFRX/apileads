@@ -77,3 +77,10 @@ export function inkOn(hex) {
   const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255]
   return (0.299 * r + 0.587 * g + 0.114 * b) > 140 ? '#1F201D' : '#FFFFFF'
 }
+
+/** "850 KB", "1,2 MB". */
+export function formatBytes(bytes) {
+  const value = Number(bytes) || 0
+  if (value < 1024 * 1024) return `${Math.max(1, Math.round(value / 1024))} KB`
+  return `${(value / 1024 / 1024).toLocaleString('es-ES', { maximumFractionDigits: 1 })} MB`
+}

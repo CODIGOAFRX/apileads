@@ -31,8 +31,13 @@ Igual que la Biblioteca: se sube la carpeta del proyecto por FTP/SFTP y la raíz
    con sus colores, el centro de Granada, la plantilla genérica y el administrador.
    (Después se puede desactivar la tarea; solo hace falta volver a ejecutarla cuando haya migraciones nuevas.
    Es seguro repetirla.)
-8. Entra con el administrador, crea las cuentas de las comerciales (Ajustes → Usuarios) y escribe las
-   plantillas de correo de cada estudio (Ajustes → Correos).
+8. Entra con el administrador, crea las cuentas de las comerciales (Ajustes → Usuarios) y revisa las
+   plantillas de correo de cada estudio y su dossier (Ajustes → Correos).
+9. **Buzón de cada comercial**: Ajustes → Usuarios → icono de correo. Los datos salen de Plesk → Correo →
+   el buzón → «Configuración del cliente de correo» → «Configuración manual» (servidor `estaciondiseno.es`,
+   SMTP 465, IMAP 993) más la contraseña del buzón. Pulsa **Probar conexión** antes de guardar. Si da error
+   de certificado «no de confianza», desmarca «Comprobar el certificado». La contraseña se guarda cifrada con
+   `MAIL_ACCOUNTS_KEY` (o `JWT_SECRET`): si cambias esa clave, hay que volver a escribirlas.
 
 > **No hace falta ninguna tarea programada para "las 9:00"**: la vuelta de los que no contestaron se
 > calcula en cada consulta, y el listado se refresca solo cada minuto.
@@ -42,6 +47,8 @@ Igual que la Biblioteca: se sube la carpeta del proyecto por FTP/SFTP y la raíz
 1. Si cambió el frontend: `cd frontend && npm run build` y sube `frontend/dist`.
 2. Si cambió el backend: sube `backend/src` (y `backend/database` si hay migraciones nuevas; entonces
    ejecuta de nuevo la tarea del paso 7).
+   Los dossieres PDF van dentro de la base de datos (tabla `adjunto`): la migración de correos los carga
+   desde `backend/database/correos/`, así que esa carpeta tiene que subirse antes de ejecutarla.
 3. Si cambiaron las dependencias PHP: `composer install --no-dev --optimize-autoloader` y sube `backend/vendor`.
 
 ## Nunca se sube

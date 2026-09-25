@@ -11,6 +11,7 @@ use Leads\Http\Controller\AuthController;
 use Leads\Http\Controller\CatalogController;
 use Leads\Http\Controller\ImportController;
 use Leads\Http\Controller\LeadController;
+use Leads\Http\Controller\MailAccountController;
 use Leads\Http\Controller\MailController;
 
 /** Tabla de rutas de la API. */
@@ -69,11 +70,18 @@ final class Routes
         $router->get('/api/plantillas', $c(MailController::class, 'templates'), Router::ADMIN);
         $router->put('/api/plantillas', $c(MailController::class, 'saveTemplate'), Router::ADMIN);
         $router->delete('/api/plantillas/{estudioId}', $c(MailController::class, 'deleteTemplate'), Router::ADMIN);
+        $router->post('/api/plantillas/{id}/adjunto', $c(MailController::class, 'attach'), Router::ADMIN);
+        $router->delete('/api/plantillas/{id}/adjunto', $c(MailController::class, 'detach'), Router::ADMIN);
+        $router->get('/api/adjuntos/{id}', $c(MailController::class, 'attachment'));
 
         // Usuarios
         $router->get('/api/usuarios', $c(AuthController::class, 'listUsers'), Router::ADMIN);
         $router->post('/api/usuarios', $c(AuthController::class, 'createUser'), Router::ADMIN);
         $router->put('/api/usuarios/{id}', $c(AuthController::class, 'updateUser'), Router::ADMIN);
+        $router->get('/api/usuarios/{id}/correo', $c(MailAccountController::class, 'show'), Router::ADMIN);
+        $router->put('/api/usuarios/{id}/correo', $c(MailAccountController::class, 'save'), Router::ADMIN);
+        $router->delete('/api/usuarios/{id}/correo', $c(MailAccountController::class, 'delete'), Router::ADMIN);
+        $router->post('/api/usuarios/{id}/correo/prueba', $c(MailAccountController::class, 'test'), Router::ADMIN);
 
         return $router;
     }
