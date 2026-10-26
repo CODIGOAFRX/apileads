@@ -44,6 +44,11 @@ done
 
 php bin/migrate.php
 
+# Acceso rápido en local: usuario "admin", contraseña "admin" (solo con APP_DEBUG=1).
+if [ "$APP_DEBUG" = "1" ]; then
+  php bin/admin-local.php
+fi
+
 if [ "$DEMO" = "1" ]; then
   php bin/demo.php
 fi

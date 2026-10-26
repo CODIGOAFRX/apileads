@@ -57,10 +57,10 @@ export function LoginPage({ onLogin }) {
           <form onSubmit={submit} className="ed-stack">
             {error && <Alert tone="error">{error}</Alert>}
             <div className="ed-field">
-              <label className="ed-label" htmlFor="login-email">Correo</label>
+              <label className="ed-label" htmlFor="login-email">Correo o usuario</label>
               <div className="ed-input-wrap">
                 <Icon name="user" />
-                <input id="login-email" className="ed-input ed-input--icon" type="email" autoComplete="username" required
+                <input id="login-email" className="ed-input ed-input--icon" type="text" autoComplete="username" autoCapitalize="none" spellCheck={false} required
                   placeholder="tu@estaciondiseno.es" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
             </div>

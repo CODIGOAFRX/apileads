@@ -1,14 +1,106 @@
 # Leads · Estación Diseño
 
-Herramienta del equipo comercial para gestionar las solicitudes de información (leads) que llegan
-de la web, Facebook, Instagram, ferias… Misma estética y arquitectura que la
-[Biblioteca](https://biblioteca.estaciondiseno.es/).
+**La herramienta con la que el equipo comercial de [Estación Diseño](https://estaciondiseno.es/)
+(Escuela Superior de Diseño, Granada) llama, sigue y convierte a las personas que piden información.**
 
-- **backend/** — API en PHP 8.1+ sin framework (Router → Controller → Service → Repository), MariaDB, PHPUnit.
-- **frontend/** — React 19 + Vite, sin librerías de UI (sistema de diseño propio en `src/styles/index.css`).
-- **DESPLIEGUE.md** — cómo subirlo a Plesk.
+Sustituye a un Excel compartido: la aplicación dice a quién toca llamar ahora, en qué orden, y vuelve a
+poner en la lista a quien no contestó el siguiente día laborable a las 9:00. El correo con la información y el
+dossier de cada estudio sale desde el buzón de cada comercial.
 
-## Qué hace
+![Bandeja de pendientes](docs/capturas/pendientes.png)
+
+<p align="center">
+  <img src="docs/capturas/llamada.png" width="49%" alt="Menú de llamada con los cuatro resultados">
+  <img src="docs/capturas/ficha.png" width="49%" alt="Ficha de un lead con su historial">
+</p>
+<p align="center">
+  <img src="docs/capturas/actividad.png" width="49%" alt="Registro de actividad del equipo">
+  <img src="docs/capturas/importar.png" width="49%" alt="Importación de leads desde Excel o CSV">
+</p>
+
+> Las capturas son de la demostración local: nombres, correos `@example.com` y teléfonos inventados.
+
+**PHP 8.1 sin framework · MariaDB · React 19 + Vite · 256 pruebas automáticas · CI en GitHub Actions · desplegado en Plesk**
+
+---
+
+## El problema
+
+Las solicitudes de información llegan por muchos sitios: la web, los formularios de Facebook e Instagram (Meta),
+las ferias, los colegios, portales como Emagister o EducaWeb… Antes vivían en hojas de cálculo: cada comercial
+tenía que acordarse de a quién había llamado, cuándo volver a intentarlo y qué correo le había enviado. Se
+perdían leads, dos personas llamaban al mismo y nadie sabía cuántos intentos llevaba cada uno.
+
+## Lo que hace
+
+- **Una bandeja que piensa por ti.** Pendientes, agendadas, no contestan, interesados, matriculados y
+  descartados. El que hay que llamar ahora sale el primero.
+- **Llamar en dos teclas.** Cada llamada termina con uno de cuatro resultados (teclas 1 a 4): no contesta,
+  no interesado, interesado o agendar otra llamada. Cada resultado mueve al lead al sitio correcto.
+- **Seguimiento automático sin tareas programadas.** Si no contesta, se propone el correo y el WhatsApp, y el
+  lead vuelve a pendientes el siguiente día laborable a las 9:00 (hora de Madrid, con festivos y cambio de hora).
+  Al 6.º intento se descarta solo. Todo se calcula al consultar: no depende de ningún cron.
+- **Correo con el dossier de cada estudio**, desde el buzón SMTP de la propia comercial y con copia en su carpeta
+  de Enviados por IMAP. Como mucho uno cada 72 segundos en toda la aplicación, para no caer en spam.
+- **Importación que no se rompe.** CSV y Excel de cualquier origen: detecta la codificación (incluido el UTF-16
+  de Meta), el separador y las columnas por su contenido, empareja los estudios y aprende alias. Los duplicados
+  completan el lead existente en lugar de crear otro.
+- **Trabajo en equipo.** Un lead queda reservado 5 minutos mientras alguien lo llama, para que no lo llamen dos.
+- **Actividad para administración.** Qué ha hecho cada comercial cada día, con resumen y cada acción con su hora.
+- **Pensada para usarla todo el día.** Atajos de teclado, buscador sin tildes ni mayúsculas, teléfono por dígitos,
+  y funciona en el móvil.
+
+## Arquitectura
+
+```
+navegador ── React 19 (SPA, sistema de diseño propio, sin librerías de UI)
+   │  fetch /api/* con JWT
+   ▼
+frontend/dist/.htaccess ── /api → backend.php (la API vive FUERA de la raíz web)
+   ▼
+backend/public/index.php ── Router → Controller → Service → Repository → MariaDB (PDO)
+                                         │
+                                       Domain   (reglas de negocio puras, sin base de datos)
+```
+
+| Capa | Qué hay | Ejemplos |
+|---|---|---|
+| `Core` | Router, peticiones/respuestas, configuración, reloj inyectable | `Router`, `Env`, `Clock` / `FrozenClock` |
+| `Domain` | Las reglas, sin dependencias: se prueban sin base de datos | `LeadWorkflow` (máquina de estados), `BusinessCalendar` (días laborables, festivos, horario de verano), `ColumnMapper` (adivina columnas), `StudyMatcher` |
+| `Application` | Casos de uso que orquestan dominio e infraestructura | `LeadService`, `ImportService`, `MailService`, `AuditService` |
+| `Infrastructure` | MariaDB/SQLite, SMTP e IMAP propios, Excel, cifrado | `LeadRepository`, `SmtpTransport`, `ImapClient`, `SecretBox` (AES-256-GCM) |
+| `Http` | Controladores finos y la tabla de rutas con permisos | `Routes.php` |
+
+### Decisiones técnicas
+
+- **Sin framework en PHP**, a propósito: el servidor de la escuela es un Plesk compartido (subida por FTP, sin
+  terminal), y la aplicación tenía que ser pequeña, entendible y fácil de mantener. El esqueleto (router,
+  contenedor, migraciones) son unos pocos archivos.
+- **El tiempo es una dependencia.** Todo lo que depende de «ahora» recibe un `Clock`; en las pruebas se congela
+  (`FrozenClock`) para comprobar fines de semana, festivos y el cambio de hora.
+- **Sin cron.** La vuelta de los que no contestaron se calcula al consultar, así que no hay ninguna tarea
+  programada que pueda fallar en silencio.
+- **Seguridad:** JWT con caducidad, bloqueo tras 5 intentos fallidos por cuenta e IP, contraseñas de los buzones
+  cifradas con AES-256-GCM, protección contra inyección de cabeceras en el correo, la API fuera de la raíz web y
+  un instalador que **se niega a arrancar** si el `.env` de producción conserva algún valor de ejemplo.
+- **Migraciones versionadas e idempotentes** (`backend/database/migrations`), que se pueden repetir sin peligro.
+
+## Calidad
+
+- **225 pruebas de backend** (PHPUnit) que se ejecutan con SQLite y con MariaDB, y **31 de frontend** (Vitest + jsdom).
+- **PHPStan** con reglas estrictas.
+- **CI en cada push** (`.github/workflows/ci.yml`): PHP 8.1, 8.3 y 8.4, MariaDB 10.11, ESLint, pruebas y compilación.
+- **Pruebas de resistencia:** todas las rutas de la API reciben datos basura (tipos cambiados, textos de 20.000
+  caracteres, inyecciones, UTF-8 roto, ids inexistentes) y ninguna puede responder con un 500 ni provocar un aviso
+  de PHP. La importación recibe ficheros vacíos, binarios, zips rotos y HTML disfrazado de Excel.
+
+## Documentación
+
+- [Manual del equipo comercial (PDF)](docs/Manual-Leads-Equipo-Comercial.pdf): El manual para quien la usa, con
+  casos prácticos y una chuleta para imprimir.
+- [DESPLIEGUE.md](DESPLIEGUE.md): instalación y actualizaciones en Plesk.
+
+## Todas las funciones
 
 | Función | Dónde está la lógica |
 |---|---|
@@ -58,6 +150,7 @@ Se crean solos la base de datos, los 10 estudios con sus colores y **45 leads de
 |---|---|---|
 | Comercial | `marta@estaciondiseno.es` | `DemoLocal2026` |
 | Administración | `admin@estaciondiseno.es` | `AdminLocal2026` |
+| Administración (atajo local) | `admin` | `admin` |
 
 - **Parar:** `docker compose down` · **parar y vaciar la base de datos:** `docker compose down -v`
 - **Si no arranca:** `docker compose logs app --tail 40` dice exactamente qué falla. Lo más habitual:
@@ -114,3 +207,26 @@ permisos y límite de intentos de acceso. Además:
 - **Ficheros basura al importar** (`ImportRobustnessTest`): vacíos, binarios, zips rotos, HTML con extensión xls…
 - **Componentes** (frontend): alta de lead y orígenes, menú de llamada (teclas, doble clic, reserva), envío de
   correo (cuenta atrás, modo pruebas, errores), creación de estudios, red de seguridad y cliente HTTP.
+
+## Estructura
+
+```
+backend/
+  bin/            migrate.php (instalar/actualizar), demo.php, limpiar-pruebas.php, preparar-plesk.php
+  database/       migraciones y plantillas de correo con sus dossieres
+  src/            Core · Domain · Application · Infrastructure · Http
+  tests/          Unit · Integration (API, importación, correo, resistencia)
+frontend/
+  src/            app, features (leads, import, activity, settings), components, styles
+  test/           lógica y componentes
+docs/             manual del equipo comercial y capturas
+preparar-plesk.sh paquete listo para subir al servidor (aplicación + base de datos limpia)
+```
+
+## Autor
+
+Diseñada y programada por **Pedro Jesús Gómez Pérez** · [pedrogomez.dev](https://pedrogomez.dev) para el equipo
+comercial de Estación Diseño, donde está en uso.
+
+El código se publica como muestra de trabajo. La marca, los textos de los correos y los dossieres de los
+estudios son de Estación Diseño.

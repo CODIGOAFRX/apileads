@@ -88,6 +88,8 @@ final class App
 
     public function auth(): AuthService
     {
+        ExampleConfig::assertJwtSecretIsReal();
+
         return $this->once(AuthService::class, fn () => new AuthService(
             new UserRepository($this->pdo()),
             new LoginAttemptRepository($this->pdo()),

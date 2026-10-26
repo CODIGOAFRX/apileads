@@ -16,7 +16,53 @@ Igual que la Biblioteca: se sube la carpeta del proyecto por FTP/SFTP y la raíz
     └── storage/logs/  ← debe poder escribir PHP
 ```
 
-## Primera instalación
+## Subida a Plesk con el paquete preparado (lo más rápido)
+
+**En el ordenador**, con `docker compose up` en marcha, desde Git Bash:
+
+```
+./preparar-plesk.sh
+```
+
+Pasa las pruebas, hace una **copia** de la base de datos del Docker, la limpia (`bin/limpiar-pruebas.php`:
+fuera el usuario `admin/admin`, el registro y los intentos de acceso; los leads quedan en pendientes),
+pone al administrador la contraseña de producción, vuelve a cifrar los buzones de las comerciales con la
+clave del servidor y deja en `_plesk/` (fuera de Git, lleva contraseñas):
+
+| Fichero | Qué es |
+|---|---|
+| `apileads-plesk.zip` | La aplicación completa: `frontend/dist`, `backend` con `vendor` sin herramientas de pruebas y `backend/.env` de producción |
+| `apileads.sql` | La base de datos: leads, usuarios (administrador y comerciales con su contraseña), estudios, plantillas y dossieres |
+| `env-produccion` | La misma configuración que va en el zip. **Aquí está la contraseña del administrador** (`ADMIN_PASSWORD`) y la de la base de datos (`DB_PASSWORD`) |
+
+`env-produccion` se crea la primera vez y se reutiliza: si se vuelve a lanzar el guion no cambian las claves.
+
+**Lo que tiene que hacer el informático** (o tú con acceso a Plesk), una vez:
+
+1. Crear el **subdominio**, p. ej. `leads.estaciondiseno.es`, con **PHP 8.1 o superior (FPM servido por Apache)**
+   y **SSL de Let's Encrypt** (Hosting y DNS → SSL/TLS). Si el hosting es «solo nginx», el `.htaccess` no
+   funciona: tiene que ser Apache (lo normal en Plesk, Apache + nginx de proxy).
+2. **Base de datos** → Añadir: nombre `apileads`, usuario `apileads` y como contraseña la `DB_PASSWORD` de
+   `env-produccion`. Si Plesk le pone prefijo al nombre (`escuela_apileads`) o se usa otra contraseña, se
+   corrige luego en `backend/.env` (`DB_DSN` y `DB_USER`/`DB_PASSWORD`).
+
+**Lo que haces tú** cuando esté el subdominio:
+
+3. Plesk → **Bases de datos** → `apileads` → **Importar volcado** → `apileads.sql`.
+   (También vale phpMyAdmin → Importar.)
+4. Plesk → **Archivos** → la carpeta del subdominio (p. ej. `leads.estaciondiseno.es/`) → Subir
+   `apileads-plesk.zip` → clic derecho → **Extraer archivos**. Quedan `frontend/` y `backend/` dentro.
+   Borra el zip después.
+5. Plesk → **Hosting y DNS** → Configuración de hosting → **Raíz del documento**:
+   `leads.estaciondiseno.es/frontend/dist` (la carpeta del subdominio + `/frontend/dist`).
+6. Si en el paso 2 cambió algo, Archivos → `backend/.env` → editar `DB_*`.
+7. Comprobar (abajo, «Comprobaciones tras desplegar») y entrar como `admin@estaciondiseno.es` con la
+   `ADMIN_PASSWORD` de `env-produccion`. Veronica entra con su contraseña de siempre y su buzón ya va configurado.
+
+> No hace falta ejecutar `bin/migrate.php`: la base de datos sube con todas las migraciones hechas. Solo
+> cuando haya migraciones nuevas (ver «Actualizaciones»).
+
+## Primera instalación (a mano, con la base de datos vacía)
 
 1. **Subdominio** en Plesk, p. ej. `leads.estaciondiseno.es`, con PHP 8.1 o superior (FPM) y SSL (Let's Encrypt).
    Las dependencias están fijadas para PHP 8.1 (`config.platform` en `composer.json`) y se prueban en 8.1, 8.3 y 8.4.
@@ -30,6 +76,8 @@ Igual que la Biblioteca: se sube la carpeta del proyecto por FTP/SFTP y la raíz
 7. Crear tablas: Plesk → **Tareas programadas** → Añadir tarea → *Ejecutar un script PHP* →
    `httpdocs/apileads/backend/bin/migrate.php` → **Ejecutar ahora**. Crea las tablas, los 10 estudios
    con sus colores, el centro de Granada, la plantilla genérica y el administrador.
+   Si en `backend/.env` queda algún valor de ejemplo (`JWT_SECRET`, `ADMIN_PASSWORD`, `DB_PASSWORD`, `MAIL_PASSWORD`),
+   el script se niega y dice cuál: con el `JWT_SECRET` de ejemplo cualquiera podría fabricarse una sesión.
    (Después se puede desactivar la tarea; solo hace falta volver a ejecutarla cuando haya migraciones nuevas.
    Es seguro repetirla.)
 8. Entra con el administrador, crea las cuentas de las comerciales (Ajustes → Usuarios) y revisa las

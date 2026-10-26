@@ -24,3 +24,6 @@ Thumbs.db
 .vscode/sftp.json
 .claude/
 _tmp/
+
+# Paquete para el servidor (lleva contraseñas)
+_plesk/

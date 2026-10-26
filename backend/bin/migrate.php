@@ -9,11 +9,19 @@ declare(strict_types=1);
 
 use Leads\Core\App;
 use Leads\Core\Env;
+use Leads\Core\ExampleConfig;
 use Leads\Infrastructure\Persistence\Migrator;
 
 $root = dirname(__DIR__);
 require $root . '/vendor/autoload.php';
 Env::load($root . '/.env');
+
+$leftovers = ExampleConfig::leftovers();
+if ($leftovers !== []) {
+    fwrite(STDERR, 'backend/.env aún tiene valores de ejemplo en: ' . implode(', ', $leftovers) . ".\n"
+        . "Cámbialos antes de instalar (JWT_SECRET: php -r \"echo base64_encode(random_bytes(48)), PHP_EOL;\").\n");
+    exit(1);
+}
 
 $app = new App($root);
 $done = (new Migrator($app->pdo(), $root . '/database/migrations'))->migrate();
