@@ -155,15 +155,24 @@ a { color: inherit; }
 
 /* ─── La línea de la marca ───────────────────────────────────────────────── */
 
-.ed-track { position: relative; }
+/* La línea baja desde el centro del ojo del logo (isotipo de 224×165 a 36 px de alto, ver .ed-header__brand img)
+   y el círculo de cada sección queda centrado sobre ella. */
+.ed-track {
+  position: relative;
+  --eye: calc(36px * 224 / 165 / 2);
+  --track-pad: 60px;
+  --line: 8px;
+  --node: 44px; /* 28 px + 8 px de borde por cada lado */
+}
 @media (min-width: 1024px) {
-  .ed-track { padding-left: 56px; }
+  .ed-track { padding-left: var(--track-pad); }
   .ed-track::after {
-    content: ''; position: absolute; left: 8px; top: 0; bottom: 40px; width: 8px;
+    content: ''; position: absolute; left: calc(var(--eye) - var(--line) / 2); top: 0; bottom: 40px; width: var(--line);
     background: var(--ink); border-radius: 999px;
   }
   .ed-stop::before {
-    content: ''; position: absolute; left: -58px; top: 26px; width: 28px; height: 28px;
+    content: ''; position: absolute; box-sizing: border-box;
+    left: calc(var(--eye) - var(--node) / 2 - var(--track-pad)); top: 26px; width: var(--node); height: var(--node);
     border: 8px solid var(--ink); border-radius: 999px; background: var(--paper); z-index: 1;
   }
 }
