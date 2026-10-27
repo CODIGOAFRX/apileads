@@ -50,9 +50,16 @@ export function LeadFormModal({ lead, section, onClose, onSaved, onOpenExisting 
 
   const hasContact = form.nombre.trim() || form.apellidos.trim() || form.email.trim() || form.telefono.trim()
 
+  const company = companyOf(form.estudioIds, catalog.estudios)
+
   const save = async (merge = false) => {
     if (!form.origen) {
       setError('Elige de dónde viene el lead (origen)')
+      return
+    }
+    // Con Estación Diseño hace falta uno de sus estudios (sin estudio el lead sería de Grupo EFP).
+    if (user?.empresa && company !== user.empresa) {
+      setError(`Elige al menos un estudio: con tu usuario solo se dan de alta leads de ${COMPANIES.find((c) => c.id === user.empresa)?.label}`)
       return
     }
     setBusy(true)
@@ -73,8 +80,8 @@ export function LeadFormModal({ lead, section, onClose, onSaved, onOpenExisting 
     }
   }
 
-  const company = companyOf(form.estudioIds, catalog.estudios)
-  const activeStudies = catalog.estudios.filter((s) => s.activo || form.estudioIds.includes(s.id))
+  // Solo los estudios de su empresa (el servidor ya los filtra; esto cubre un catálogo cargado antes del cambio).
+  const activeStudies = catalog.estudios.filter((s) => (s.activo || form.estudioIds.includes(s.id)) && (!user?.empresa || s.empresa === user.empresa))
   const centers = catalog.centros.filter((c) => c.activo || c.id === form.centroId)
 
   return (
@@ -139,13 +146,13 @@ export function LeadFormModal({ lead, section, onClose, onSaved, onOpenExisting 
 
         <Field label="Estudios de interés">
           <StudyPicker studies={activeStudies} value={form.estudioIds} onChange={set('estudioIds')} />
-          <div className="ed-row" style={{ gap: 8 }}>
-            <span className="ed-hint">Este lead es de</span>
-            <CompanyTag company={company} />
-            {user?.empresa && company !== user.empresa && (
-              <span className="ed-error-text">Con tu usuario solo puedes guardar leads de {COMPANIES.find((c) => c.id === user.empresa)?.label}: elige uno de sus estudios.</span>
-            )}
-          </div>
+          {/* Quien trabaja con una sola empresa ya solo ve sus estudios: no hace falta decirle de cuál es. */}
+          {!user?.empresa && form.estudioIds.length > 0 && (
+            <div className="ed-row" style={{ gap: 8 }}>
+              <span className="ed-hint">Este lead es de</span>
+              <CompanyTag company={company} />
+            </div>
+          )}
           <div>
             <button type="button" className="ed-btn ed-btn--sm" onClick={() => setNewStudy(true)}>
               <Icon name="plus" size={13} /> No está en la lista: crear estudio

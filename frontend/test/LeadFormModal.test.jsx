@@ -41,9 +41,9 @@ describe('Alta de un lead', () => {
 
   it('marca la empresa según el estudio de interés elegido', async () => {
     const { user } = open()
-    const company = () => screen.getByText('Este lead es de').nextSibling.textContent
+    const company = () => screen.queryByText('Este lead es de')?.nextSibling.textContent
 
-    expect(company()).toBe('Grupo EFP')
+    expect(company()).toBeUndefined()
     await user.click(screen.getByRole('button', { name: 'Gestión de recepción' }))
     expect(company()).toBe('Grupo EFP')
     await user.click(screen.getByRole('button', { name: 'Grado Diseño Moda' }))
@@ -52,13 +52,23 @@ describe('Alta de un lead', () => {
     expect(company()).toBe('Grupo EFP')
   })
 
-  it('avisa a quien solo trabaja con Estación Diseño si el lead quedaría en Grupo EFP', async () => {
+  it('quien solo trabaja con Estación Diseño ve solo sus estudios y no puede guardar sin uno', async () => {
     const { user } = open({}, { empresa: 'ESTACION' })
-    const warning = () => screen.queryByText(/solo puedes guardar leads de Estación Diseño/)
 
-    expect(warning()).not.toBeNull()
+    expect(screen.queryByRole('button', { name: 'Gestión de recepción' })).toBeNull()
+    expect(screen.queryByText('Este lead es de')).toBeNull()
+    expect(screen.queryByRole('alert')).toBeNull()
+
+    await user.type(screen.getByLabelText('Nombre'), 'Eva')
+    await user.click(radio('Web'))
+    await user.click(screen.getByRole('button', { name: /Crear lead/ }))
+    expect(screen.getByRole('alert').textContent).toMatch(/solo se dan de alta leads de Estación Diseño/)
+    expect(leadsApi.create).not.toHaveBeenCalled()
+
+    leadsApi.create.mockResolvedValue({ lead: { id: 9, nombre: 'Eva' } })
     await user.click(screen.getByRole('button', { name: 'Grado Diseño Moda' }))
-    expect(warning()).toBeNull()
+    await user.click(screen.getByRole('button', { name: /Crear lead/ }))
+    expect(leadsApi.create).toHaveBeenCalledTimes(1)
   })
 
   it('ya no pide campaña ni formulario', () => {
