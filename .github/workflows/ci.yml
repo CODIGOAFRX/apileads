@@ -76,3 +76,49 @@ jobs:
         run: npm test
       - name: Compilación
         run: npm run build
+
+  # Con todo en verde en main, publica la rama "produccion": la aplicación ya compilada (frontend/dist y
+  # backend/vendor sin herramientas de pruebas), que es de donde tira Plesk (Git → despliegue automático).
+  # El backend/.env de producción no está aquí: se sube una vez a mano al servidor y el despliegue no lo toca.
+  produccion:
+    name: Rama de despliegue
+    needs: [backend, frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: mbstring, pdo_mysql, zip, gd
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Compilación del frontend
+        working-directory: frontend
+        run: npm ci && npm run build
+      - name: Carpeta de la aplicación
+        # Lo mismo que preparar-plesk.sh, sin el .env ni la base de datos.
+        run: |
+          mkdir -p out/frontend out/backend/storage/logs
+          cp -r frontend/dist out/frontend/dist
+          cp -r backend/bin backend/database backend/public backend/src \
+                backend/composer.json backend/composer.lock backend/.htaccess out/backend/
+          cp backend/storage/logs/.gitkeep out/backend/storage/logs/
+          rm -f out/backend/bin/{admin-local,demo,dev-router,limpiar-pruebas,preparar-plesk}.php \
+                out/backend/database/docker-init.sql
+          (cd out/backend && composer install --no-dev --optimize-autoloader --no-interaction --no-progress)
+      - name: Publicar la rama produccion
+        working-directory: out
+        run: |
+          git init -q -b produccion
+          git config user.name "github-actions[bot]"
+          git config user.email "41898802+github-actions[bot]@users.noreply.github.com"
+          git add -A -f .
+          git commit -q -m "Despliegue de main @ ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" produccion
