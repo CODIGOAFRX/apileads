@@ -16,6 +16,22 @@ Igual que la Biblioteca: se sube la carpeta del proyecto por FTP/SFTP y la raíz
     └── storage/logs/  ← debe poder escribir PHP
 ```
 
+## Despliegue automático con Git (lead.grupoefp.es)
+
+Cada push a `main` pasa las pruebas en GitHub Actions y, si van en verde (un fallo solo en PHP 8.1 avisa pero
+no frena), publica la rama **`produccion`**: la aplicación compilada (`frontend/dist` y `backend/vendor` sin
+herramientas de pruebas), sin `.env` ni base de datos. Plesk tira de esa rama:
+
+- Plesk → lead.grupoefp.es → **Git** → `apileads.git` (`https://github.com/CODIGOAFRX/apileads.git`),
+  rama `produccion`, despliegue **automático** en `/httpdocs`.
+- **Raíz del documento**: `httpdocs/frontend/dist`.
+- GitHub → Settings → **Webhooks**: la «URL de Webhook» que da Plesk en la configuración del repositorio
+  (evento *push*). Con ella Plesk hace pull y despliega en cuanto se actualiza `produccion`; sin ella, en Plesk
+  → Git → **Pull ahora** y **Desplegar ahora**.
+- Una sola vez, a mano: `httpdocs/backend/.env` (el `env-produccion` de `_plesk/`) y la base de datos
+  (pasos 2 y 3 de abajo). El despliegue no toca el `.env`.
+- Migraciones nuevas: tarea programada con `httpdocs/backend/bin/migrate.php` (paso 7 de «Primera instalación»).
+
 ## Subida a Plesk con el paquete preparado (lo más rápido)
 
 **En el ordenador**, con `docker compose up` en marcha, desde Git Bash:
