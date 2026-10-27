@@ -20,7 +20,7 @@ dossier de cada estudio sale desde el buzón de cada comercial.
 
 > Las capturas son de la demostración local: nombres, correos `@example.com` y teléfonos inventados.
 
-**PHP 8.1 sin framework · MariaDB · React 19 + Vite · 282 pruebas automáticas · CI en GitHub Actions · desplegado en Plesk**
+**PHP 8.1 sin framework · MariaDB · React 19 + Vite · 283 pruebas automáticas · CI en GitHub Actions · desplegado en Plesk**
 
 ---
 
@@ -87,7 +87,7 @@ backend/public/index.php ── Router → Controller → Service → Repository
 
 ## Calidad
 
-- **245 pruebas de backend** (PHPUnit) que se ejecutan con SQLite y con MariaDB, y **37 de frontend** (Vitest + jsdom).
+- **246 pruebas de backend** (PHPUnit) que se ejecutan con SQLite y con MariaDB, y **37 de frontend** (Vitest + jsdom).
 - **PHPStan** con reglas estrictas.
 - **CI en cada push** (`.github/workflows/ci.yml`): PHP 8.1, 8.3 y 8.4, MariaDB 10.11, ESLint, pruebas y compilación.
 - **Pruebas de resistencia:** todas las rutas de la API reciben datos basura (tipos cambiados, textos de 20.000
@@ -120,7 +120,7 @@ backend/public/index.php ── Router → Controller → Service → Repository
 | **No interesado** → descartados. Nunca se borra; se puede exportar a CSV y reabrir | `LeadWorkflow::registerCall` |
 | Cita agendada y matriculado (embudo completo) | `LeadWorkflow` |
 | **Reserva** del lead mientras una comercial lo llama (5 min) para que no llamen dos a la vez | `LeadRepository::lock` |
-| **Buscador "contiene"** sin tildes ni mayúsculas: nombre, correo, teléfono por dígitos ("454"), ciudad, varias palabras en cualquier orden. Filtros por estudio, tipo (grados/ciclos/másteres), origen y fechas | `LeadSearch.php`, `LeadRepository::buildWhere` |
+| **Buscador "contiene"** sin tildes ni mayúsculas: nombre, correo, teléfono por dígitos ("454"), ciudad, estudio ("maya hansen"), varias palabras en cualquier orden. Filtros por estudio, tipo (grados/ciclos/másteres), origen y fechas | `LeadSearch.php`, `LeadRepository::buildWhere` |
 | **Importación flexible** CSV/Excel: detecta codificación y separador, cabeceras de web/Facebook/Google Forms y del centro de clientes potenciales de Meta, columnas por contenido, ficheros sin cabecera, filas incompletas, fechas con am/pm; empareja estudios (también por su código dentro del nombre del formulario: «F250454AA \| COMM0023 – Instagram…») y aprende alias; nunca se para por una fila mala | `Domain/Import/*`, `Application/ImportService.php` |
 | **Cursos de formación** (Instagram para tu negocio, Gestión de recepción…) además de los estudios de diseño; filtro rápido «Cursos» | migración `2026_09_22_000004_cursos_formacion.php` |
 | **Duplicados**: mismo correo o teléfono → se completa el lead existente (y si estaba descartado vuelve a pendientes) | `LeadService::ingest` |

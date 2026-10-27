@@ -31,6 +31,21 @@ final class LeadSearchTest extends DatabaseTestCase
         self::assertSame([$this->ids['andres']], $this->search(['q' => 'garcia andrés']), 'varias palabras en cualquier orden');
     }
 
+    public function testBuscaTambienPorElNombreDeSusEstudios(): void
+    {
+        // andres: Máster Ilustración · pablo: Máster Profesional Gráfico y Grado Diseño Moda.
+        self::assertSame([$this->ids['andres']], $this->search(['q' => 'ILUSTRACIÓN']), 'sin tildes ni mayúsculas');
+        self::assertSame([$this->ids['pablo']], $this->search(['q' => 'moda']));
+        self::assertSame([$this->ids['andres']], $this->search(['q' => 'garcia master']), 'una palabra en sus datos y otra en su estudio');
+        self::assertEqualsCanonicalizing([$this->ids['andres'], $this->ids['pablo']], $this->search(['q' => 'master']));
+        self::assertSame([], $this->search(['q' => 'lucia master']));
+
+        $taller = $this->app->catalog()->saveStudy(null, ['nombre' => 'Taller de corsetería con Maya Hansen', 'tipo' => 'CURSO', 'empresa' => 'ESTACION']);
+        $sac = $this->lead(['nombre' => 'Rosa', 'email' => 'rosa@example.com', 'estudioIds' => [$taller['id']]]);
+        self::assertSame([$sac], $this->search(['q' => 'maya hansen']));
+        self::assertSame([$sac], $this->search(['q' => 'corseteria']));
+    }
+
     public function testBuscaTelefonosQueContienenLosDigitos(): void
     {
         self::assertEqualsCanonicalizing([$this->ids['andres'], $this->ids['sin']], $this->search(['q' => '454']));

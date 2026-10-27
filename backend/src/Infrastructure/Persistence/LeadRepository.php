@@ -191,6 +191,17 @@ final class LeadRepository extends BaseRepository
         } while (count($rows) === 500);
     }
 
+    /** @return array<int, string> id => nombre del estudio sin tildes ni mayúsculas (como el buscador) */
+    private function normalizedStudyNames(): array
+    {
+        $names = [];
+        foreach ($this->all('SELECT id, nombre FROM estudio') as $row) {
+            $names[(int) $row['id']] = Text::normalize($row['nombre']);
+        }
+
+        return $names;
+    }
+
     /** Llamadas agendadas entre esas horas en leads abiertos, por orden de hora. */
     public function scheduledCalls(DateTimeImmutable $from, DateTimeImmutable $to, ?string $company = null): array
     {
@@ -254,8 +265,18 @@ final class LeadRepository extends BaseRepository
             $params['q_phone'] = Text::likeContains($digits);
             $params['q_text'] = Text::likeContains(Text::normalize($search->text));
         } else {
+            // Cada palabra, en sus datos o en el nombre de alguno de sus estudios («maya hansen», «procreate»).
+            $studies = null;
             foreach ($search->words() as $i => $word) {
-                $where[] = "(l.texto_busqueda LIKE :q{$i} ESCAPE '!')";
+                $studies ??= $this->normalizedStudyNames();
+                $ids = array_keys(array_filter($studies, static fn (string $name): bool => str_contains($name, $word)));
+                $byStudy = '';
+                if ($ids !== []) {
+                    [$in, $inParams] = $this->inClause("qs{$i}_", $ids);
+                    $byStudy = " OR EXISTS (SELECT 1 FROM lead_estudio lq{$i} WHERE lq{$i}.lead_id = l.id AND lq{$i}.estudio_id IN ({$in}))";
+                    $params += $inParams;
+                }
+                $where[] = "(l.texto_busqueda LIKE :q{$i} ESCAPE '!'{$byStudy})";
                 $params["q{$i}"] = Text::likeContains($word);
             }
         }

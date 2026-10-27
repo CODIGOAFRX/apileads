@@ -42,7 +42,7 @@ export function SearchPanel({ filters, onChange, studies }) {
             type="search"
             value={filters.q}
             onChange={(e) => set('q', e.target.value)}
-            placeholder="Buscar por nombre, correo, teléfono (p. ej. 454) o ciudad"
+            placeholder="Buscar por nombre, correo, teléfono (p. ej. 454), ciudad o estudio"
             aria-label="Buscar leads"
             autoComplete="off"
           />
