@@ -18,9 +18,9 @@ Igual que la Biblioteca: se sube la carpeta del proyecto por FTP/SFTP y la raíz
 
 ## Despliegue automático con Git (lead.grupoefp.es)
 
-Cada push a `main` pasa las pruebas en GitHub Actions y, si van en verde (un fallo solo en PHP 8.1 avisa pero
-no frena), publica la rama **`produccion`**: la aplicación compilada (`frontend/dist` y `backend/vendor` sin
-herramientas de pruebas), sin `.env` ni base de datos. Plesk tira de esa rama:
+Cada push a `main` pasa las pruebas en GitHub Actions y, si van en verde, publica la rama **`produccion`**: la
+aplicación compilada (`frontend/dist` y `backend/vendor` sin herramientas de pruebas), sin `.env` ni base de
+datos. Plesk tira de esa rama:
 
 - Plesk → lead.grupoefp.es → **Git** → `apileads.git` (`https://github.com/CODIGOAFRX/apileads.git`),
   rama `produccion`, despliegue **automático** en `/httpdocs`.

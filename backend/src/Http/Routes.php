@@ -6,6 +6,7 @@ namespace Leads\Http;
 
 use Leads\Application\AuditService;
 use Leads\Core\App;
+use Leads\Core\Input;
 use Leads\Core\Request;
 use Leads\Core\Response;
 use Leads\Core\Router;
@@ -31,7 +32,7 @@ final class Routes
             if ($response->status() < 400) {
                 $text = (string) preg_replace_callback('/\{(\w+)\}/', static function (array $m) use ($request): string {
                     $value = $request->input($m[1]);
-                    return is_scalar($value) ? (string) $value : '';
+                    return is_scalar($value) ? (string) Input::toText($value) : '';
                 }, $summary);
                 $app->audit()->record($request->userId(), AuditService::AJUSTES, $text, ['ruta' => $request->method() . ' ' . $request->path()], null, $request->ip());
             }

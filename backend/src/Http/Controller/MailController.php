@@ -24,8 +24,8 @@ final class MailController extends Controller
         return Response::json($this->app->mail()->sendInfo(
             $request->intParam('id'),
             $request->user(),
-            is_string($subject) ? $subject : null,
-            is_string($html) ? $html : null,
+            is_string($subject) ? Input::toText($subject) : null,
+            is_string($html) ? Input::toText($html) : null,
         ));
     }
 
