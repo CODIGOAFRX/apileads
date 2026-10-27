@@ -12,13 +12,32 @@ use DateTimeImmutable;
  */
 final class ThrottleRepository extends BaseRepository
 {
+    /** Valor de una fila libre: «nunca se ha enviado nada». */
+    public const FREE = '2000-01-01 00:00:00';
+
     /** Reserva el turno si el último envío fue como muy tarde en $notAfter. */
     public function acquire(string $key, DateTimeImmutable $now, DateTimeImmutable $notAfter): bool
     {
-        return $this->execute(
+        $take = fn (): bool => $this->execute(
             'UPDATE limite_envio SET ultimo = :ahora WHERE clave = :clave AND ultimo <= :limite',
             ['ahora' => DbTime::toDb($now), 'clave' => $key, 'limite' => DbTime::toDb($notAfter)]
         ) === 1;
+        if ($take()) {
+            return true;
+        }
+        if ($this->last($key) !== null) {
+            return false;
+        }
+
+        // Sin fila (p. ej. una base de datos restaurada de un volcado que no la traía):
+        // sin ella el UPDATE no reserva nunca y no saldría ningún correo. Se crea libre.
+        try {
+            $this->execute('INSERT INTO limite_envio (clave, ultimo) VALUES (:clave, :libre)', ['clave' => $key, 'libre' => self::FREE]);
+        } catch (\PDOException) {
+            // La ha creado a la vez otra petición: vale igual.
+        }
+
+        return $take();
     }
 
     /** Devuelve el turno (el envío falló y no llegó a salir nada). */

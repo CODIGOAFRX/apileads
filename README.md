@@ -20,7 +20,7 @@ dossier de cada estudio sale desde el buzón de cada comercial.
 
 > Las capturas son de la demostración local: nombres, correos `@example.com` y teléfonos inventados.
 
-**PHP 8.1 sin framework · MariaDB · React 19 + Vite · 264 pruebas automáticas · CI en GitHub Actions · desplegado en Plesk**
+**PHP 8.1 sin framework · MariaDB · React 19 + Vite · 275 pruebas automáticas · CI en GitHub Actions · desplegado en Plesk**
 
 ---
 
@@ -87,7 +87,7 @@ backend/public/index.php ── Router → Controller → Service → Repository
 
 ## Calidad
 
-- **232 pruebas de backend** (PHPUnit) que se ejecutan con SQLite y con MariaDB, y **32 de frontend** (Vitest + jsdom).
+- **242 pruebas de backend** (PHPUnit) que se ejecutan con SQLite y con MariaDB, y **33 de frontend** (Vitest + jsdom).
 - **PHPStan** con reglas estrictas.
 - **CI en cada push** (`.github/workflows/ci.yml`): PHP 8.1, 8.3 y 8.4, MariaDB 10.11, ESLint, pruebas y compilación.
 - **Pruebas de resistencia:** todas las rutas de la API reciben datos basura (tipos cambiados, textos de 20.000
@@ -129,6 +129,8 @@ backend/public/index.php ── Router → Controller → Service → Repository
 | Usuarios (admin / comercial), estudios con color, centros y plantillas de correo por estudio | `features/settings/*` |
 | **Origen** del lead: se elige uno (Web, Redes sociales, Referencias, Año pasado, Feria, Colegios, AprendeMás, Emagister, TuMaster, EducaWeb). Es obligatorio al dar de alta; los antiguos sin origen salen como «Sin indicar». Al importar se reconoce aunque venga escrito de otra forma («Facebook», «IG», «educaweb.com»…) | `Domain/Lead/LeadOrigin.php` |
 | **Empresa: Estación Diseño o Grupo EFP**. Cada estudio es de una de las dos (los de estaciondiseno.es —grados, ciclos, másteres, cursos cortos y subvencionada— de Estación Diseño; el resto de Grupo EFP). El lead es de Estación Diseño si alguno de sus estudios lo es y, si no o sin estudio, de Grupo EFP: se ve al elegir los estudios, en la fila, en la ficha y en el CSV, y se filtra con «Rápido: Estación Diseño / Grupo EFP». La empresa de cada estudio se cambia en Ajustes → Estudios | `Domain/Lead/Company.php`, migración `2026_10_27_000010_empresa_por_estudio.php` |
+| **Firma de correo de cada usuario** (Ajustes → Usuarios → icono de nota): se crea con la plantilla de Estación Diseño a partir de nombre, cargo, correo y teléfono, o se pega otro HTML (p. ej. la de Grupo EFP). Va al final de cada correo que envía, también si retoca el texto, y se ve aparte al enviar | `MailService::signature`, `frontend/src/lib/signature.js`, `SignatureModal` |
+| **Usuarios por empresa**: en Ajustes → Usuarios, «Leads de» limita a alguien a Estación Diseño (Granada) o a Grupo EFP (Almería, Valladolid…), o le deja las dos. Solo ve, cuenta, exporta y trabaja los leads de esa empresa, solo ve sus estudios y solo da de alta, edita o importa leads que queden en ella (con Estación Diseño hace falta un estudio suyo). Un lead de la otra empresa no existe para él (404) y un duplicado suyo se avisa sin enseñar sus datos | `Company::ofUser`, `LeadService::findOrFail`, `LeadService::scopedQuery` |
 | **Histórico**: pestaña con todos los contactos menos los descartados, también los antiguos. En Importar, «Contactos antiguos: importar al histórico» los deja ahí (estado Histórico, con su fecha de alta) sin pasarlos a pendientes; los que ya estaban en la aplicación solo se completan. Un contacto del histórico vuelve a pendientes si se reabre o si vuelve a pedir información | `LeadStatus::HISTORICO`, `Inbox::HISTORICO`, `LeadService::ingest` |
 | **Crear estudios que falten** (p. ej. cursos cortos): cualquier usuario, desde el alta del lead, la importación o Ajustes → Estudios. Si ya existe (sin mirar tildes ni mayúsculas, o por un alias) se ofrece ese en lugar de duplicarlo. Se guarda quién lo creó; cambiar o borrar estudios es de administración | `CatalogService::saveStudy`, `StudyModal` |
 

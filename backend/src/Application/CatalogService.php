@@ -34,10 +34,17 @@ final class CatalogService
     ) {
     }
 
-    public function catalog(): array
+    /** $viewer limitado a una empresa: solo ve los estudios de esa. */
+    public function catalog(?array $viewer = null): array
     {
+        $company = $viewer === null ? null : Company::ofUser($viewer);
+        $studies = $this->catalog->studies();
+        if ($company !== null) {
+            $studies = array_values(array_filter($studies, static fn (array $s): bool => $s['empresa'] === $company->value));
+        }
+
         return [
-            'estudios' => $this->catalog->studies(),
+            'estudios' => $studies,
             'centros' => $this->catalog->centers(),
             'tipos' => self::STUDY_TYPES,
             'areas' => self::AREAS,
@@ -66,7 +73,12 @@ final class CatalogService
         $type = Input::text($data, 'tipo', $isAdmin ? '' : 'CURSO');
         $area = Input::text($data, 'area');
         // Quien lo crea puede decir de qué empresa es; si no lo dice, de Grupo EFP (o la que ya tenía).
-        $company = Company::tryFrom(Input::text($data, 'empresa', $current['empresa'] ?? Company::EFP->value));
+        // Quien solo trabaja con una empresa crea (y edita) estudios de esa, sin poder elegir.
+        $scope = $viewer === null ? null : Company::ofUser($viewer);
+        if ($scope !== null && $current !== null && $current['empresa'] !== $scope->value) {
+            throw HttpException::notFound('Estudio no encontrado');
+        }
+        $company = $scope ?? Company::tryFrom(Input::text($data, 'empresa', $current['empresa'] ?? Company::EFP->value));
         $color = strtoupper(trim(Input::text($data, 'color', '#00FF81')));
         if ($name === '' || mb_strlen($name) > 160) {
             throw new \InvalidArgumentException('Indica el nombre del estudio');

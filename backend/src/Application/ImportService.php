@@ -122,7 +122,8 @@ final class ImportService
         ];
     }
 
-    public function import(Table $table, string $fileName, array $options, int $userId): array
+    /** $viewer: si está limitado a una empresa, se omiten las filas de la otra. */
+    public function import(Table $table, string $fileName, array $options, int $userId, ?array $viewer = null): array
     {
         $mapping = $this->mapping($table, $options);
         $origin = $this->defaultOrigin($mapping, $options);
@@ -153,7 +154,7 @@ final class ImportService
             $this->pdo->beginTransaction();
             try {
                 foreach ($chunk as $index => $row) {
-                    $this->importRow($rowMapper, $row, $index + 1, $userId, $importId, $historical, $report);
+                    $this->importRow($rowMapper, $row, $index + 1, $userId, $importId, $historical, $viewer, $report);
                 }
                 $this->pdo->commit();
             } catch (\Throwable $e) {
@@ -194,7 +195,7 @@ final class ImportService
         return $this->imports->latest();
     }
 
-    private function importRow(RowMapper $rowMapper, array $row, int $rowNumber, int $userId, int $importId, bool $historical, array &$report): void
+    private function importRow(RowMapper $rowMapper, array $row, int $rowNumber, int $userId, int $importId, bool $historical, ?array $viewer, array &$report): void
     {
         $this->pdo->exec('SAVEPOINT fila');
         try {
@@ -203,6 +204,14 @@ final class ImportService
             if (!$input->hasContactData()) {
                 $report['omitidos']++;
                 $report['incidencias'][] = ['fila' => $rowNumber, 'tipo' => 'omitida', 'mensaje' => 'Fila sin nombre, correo ni teléfono'];
+                $this->pdo->exec('RELEASE SAVEPOINT fila');
+                return;
+            }
+
+            $outside = $viewer === null ? null : $this->leadService->outsideCompany($input, $viewer);
+            if ($outside !== null) {
+                $report['omitidos']++;
+                $report['incidencias'][] = ['fila' => $rowNumber, 'tipo' => 'omitida', 'mensaje' => $outside];
                 $this->pdo->exec('RELEASE SAVEPOINT fila');
                 return;
             }

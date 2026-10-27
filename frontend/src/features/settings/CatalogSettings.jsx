@@ -86,12 +86,12 @@ export function CatalogSettings() {
  * lo básico; si ya existe uno igual, se le ofrece en lugar de duplicarlo.
  */
 export function StudyModal({ study, onClose, onSaved, onAliasChange = () => {} }) {
-  const { catalog, isAdmin } = useApp()
+  const { catalog, isAdmin, user } = useApp()
   const toast = useToast()
   const isNew = !study.id
   const [existing, setExisting] = useState(null)
   const [form, setForm] = useState({
-    nombre: study.nombre || '', tipo: study.tipo || (isAdmin ? 'GRADO' : 'CURSO'), area: study.area || '', empresa: study.empresa || 'EFP',
+    nombre: study.nombre || '', tipo: study.tipo || (isAdmin ? 'GRADO' : 'CURSO'), area: study.area || '', empresa: study.empresa || user?.empresa || 'EFP',
     color: study.color || PALETTE[catalog.estudios.length % PALETTE.length],
     orden: study.orden ?? catalog.estudios.length + 1, activo: study.activo ?? true,
     centroIds: study.centroIds || catalog.centros.map((c) => c.id),
@@ -193,11 +193,13 @@ export function StudyModal({ study, onClose, onSaved, onAliasChange = () => {} }
               {Object.entries(catalog.areas).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
             </select>
           </Field>
-          <Field label="Empresa" hint="Los leads con este estudio van a esta empresa">
-            <select className="ed-select" value={form.empresa} onChange={set('empresa')}>
-              {COMPANIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
-            </select>
-          </Field>
+          {!user?.empresa && (
+            <Field label="Empresa" hint="Los leads con este estudio van a esta empresa">
+              <select className="ed-select" value={form.empresa} onChange={set('empresa')}>
+                {COMPANIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+              </select>
+            </Field>
+          )}
           {isAdmin && <Field label="Orden"><input className="ed-input" type="number" value={form.orden} onChange={set('orden')} /></Field>}
         </div>
         <Field label="Color">

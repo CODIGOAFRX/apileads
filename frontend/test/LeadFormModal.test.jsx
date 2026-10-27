@@ -11,9 +11,9 @@ vi.mock('../src/api/endpoints.js', () => ({
 const { leadsApi } = await import('../src/api/endpoints.js')
 const { LeadFormModal } = await import('../src/features/leads/LeadFormModal.jsx')
 
-function open(props = {}) {
+function open(props = {}, options = {}) {
   const onSaved = vi.fn()
-  renderWithApp(<LeadFormModal section="pendientes" onClose={() => {}} onSaved={onSaved} onOpenExisting={() => {}} {...props} />)
+  renderWithApp(<LeadFormModal section="pendientes" onClose={() => {}} onSaved={onSaved} onOpenExisting={() => {}} {...props} />, options)
   return { onSaved, user: userEvent.setup() }
 }
 
@@ -50,6 +50,15 @@ describe('Alta de un lead', () => {
     expect(company()).toBe('Estación Diseño')
     await user.click(screen.getByRole('button', { name: 'Grado Diseño Moda' }))
     expect(company()).toBe('Grupo EFP')
+  })
+
+  it('avisa a quien solo trabaja con Estación Diseño si el lead quedaría en Grupo EFP', async () => {
+    const { user } = open({}, { empresa: 'ESTACION' })
+    const warning = () => screen.queryByText(/solo puedes guardar leads de Estación Diseño/)
+
+    expect(warning()).not.toBeNull()
+    await user.click(screen.getByRole('button', { name: 'Grado Diseño Moda' }))
+    expect(warning()).toBeNull()
   })
 
   it('ya no pide campaña ni formulario', () => {

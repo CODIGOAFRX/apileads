@@ -21,9 +21,9 @@ export const CATALOG = {
   areas: { GRAFICO: 'Gráfico', MODA: 'Moda', ILUSTRACION: 'Ilustración' },
 }
 
-export function renderWithApp(ui, { isAdmin = false, reloadCatalog = async () => {} } = {}) {
+export function renderWithApp(ui, { isAdmin = false, empresa = null, reloadCatalog = async () => {} } = {}) {
   const context = {
-    user: { id: 2, nombre: 'Marta Ruiz', email: 'marta@estaciondiseno.es', rol: isAdmin ? 'ADMIN' : 'COMERCIAL' },
+    user: { id: 2, nombre: 'Marta Ruiz', email: 'marta@estaciondiseno.es', rol: isAdmin ? 'ADMIN' : 'COMERCIAL', empresa },
     isAdmin,
     catalog: CATALOG,
     reloadCatalog,

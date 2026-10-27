@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Leads\Http\Controller;
 
 use Leads\Application\AuditService;
+use Leads\Application\LeadService;
 use Leads\Core\Request;
 use Leads\Core\Response;
 
@@ -17,7 +18,7 @@ final class LeadController extends Controller
 
     public function counters(Request $request): Response
     {
-        return Response::json($this->app->leads()->counters());
+        return Response::json($this->app->leads()->counters($request->user()));
     }
 
     public function show(Request $request): Response
@@ -52,7 +53,7 @@ final class LeadController extends Controller
     /** Ha pulsado el número de teléfono (enlace tel:) para llamar. */
     public function dial(Request $request): Response
     {
-        $lead = $this->app->leads()->findOrFail($request->intParam('id'));
+        $lead = $this->app->leads()->findOrFail($request->intParam('id'), $request->user());
         $this->audit($request, AuditService::MARCADO, 'Pulsa el teléfono para llamar', ['telefono' => $lead['telefono']], (int) $lead['id'], 10);
 
         return Response::noContent();
@@ -130,6 +131,6 @@ final class LeadController extends Controller
         $name = 'leads-' . ($request->queryText('bandeja') ?: 'pendientes') . '-' . date('Y-m-d') . '.csv';
         $this->audit($request, AuditService::EXPORTACION, 'Exporta leads a CSV (' . ($request->queryText('bandeja') ?: 'pendientes') . ')', ['filtros' => $request->allQuery()]);
 
-        return Response::download($this->app->exports()->csv($request->allQuery()), $name, 'text/csv; charset=utf-8');
+        return Response::download($this->app->exports()->csv(LeadService::scopedQuery($request->allQuery(), $request->user())), $name, 'text/csv; charset=utf-8');
     }
 }

@@ -7,6 +7,7 @@ namespace Leads\Application;
 use Leads\Core\Clock;
 use Leads\Core\HttpException;
 use Leads\Core\Input;
+use Leads\Domain\Lead\Company;
 use Leads\Domain\User\Role;
 use Leads\Infrastructure\Persistence\DbTime;
 use Leads\Infrastructure\Persistence\LoginAttemptRepository;
@@ -18,6 +19,8 @@ final class AuthService
     private const MAX_ATTEMPTS = 5;
     private const WINDOW = '-15 minutes';
     private const MIN_PASSWORD_LENGTH = 10;
+    /** Tamaño máximo de la firma de correo (la columna es TEXT, 64 KB). */
+    private const MAX_SIGNATURE = 20000;
     private const DUMMY_HASH = '$2y$12$6hZYeRhrxC2gRRRsDcQC9uwa.GPCATNoE7p9dxeStslERr5R8jHWq';
 
     public function __construct(
@@ -91,6 +94,7 @@ final class AuthService
         $email = mb_strtolower(trim(Input::text($data, 'email')));
         $role = Role::tryFrom(Input::text($data, 'rol')) ?? Role::COMERCIAL;
         $password = Input::text($data, 'password');
+        $company = self::companyFrom($data, null);
 
         $this->assertValidProfile($name, $email);
         $this->assertValidPassword($password);
@@ -103,6 +107,7 @@ final class AuthService
             'email' => $email,
             'password_hash' => password_hash($password, PASSWORD_DEFAULT),
             'rol' => $role->value,
+            'empresa' => $company,
             'activo' => 1,
             'creado_en' => DbTime::toDb($this->clock->now()),
         ]);
@@ -131,7 +136,13 @@ final class AuthService
             throw HttpException::conflict('No puedes desactivar tu propia cuenta');
         }
 
-        $values = ['nombre' => $name, 'email' => $email, 'rol' => $role->value, 'activo' => $active ? 1 : 0];
+        $values = [
+            'nombre' => $name, 'email' => $email, 'rol' => $role->value, 'activo' => $active ? 1 : 0,
+            'empresa' => self::companyFrom($data, $user['empresa'] ?? null),
+        ];
+        if (array_key_exists('firma', $data)) {
+            $values['firma_html'] = self::signatureFrom($data);
+        }
         if (($data['password'] ?? '') !== '') {
             $this->assertValidPassword((string) $data['password']);
             $values['password_hash'] = password_hash((string) $data['password'], PASSWORD_DEFAULT);
@@ -167,6 +178,10 @@ final class AuthService
             'nombre' => $user['nombre'],
             'email' => $user['email'],
             'rol' => $user['rol'],
+            // Empresa cuyos leads ve (ESTACION o EFP); null = las dos.
+            'empresa' => Company::ofUser($user)?->value,
+            // Firma de sus correos (HTML); null si no tiene.
+            'firma' => $user['firma_html'] ?? null,
             'activo' => (bool) $user['activo'],
             'ultimoAcceso' => DbTime::toApi($user['ultimo_acceso'] ?? null),
         ];
@@ -176,6 +191,31 @@ final class AuthService
         }
 
         return $presented;
+    }
+
+    /** Firma de correo, con la misma limpieza que las plantillas; vacía = sin firma. */
+    private static function signatureFrom(array $data): ?string
+    {
+        $html = trim(MailService::sanitize(Input::text($data, 'firma')));
+        if (strlen($html) > self::MAX_SIGNATURE) {
+            throw new \InvalidArgumentException('La firma es demasiado larga');
+        }
+
+        return trim(strip_tags($html, '<img>')) === '' ? null : $html;
+    }
+
+    /** «empresa» del formulario: ESTACION, EFP o vacío (las dos). Sin indicarla, $current. */
+    private static function companyFrom(array $data, ?string $current): ?string
+    {
+        if (!array_key_exists('empresa', $data)) {
+            return $current;
+        }
+        $value = Input::text($data, 'empresa');
+        if ($value === '') {
+            return null;
+        }
+
+        return (Company::tryFrom($value) ?? throw new \InvalidArgumentException('Empresa no válida'))->value;
     }
 
     private function assertValidProfile(string $name, string $email): void

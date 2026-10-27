@@ -26,6 +26,15 @@ enum Company: string
         return self::EFP;
     }
 
+    /**
+     * Empresa a la que está limitado un usuario (solo ve y da de alta leads de
+     * esa); null si trabaja con las dos.
+     */
+    public static function ofUser(array $user): ?self
+    {
+        return self::tryFrom((string) ($user['empresa'] ?? ''));
+    }
+
     public function label(): string
     {
         return match ($this) {

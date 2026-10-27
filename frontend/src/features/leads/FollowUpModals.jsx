@@ -4,7 +4,7 @@ import { Icon } from '../../components/Icon.jsx'
 import { Modal } from '../../components/Modal.jsx'
 import { useToast } from '../../components/Toasts.jsx'
 import { Alert, Loading, Spinner } from '../../components/ui.jsx'
-import { EditableHtml } from '../../components/HtmlPreview.jsx'
+import { EditableHtml, HtmlPreview } from '../../components/HtmlPreview.jsx'
 import { formatBytes, formatDateTime, plural } from '../../lib/format.js'
 import { displayName } from '../../lib/leads.js'
 
@@ -181,6 +181,9 @@ export function MailModal({ lead, section, onClose, onSent, andWhatsapp = false 
             )}
           </div>
           <EditableHtml key={version} html={preview.html} onChange={setHtml} />
+          {preview.firma
+            ? <HtmlPreview html={preview.firma} title="Tu firma (se añade al final)" compact />
+            : <p className="ed-hint" style={{ margin: 0 }}>Sin firma: administración la añade en Ajustes → Usuarios.</p>}
           {!(lead.estudios || []).length && (
             <Alert>No sabemos qué quiere estudiar: se enviará el correo genérico. Puedes asignarle un estudio desde su ficha.</Alert>
           )}

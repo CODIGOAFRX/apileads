@@ -267,6 +267,72 @@ final class MailServiceTest extends DatabaseTestCase
         self::assertCount(2, $this->mailer->sent);
     }
 
+    public function testCadaComercialFirmaSusCorreos(): void
+    {
+        $auth = $this->app->auth();
+        $marta = $auth->updateUser((int) $this->comercial['id'], [
+            'firma' => '<table><tr><td><strong>Marta Comercial</strong><br>Atención al usuario</td></tr></table><script>alert(1)</script>',
+        ], (int) $this->admin['id']);
+        self::assertStringNotContainsString('<script', (string) $marta['firma'], 'se limpia como las plantillas');
+
+        $mail = $this->app->mail();
+        $eva = $this->lead(['nombre' => 'Eva', 'email' => 'eva@example.com', 'estudioIds' => [2]]);
+        $preview = $mail->preview($eva, $marta);
+        self::assertStringContainsString('Atención al usuario', $preview['firma']);
+        self::assertStringNotContainsString('Atención al usuario', $preview['html'], 'la firma va aparte: no se retoca');
+
+        $mail->sendInfo($eva, $marta, null, '<p>Hola Eva, la matrícula cierra el viernes.</p>');
+        $sent = $this->mailer->sent[0]->html;
+        self::assertStringStartsWith('<p>Hola Eva, la matrícula cierra el viernes.</p>', $sent);
+        self::assertStringEndsWith('Atención al usuario</td></tr></table></div>', $sent, 'al final, también si se retoca el texto');
+
+        // Sin firma (o vaciándola) no se añade nada.
+        $sinFirma = $auth->updateUser((int) $this->comercial['id'], ['firma' => '  <p> </p> '], (int) $this->admin['id']);
+        self::assertNull($sinFirma['firma']);
+        self::assertNull($mail->preview($eva, $sinFirma)['firma']);
+        self::assertNull($auth->updateUser((int) $this->comercial['id'], ['nombre' => 'Marta'], (int) $this->admin['id'])['firma'], 'sin indicarla no se toca');
+    }
+
+    public function testEnviaAunqueFalteLaFilaDelLimiteDeEnvio(): void
+    {
+        // Como en una base de datos restaurada de un volcado limpio: limite_envio vacía.
+        // Antes respondía siempre «podrás enviarlo en 1 s» y no salía ningún correo.
+        $this->pdo->exec('DELETE FROM limite_envio');
+        $mail = $this->app->mail();
+        $eva = $this->lead(['nombre' => 'Eva', 'email' => 'eva@example.com', 'estudioIds' => [2]]);
+        $luis = $this->lead(['nombre' => 'Luis', 'email' => 'luis@example.com', 'estudioIds' => [1]]);
+        self::assertSame(0, $mail->preview($eva, $this->comercial)['esperaSegundos']);
+
+        $mail->sendInfo($eva, $this->comercial);
+        self::assertCount(1, $this->mailer->sent);
+        self::assertSame(72, $mail->preview($luis, $this->comercial)['esperaSegundos'], 'y el límite sigue funcionando');
+
+        $this->clock->advance('+72 seconds');
+        $mail->sendInfo($luis, $this->comercial);
+        self::assertCount(2, $this->mailer->sent);
+    }
+
+    public function testSiElEnvioFallaSinEnviosPreviosElTurnoQuedaLibre(): void
+    {
+        $this->pdo->exec('DELETE FROM limite_envio');
+        $failing = new class implements MailTransport {
+            public function send(Message $message): void
+            {
+                throw new MailException('Connection refused');
+            }
+        };
+        $app = new App(dirname(__DIR__, 2), $this->pdo, $this->clock, $failing);
+        $id = $this->lead(['nombre' => 'Eva', 'email' => 'eva@example.com', 'estudioIds' => [2]]);
+
+        try {
+            $app->mail()->sendInfo($id, $this->comercial);
+            self::fail('Debía fallar');
+        } catch (HttpException $e) {
+            self::assertSame(502, $e->status());
+        }
+        self::assertSame(0, $app->mail()->preview($id, $this->comercial)['esperaSegundos']);
+    }
+
     public function testSiElEnvioFallaSeDevuelveElTurno(): void
     {
         $failing = new class implements MailTransport {

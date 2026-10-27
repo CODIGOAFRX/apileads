@@ -7,9 +7,9 @@ function documentFor(html) {
     a{color:#1F201D}</style></head><body>${html}</body></html>`
 }
 
-/** Muestra HTML de correo aislado en un iframe sin scripts. */
-export function HtmlPreview({ html, title = 'Vista previa del correo' }) {
-  return <iframe className="ed-mail-preview" title={title} sandbox="" srcDoc={documentFor(html)} />
+/** Muestra HTML de correo aislado en un iframe sin scripts. «compact»: más bajo (p. ej. una firma). */
+export function HtmlPreview({ html, title = 'Vista previa del correo', compact = false }) {
+  return <iframe className={`ed-mail-preview${compact ? ' ed-mail-preview--compact' : ''}`} title={title} sandbox="" srcDoc={documentFor(html)} />
 }
 
 /**

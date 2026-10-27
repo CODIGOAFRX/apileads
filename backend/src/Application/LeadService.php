@@ -11,6 +11,7 @@ use Leads\Core\HttpException;
 use Leads\Core\Input;
 use Leads\Domain\Lead\ActivityType;
 use Leads\Domain\Lead\CallOutcome;
+use Leads\Domain\Lead\Company;
 use Leads\Domain\Lead\LeadInput;
 use Leads\Domain\Lead\LeadOrigin;
 use Leads\Domain\Lead\LeadSearch;
@@ -50,7 +51,7 @@ final class LeadService
 
     public function search(array $query, array $viewer): array
     {
-        $search = LeadSearch::fromQuery($query);
+        $search = LeadSearch::fromQuery(self::scopedQuery($query, $viewer));
         $now = $this->clock->now();
         $result = $this->leads->search($search, $now, $this->timezone);
 
@@ -59,18 +60,27 @@ final class LeadService
             'total' => $result['total'],
             'pagina' => $search->page,
             'porPagina' => $search->perPage,
-            'contadores' => $this->leads->countByInbox($now),
+            'contadores' => $this->leads->countByInbox($now, Company::ofUser($viewer)?->value),
         ];
     }
 
-    public function counters(): array
+    /** Sin $viewer (scripts y pruebas), de todos los leads. */
+    public function counters(array $viewer = []): array
     {
-        return $this->leads->countByInbox($this->clock->now());
+        return $this->leads->countByInbox($this->clock->now(), Company::ofUser($viewer)?->value);
+    }
+
+    /** Un usuario limitado a una empresa solo busca (y exporta) los leads de esa. */
+    public static function scopedQuery(array $query, array $viewer): array
+    {
+        $company = Company::ofUser($viewer);
+
+        return $company === null ? $query : ['empresa' => $company->value] + array_diff_key($query, ['empresa' => true]);
     }
 
     public function get(int $id, array $viewer): array
     {
-        $lead = $this->present($this->findOrFail($id), $viewer);
+        $lead = $this->present($this->findOrFail($id, $viewer), $viewer);
         $lead['historial'] = $this->activity->forLead($id);
 
         return $lead;
@@ -89,7 +99,12 @@ final class LeadService
             throw new \InvalidArgumentException('Indica al menos un nombre, un correo o un teléfono');
         }
 
+        $this->assertCompanyAllowed($input->studyIds, $viewer);
+
         $duplicate = $this->leads->findDuplicate($input->email, $input->phone?->digits());
+        if ($duplicate !== null) {
+            $this->assertDuplicateVisible($duplicate, $viewer);
+        }
         if ($duplicate !== null && !filter_var($data['fusionar'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
             throw HttpException::conflict('Ya existe un lead con ese correo o teléfono', [
                 'duplicado' => $this->present($duplicate, $viewer),
@@ -103,13 +118,15 @@ final class LeadService
 
     public function update(int $id, array $data, array $viewer): array
     {
-        $current = $this->findOrFail($id);
+        $current = $this->findOrFail($id, $viewer);
         $input = $this->inputFromForm($data, $this->formOrigin($data, LeadOrigin::tryFrom((string) $current['origen']) ?? LeadOrigin::OTRO));
         if (!$input->hasContactData()) {
             throw new \InvalidArgumentException('Indica al menos un nombre, un correo o un teléfono');
         }
+        $this->assertCompanyAllowed($input->studyIds, $viewer);
         $duplicate = $this->leads->findDuplicate($input->email, $input->phone?->digits(), $id);
         if ($duplicate !== null) {
+            $this->assertDuplicateVisible($duplicate, $viewer);
             throw HttpException::conflict('Otro lead ya tiene ese correo o teléfono', [
                 'duplicado' => $this->present($duplicate, $viewer),
             ]);
@@ -209,16 +226,16 @@ final class LeadService
 
     public function lock(int $id, array $viewer): array
     {
-        $this->findOrFail($id);
+        $this->findOrFail($id, $viewer);
         $now = $this->clock->now();
         $until = $now->modify("+{$this->settings->lockMinutes} minutes");
         if (!$this->leads->lock($id, (int) $viewer['id'], $now, $until)) {
-            $lead = $this->present($this->findOrFail($id), $viewer);
+            $lead = $this->present($this->findOrFail($id, $viewer), $viewer);
             $who = $lead['bloqueo']['usuario'] ?? 'otra persona';
             throw HttpException::conflict("{$who} está llamando a este lead ahora mismo", ['lead' => $lead]);
         }
 
-        return $this->present($this->findOrFail($id), $viewer);
+        return $this->present($this->findOrFail($id, $viewer), $viewer);
     }
 
     public function unlock(int $id, array $viewer): void
@@ -229,7 +246,7 @@ final class LeadService
     public function registerCall(int $id, string $outcome, ?string $note, array $viewer): array
     {
         $result = CallOutcome::tryFrom($outcome) ?? throw new \InvalidArgumentException('Resultado de llamada no válido');
-        $lead = $this->findOrFail($id);
+        $lead = $this->findOrFail($id, $viewer);
         if ($lead['telefono_digitos'] === null) {
             throw new \InvalidArgumentException('Este lead no tiene un teléfono válido');
         }
@@ -245,7 +262,7 @@ final class LeadService
     public function scheduleCall(int $id, string $when, ?string $note, array $viewer): array
     {
         $at = $this->parseLocalDateTime($when, 'Fecha de la llamada no válida');
-        $lead = $this->findOrFail($id);
+        $lead = $this->findOrFail($id, $viewer);
         if ($lead['telefono_digitos'] === null) {
             throw new \InvalidArgumentException('Este lead no tiene un teléfono válido');
         }
@@ -260,7 +277,7 @@ final class LeadService
     /** Botón rápido de interés, sin registrar ninguna llamada. */
     public function markInterested(int $id, array $viewer): array
     {
-        $lead = $this->findOrFail($id);
+        $lead = $this->findOrFail($id, $viewer);
 
         return $this->commit($id, $this->workflow->markInterested($this->stateOf($lead)), null, $viewer, $this->clock->now());
     }
@@ -268,7 +285,7 @@ final class LeadService
     public function scheduleAppointment(int $id, string $when, ?string $note, array $viewer): array
     {
         $at = $this->parseLocalDateTime($when, 'Fecha de la cita no válida');
-        $lead = $this->findOrFail($id);
+        $lead = $this->findOrFail($id, $viewer);
         $now = $this->clock->now();
 
         return $this->commit($id, $this->workflow->scheduleAppointment($this->stateOf($lead), $at), $note, $viewer, $now);
@@ -276,21 +293,21 @@ final class LeadService
 
     public function enroll(int $id, ?string $note, array $viewer): array
     {
-        $lead = $this->findOrFail($id);
+        $lead = $this->findOrFail($id, $viewer);
 
         return $this->commit($id, $this->workflow->enroll($this->stateOf($lead)), $note, $viewer, $this->clock->now());
     }
 
     public function discard(int $id, string $reason, array $viewer): array
     {
-        $lead = $this->findOrFail($id);
+        $lead = $this->findOrFail($id, $viewer);
 
         return $this->commit($id, $this->workflow->discard($this->stateOf($lead), $reason), null, $viewer, $this->clock->now(), unlock: true);
     }
 
     public function reopen(int $id, array $viewer): array
     {
-        $lead = $this->findOrFail($id);
+        $lead = $this->findOrFail($id, $viewer);
 
         return $this->commit($id, $this->workflow->reopen($this->stateOf($lead)), null, $viewer, $this->clock->now());
     }
@@ -301,7 +318,7 @@ final class LeadService
         if ($text === '') {
             throw new \InvalidArgumentException('La nota está vacía');
         }
-        $this->findOrFail($id);
+        $this->findOrFail($id, $viewer);
         $now = $this->clock->now();
         $this->activity->log($id, (int) $viewer['id'], ActivityType::NOTA, mb_substr($text, 0, 255), mb_strlen($text) > 255 ? ['texto' => $text] : [], $now);
         $this->leads->save($id, ['actualizado_en' => DbTime::toDb($now)]);
@@ -311,7 +328,7 @@ final class LeadService
 
     public function logWhatsapp(int $id, array $viewer): array
     {
-        $lead = $this->present($this->findOrFail($id), $viewer);
+        $lead = $this->present($this->findOrFail($id, $viewer), $viewer);
         if ($lead['whatsappUrl'] === null) {
             throw new \InvalidArgumentException('Este lead no tiene un teléfono válido');
         }
@@ -322,9 +339,72 @@ final class LeadService
 
     // ── Utilidades ──────────────────────────────────────────────────────────
 
-    public function findOrFail(int $id): array
+    /** Con $viewer, un lead de la otra empresa no existe para un usuario limitado a una. */
+    public function findOrFail(int $id, ?array $viewer = null): array
     {
-        return $this->leads->find($id) ?? throw HttpException::notFound('Lead no encontrado');
+        $lead = $this->leads->find($id) ?? throw HttpException::notFound('Lead no encontrado');
+        if ($viewer !== null && !$this->visibleTo($lead, $viewer)) {
+            throw HttpException::notFound('Lead no encontrado');
+        }
+
+        return $lead;
+    }
+
+    private function visibleTo(array $lead, array $viewer): bool
+    {
+        $company = Company::ofUser($viewer);
+
+        return $company === null || Company::ofStudies($lead['estudios'] ?? []) === $company;
+    }
+
+    /**
+     * Al importar con un usuario limitado a una empresa: por qué esta fila no puede
+     * entrar (es de la otra empresa o ya es de un lead suyo); null si puede.
+     */
+    public function outsideCompany(LeadInput $input, array $viewer): ?string
+    {
+        try {
+            $this->assertCompanyAllowed($input->studyIds, $viewer);
+            $duplicate = $this->leads->findDuplicate($input->email, $input->phone?->digits());
+            if ($duplicate !== null) {
+                $this->assertDuplicateVisible($duplicate, $viewer);
+            }
+        } catch (\InvalidArgumentException | HttpException $e) {
+            return $e->getMessage();
+        }
+
+        return null;
+    }
+
+    /** Si el duplicado es de la otra empresa, se avisa sin enseñar sus datos ni dejar fusionarlo. */
+    private function assertDuplicateVisible(array $duplicate, array $viewer): void
+    {
+        if (!$this->visibleTo($duplicate, $viewer)) {
+            throw HttpException::conflict(
+                'Ese correo o teléfono ya es de un lead de ' . Company::ofStudies($duplicate['estudios'] ?? [])->label() . ': lo lleva su equipo'
+            );
+        }
+    }
+
+    /**
+     * Un usuario limitado a una empresa solo da de alta (o deja) leads de esa: con
+     * Estación Diseño hace falta algún estudio suyo; con Grupo EFP, ninguno.
+     *
+     * @param list<int> $studyIds
+     */
+    private function assertCompanyAllowed(array $studyIds, array $viewer): void
+    {
+        $company = Company::ofUser($viewer);
+        if ($company === null) {
+            return;
+        }
+        $studies = array_filter($this->catalog->studies(), static fn (array $s): bool => in_array($s['id'], $studyIds, true));
+        if (Company::ofStudies(array_values($studies)) === $company) {
+            return;
+        }
+        throw new \InvalidArgumentException($company === Company::ESTACION
+            ? 'Elige al menos un estudio de Estación Diseño: con tu usuario solo se dan de alta leads de Estación Diseño'
+            : 'Hay un estudio de Estación Diseño: con tu usuario solo se dan de alta leads de Grupo EFP');
     }
 
     public function present(array $row, array $viewer): array

@@ -191,8 +191,19 @@ final class LeadRepository extends BaseRepository
         } while (count($rows) === 500);
     }
 
-    /** @return array<string,int> número de leads por pestaña */
-    public function countByInbox(DateTimeImmutable $now): array
+    /** De Estación Diseño si alguno de sus estudios lo es; si no, de Grupo EFP (ver Company). */
+    private static function companyCondition(string $company): string
+    {
+        return ($company === Company::ESTACION->value ? '' : 'NOT ')
+            . "EXISTS (SELECT 1 FROM lead_estudio le4 JOIN estudio e4 ON e4.id = le4.estudio_id
+               WHERE le4.lead_id = l.id AND e4.empresa = '" . Company::ESTACION->value . "')";
+    }
+
+    /**
+     * @param ?string $company solo los leads de esa empresa (usuario limitado a una)
+     * @return array<string,int> número de leads por pestaña
+     */
+    public function countByInbox(DateTimeImmutable $now, ?string $company = null): array
     {
         $cases = [];
         $params = [];
@@ -202,7 +213,8 @@ final class LeadRepository extends BaseRepository
             $cases[] = "SUM(CASE WHEN {$condition} THEN 1 ELSE 0 END) AS {$alias}";
             $params += $conditionParams;
         }
-        $row = $this->one('SELECT COUNT(*) AS todos, ' . implode(', ', $cases) . ' FROM leads l', $params) ?? [];
+        $where = $company === null ? '' : ' WHERE ' . self::companyCondition($company);
+        $row = $this->one('SELECT COUNT(*) AS todos, ' . implode(', ', $cases) . ' FROM leads l' . $where, $params) ?? [];
 
         $counts = [];
         foreach (Inbox::cases() as $inbox) {
@@ -264,10 +276,7 @@ final class LeadRepository extends BaseRepository
             $params['study_type'] = $search->studyType;
         }
         if ($search->company !== null) {
-            // De Estación Diseño si alguno de sus estudios lo es; si no, de Grupo EFP (ver Company).
-            $where[] = ($search->company === Company::ESTACION->value ? '' : 'NOT ')
-                . "EXISTS (SELECT 1 FROM lead_estudio le4 JOIN estudio e4 ON e4.id = le4.estudio_id
-                   WHERE le4.lead_id = l.id AND e4.empresa = '" . Company::ESTACION->value . "')";
+            $where[] = self::companyCondition($search->company);
         }
         if ($search->withoutStudy) {
             $where[] = 'NOT EXISTS (SELECT 1 FROM lead_estudio le3 WHERE le3.lead_id = l.id)';

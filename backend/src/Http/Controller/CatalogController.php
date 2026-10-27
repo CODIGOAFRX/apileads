@@ -11,7 +11,7 @@ final class CatalogController extends Controller
 {
     public function index(Request $request): Response
     {
-        return Response::json($this->app->catalog()->catalog());
+        return Response::json($this->app->catalog()->catalog($request->user()));
     }
 
     public function createStudy(Request $request): Response

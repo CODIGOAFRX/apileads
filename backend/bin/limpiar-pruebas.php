@@ -24,6 +24,7 @@ declare(strict_types=1);
 use Leads\Core\App;
 use Leads\Core\Env;
 use Leads\Infrastructure\Persistence\DbTime;
+use Leads\Infrastructure\Persistence\ThrottleRepository;
 
 $root = dirname(__DIR__);
 require $root . '/vendor/autoload.php';
@@ -148,7 +149,9 @@ try {
 
     $pdo->exec('DELETE FROM importacion WHERE id NOT IN (SELECT importacion_id FROM leads WHERE importacion_id IS NOT NULL)');
     $pdo->exec('DELETE FROM login_intento');
+    // Se deja libre, sin borrar la fila: sin ella no se reservaría nunca el turno de envío.
     $pdo->exec('DELETE FROM limite_envio');
+    $pdo->exec("INSERT INTO limite_envio (clave, ultimo) VALUES ('correo', '" . ThrottleRepository::FREE . "')");
 
     $testIds = $in(array_column($testUsers, 'id'));
     $pdo->exec("DELETE FROM cuenta_correo WHERE usuario_id IN ({$testIds})");

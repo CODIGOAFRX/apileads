@@ -18,6 +18,7 @@ use Leads\Domain\Shared\Email;
 use Leads\Infrastructure\Mail\PersonalMailbox;
 use Leads\Infrastructure\Persistence\ActivityRepository;
 use Leads\Infrastructure\Persistence\CatalogRepository;
+use Leads\Infrastructure\Persistence\DbTime;
 use Leads\Infrastructure\Persistence\MailRepository;
 use Leads\Infrastructure\Persistence\ThrottleRepository;
 
@@ -68,7 +69,7 @@ final class MailService
 
     public function preview(int $leadId, array $viewer): array
     {
-        $lead = $this->leads->findOrFail($leadId);
+        $lead = $this->leads->findOrFail($leadId, $viewer);
         [$message, $attachmentIds] = $this->compose($lead, $viewer);
         $personal = $this->personalDelivery && $message->from !== null;
 
@@ -77,6 +78,8 @@ final class MailService
             'para' => $message->to,
             'asunto' => $message->subject,
             'html' => $message->html,
+            // Va debajo del texto y no se retoca al enviar (Ajustes → Usuarios).
+            'firma' => self::signature($viewer),
             'adjuntos' => $this->attachmentList($attachmentIds),
             'ultimoEnvio' => $this->mails->lastSentAt($leadId),
             'esperaSegundos' => $this->secondsToWait(),
@@ -102,7 +105,7 @@ final class MailService
      */
     public function sendInfo(int $leadId, array $viewer, ?string $subject = null, ?string $html = null): array
     {
-        $lead = $this->leads->findOrFail($leadId);
+        $lead = $this->leads->findOrFail($leadId, $viewer);
         if (!Email::isValid($lead['email'])) {
             throw new \InvalidArgumentException('Este lead no tiene un correo válido');
         }
@@ -112,7 +115,11 @@ final class MailService
         }
 
         [$message, $attachmentIds] = $this->compose($lead, $viewer);
-        $message = $this->personalize($message, $subject, $html)->with(['attachments' => $this->attachments($attachmentIds)]);
+        $message = $this->personalize($message, $subject, $html);
+        $message = $message->with([
+            'html' => $message->html . (self::signature($viewer) ?? ''),
+            'attachments' => $this->attachments($attachmentIds),
+        ]);
         $userId = (int) $viewer['id'];
         $transport = $this->transportFor($userId);
         $simulated = $this->simulated && !$transport instanceof PersonalMailbox;
@@ -156,7 +163,8 @@ final class MailService
         if ($this->throttle === null || $this->secondsBetween <= 0) {
             return null;
         }
-        $previous = $this->throttle->last(self::THROTTLE_KEY);
+        // Sin envíos previos el turno se devuelve como libre si el envío falla.
+        $previous = $this->throttle->last(self::THROTTLE_KEY) ?? DbTime::fromDb(ThrottleRepository::FREE);
         if (!$this->throttle->acquire(self::THROTTLE_KEY, $now, $now->modify("-{$this->secondsBetween} seconds"))) {
             $wait = max(1, $this->secondsToWait());
             throw new HttpException(
@@ -377,6 +385,14 @@ final class MailService
     }
 
     /** Quita scripts, iframes y manejadores de eventos del HTML de las plantillas. */
+    /** Firma de quien envía, ya lista para ir al final del correo; null si no tiene. */
+    private static function signature(array $viewer): ?string
+    {
+        $html = trim(Input::text($viewer, 'firma'));
+
+        return $html === '' ? null : '<div class="firma" style="margin-top:28px">' . self::sanitize($html) . '</div>';
+    }
+
     public static function sanitize(string $html): string
     {
         $html = (string) preg_replace('#<\s*(script|style|iframe|object|embed|form)\b[^>]*>.*?<\s*/\s*\1\s*>#is', '', $html);

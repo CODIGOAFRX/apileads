@@ -9,7 +9,9 @@ import { COMPANIES, EMPTY_FILTERS, STUDY_TYPES, activeFilterCount } from '../../
  * y filtros avanzados por campo, estudio, tipo, empresa, origen y fechas.
  */
 export function SearchPanel({ filters, onChange, studies }) {
-  const { catalog } = useApp()
+  const { catalog, user } = useApp()
+  // Quien solo trabaja con una empresa ya ve solo esa: no hay nada que elegir.
+  const companies = user?.empresa ? [] : COMPANIES
   const [open, setOpen] = useState(false)
   const inputRef = useRef(null)
   const active = activeFilterCount(filters)
@@ -59,7 +61,7 @@ export function SearchPanel({ filters, onChange, studies }) {
 
       <div className="ed-row" style={{ gap: 6 }}>
         <span className="ed-label">Rápido:</span>
-        {COMPANIES.map((company) => (
+        {companies.map((company) => (
           <button key={company.id} type="button" className="ed-btn ed-btn--sm" data-on={filters.empresa === company.id}
             onClick={() => set('empresa', filters.empresa === company.id ? '' : company.id)} aria-pressed={filters.empresa === company.id}>
             {company.label}
@@ -97,12 +99,12 @@ export function SearchPanel({ filters, onChange, studies }) {
                 {STUDY_TYPES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
               </select>
             </Field>
-            <Field label="Empresa" hint="Según sus estudios de interés">
+            {companies.length > 0 && <Field label="Empresa" hint="Según sus estudios de interés">
               <select className="ed-select" value={filters.empresa} onChange={(e) => set('empresa', e.target.value)}>
                 <option value="">Las dos</option>
-                {COMPANIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+                {companies.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
               </select>
-            </Field>
+            </Field>}
             <Field label="Entrada desde"><input className="ed-input" type="date" value={filters.desde} onChange={(e) => set('desde', e.target.value)} /></Field>
             <Field label="Entrada hasta"><input className="ed-input" type="date" value={filters.hasta} onChange={(e) => set('hasta', e.target.value)} /></Field>
           </div>

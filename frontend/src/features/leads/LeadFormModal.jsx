@@ -5,7 +5,7 @@ import { Icon } from '../../components/Icon.jsx'
 import { Modal } from '../../components/Modal.jsx'
 import { useToast } from '../../components/Toasts.jsx'
 import { Alert, ChoicePicker, CompanyTag, Field, Spinner, StudyPicker } from '../../components/ui.jsx'
-import { companyOf, displayName, selectableOrigins } from '../../lib/leads.js'
+import { COMPANIES, companyOf, displayName, selectableOrigins } from '../../lib/leads.js'
 import { StudyModal } from '../settings/CatalogSettings.jsx'
 
 const EMPTY = {
@@ -30,7 +30,7 @@ function fromLead(lead) {
 
 /** Alta manual y edición. Si el correo o el teléfono ya existen, ofrece abrir o completar el existente. */
 export function LeadFormModal({ lead, section, onClose, onSaved, onOpenExisting }) {
-  const { catalog, reloadCatalog } = useApp()
+  const { catalog, reloadCatalog, user } = useApp()
   const toast = useToast()
   const editing = Boolean(lead)
   const [form, setForm] = useState(() => (editing ? fromLead(lead) : EMPTY))
@@ -73,6 +73,7 @@ export function LeadFormModal({ lead, section, onClose, onSaved, onOpenExisting 
     }
   }
 
+  const company = companyOf(form.estudioIds, catalog.estudios)
   const activeStudies = catalog.estudios.filter((s) => s.activo || form.estudioIds.includes(s.id))
   const centers = catalog.centros.filter((c) => c.activo || c.id === form.centroId)
 
@@ -140,7 +141,10 @@ export function LeadFormModal({ lead, section, onClose, onSaved, onOpenExisting 
           <StudyPicker studies={activeStudies} value={form.estudioIds} onChange={set('estudioIds')} />
           <div className="ed-row" style={{ gap: 8 }}>
             <span className="ed-hint">Este lead es de</span>
-            <CompanyTag company={companyOf(form.estudioIds, catalog.estudios)} />
+            <CompanyTag company={company} />
+            {user?.empresa && company !== user.empresa && (
+              <span className="ed-error-text">Con tu usuario solo puedes guardar leads de {COMPANIES.find((c) => c.id === user.empresa)?.label}: elige uno de sus estudios.</span>
+            )}
           </div>
           <div>
             <button type="button" className="ed-btn ed-btn--sm" onClick={() => setNewStudy(true)}>

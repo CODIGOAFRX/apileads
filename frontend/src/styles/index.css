@@ -608,6 +608,7 @@ a { color: inherit; }
 .ed-timeline__note { margin-top: 4px; padding: 8px 12px; background: var(--bone); border-radius: var(--r-field); font-size: 13px; white-space: pre-line; }
 
 .ed-mail-preview { display: block; width: 100%; height: 46vh; min-height: 260px; border: var(--bw) solid var(--ink); border-radius: var(--r-field); background: var(--paper); }
+.ed-mail-preview--compact { height: 250px; min-height: 0; }
 .ed-mail-preview--editable:focus { outline: none; box-shadow: 3px 3px 0 var(--acc), 3px 3px 0 1px var(--ink); }
 .ed-split { display: grid; gap: 14px; align-items: start; }
 @media (min-width: 900px) { .ed-split { grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); } }
