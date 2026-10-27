@@ -25,6 +25,7 @@ final class CatalogRepository extends BaseRepository
                 'nombre' => $row['nombre'],
                 'tipo' => $row['tipo'],
                 'area' => $row['area'],
+                'empresa' => $row['empresa'],
                 'color' => $row['color'],
                 'orden' => (int) $row['orden'],
                 'activo' => (bool) $row['activo'],

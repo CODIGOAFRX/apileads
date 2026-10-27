@@ -35,6 +35,21 @@ export const STUDY_TYPES = [
   { id: 'CURSO', label: 'Cursos' },
 ]
 
+// Las dos empresas del grupo (catalog.empresas trae sus nombres).
+export const COMPANIES = [
+  { id: 'ESTACION', label: 'Estación Diseño' },
+  { id: 'EFP', label: 'Grupo EFP' },
+]
+
+/**
+ * De qué empresa es un lead con esos estudios: de Estación Diseño si alguno lo es
+ * y, si no (o sin estudio), de Grupo EFP. Igual que Company::ofStudies en el servidor.
+ */
+export function companyOf(studyIds, studies) {
+  const estacion = (studyIds || []).some((id) => studies.find((s) => s.id === id)?.empresa === 'ESTACION')
+  return estacion ? 'ESTACION' : 'EFP'
+}
+
 // Los orígenes vienen del servidor (catalog.origenes): [{ id, label, seleccionable }].
 
 /** Los que se pueden elegir al dar de alta un lead (uno solo). */
@@ -56,6 +71,7 @@ export const EMPTY_FILTERS = {
   ubicacion: '',
   estudio: [],
   tipo: '',
+  empresa: '',
   origen: '',
   sinEstudio: false,
   desde: '',

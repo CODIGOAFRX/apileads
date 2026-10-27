@@ -2,7 +2,7 @@
 import { cloneElement, isValidElement, useId } from 'react'
 import { Icon } from './Icon.jsx'
 import { cn } from '../lib/cn.js'
-import { STATUS_TONE } from '../lib/leads.js'
+import { COMPANIES, STATUS_TONE } from '../lib/leads.js'
 
 export function Spinner({ label }) {
   return <span className="ed-spinner" role="status" aria-label={label || 'Cargando'} />
@@ -73,6 +73,12 @@ export function StudyList({ lead, max = 3 }) {
       {studies.length > max && <span className="ed-tag ed-tag--ghost">+{studies.length - max}</span>}
     </div>
   )
+}
+
+/** Empresa a la que va el lead (o un estudio): Estación Diseño o Grupo EFP. */
+export function CompanyTag({ company }) {
+  const label = COMPANIES.find((c) => c.id === company)?.label ?? company
+  return <span className={`ed-tag ed-tag--${company === 'ESTACION' ? 'solid' : 'cyan'}`}>{label}</span>
 }
 
 export function StatusTag({ lead }) {

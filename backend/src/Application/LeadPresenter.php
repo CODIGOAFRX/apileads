@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Leads\Application;
 
 use Leads\Core\Input;
+use Leads\Domain\Lead\Company;
 use Leads\Domain\Lead\Inbox;
 use Leads\Domain\Lead\LeadActionPolicy;
 use Leads\Domain\Lead\LeadOrigin;
@@ -32,6 +33,7 @@ final class LeadPresenter
         $scheduledCall = DbTime::fromDb($row['llamada_agendada']);
         $origin = LeadOrigin::tryFrom((string) $row['origen']) ?? LeadOrigin::OTRO;
         $studies = $row['estudios'] ?? [];
+        $company = Company::ofStudies($studies);
         $fullName = trim($row['nombre'] . ' ' . $row['apellidos']);
 
         $lockUntil = DbTime::fromDb($row['bloqueado_hasta']);
@@ -58,6 +60,8 @@ final class LeadPresenter
             'ubicacion' => $row['ubicacion'],
             'interes' => $row['interes_texto'],
             'estudios' => $studies,
+            'empresa' => $company->value,
+            'empresaLabel' => $company->label(),
             'origen' => $origin->value,
             'origenLabel' => $origin->label(),
             'campana' => $row['campana'],

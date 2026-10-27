@@ -39,6 +39,19 @@ describe('Alta de un lead', () => {
     expect(options.filter((o) => o.getAttribute('aria-checked') === 'true')).toHaveLength(1)
   })
 
+  it('marca la empresa según el estudio de interés elegido', async () => {
+    const { user } = open()
+    const company = () => screen.getByText('Este lead es de').nextSibling.textContent
+
+    expect(company()).toBe('Grupo EFP')
+    await user.click(screen.getByRole('button', { name: 'Gestión de recepción' }))
+    expect(company()).toBe('Grupo EFP')
+    await user.click(screen.getByRole('button', { name: 'Grado Diseño Moda' }))
+    expect(company()).toBe('Estación Diseño')
+    await user.click(screen.getByRole('button', { name: 'Grado Diseño Moda' }))
+    expect(company()).toBe('Grupo EFP')
+  })
+
   it('ya no pide campaña ni formulario', () => {
     open()
     expect(screen.queryByText(/campaña/i)).toBeNull()

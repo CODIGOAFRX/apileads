@@ -54,6 +54,25 @@ final class LeadSearchTest extends DatabaseTestCase
         self::assertSame([$this->ids['andres']], $this->search(['ubicacion' => 'ja']));
     }
 
+    public function testFiltraPorEmpresaSegunSusEstudios(): void
+    {
+        // 11: «Dirección por objetivos…», un curso de Grupo EFP.
+        $efp = $this->lead(['nombre' => 'Curso EFP', 'email' => 'efp@example.com', 'estudioIds' => [11]]);
+        $mixto = $this->lead(['nombre' => 'Mixto', 'email' => 'mixto@example.com', 'estudioIds' => [11, 2]]);
+
+        self::assertEqualsCanonicalizing(
+            [$this->ids['andres'], $this->ids['lucia'], $this->ids['pablo'], $mixto],
+            $this->search(['empresa' => 'ESTACION']),
+            'con un estudio de Estación Diseño ya es de Estación Diseño'
+        );
+        self::assertEqualsCanonicalizing([$this->ids['sin'], $efp], $this->search(['empresa' => 'EFP']), 'sin estudio también es de Grupo EFP');
+        self::assertCount(6, $this->search(['empresa' => 'OTRA']), 'una empresa que no existe no filtra');
+
+        $lead = $this->app->leads()->get($mixto, $this->comercial);
+        self::assertSame(['ESTACION', 'Estación Diseño'], [$lead['empresa'], $lead['empresaLabel']]);
+        self::assertSame('Grupo EFP', $this->app->leads()->get($this->ids['sin'], $this->comercial)['empresaLabel']);
+    }
+
     public function testComodinesNoRompenLaBusqueda(): void
     {
         self::assertSame([], $this->search(['q' => '%']));
@@ -71,7 +90,7 @@ final class LeadSearchTest extends DatabaseTestCase
         self::assertSame(5, $page['total']);
         self::assertSame(5, $page['contadores']['pendientes']);
         self::assertSame('Andrés', $page['items'][4]['nombre']);
-        self::assertSame(['id' => 5, 'nombre' => 'Máster Ilustración', 'tipo' => 'MASTER', 'color' => '#8CE5FF'], $page['items'][4]['estudios'][0]);
+        self::assertSame(['id' => 5, 'nombre' => 'Máster Ilustración', 'tipo' => 'MASTER', 'color' => '#8CE5FF', 'empresa' => 'ESTACION'], $page['items'][4]['estudios'][0]);
     }
 
     public function testFiltraPorFechaDeEntradaEnHoraLocal(): void

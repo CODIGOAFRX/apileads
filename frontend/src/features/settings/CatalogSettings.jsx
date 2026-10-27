@@ -4,8 +4,9 @@ import { useApp } from '../../AppContext.js'
 import { Icon } from '../../components/Icon.jsx'
 import { Modal } from '../../components/Modal.jsx'
 import { useToast } from '../../components/Toasts.jsx'
-import { Alert, Checkbox, Field, Spinner, StudyChip } from '../../components/ui.jsx'
+import { Alert, Checkbox, CompanyTag, Field, Spinner, StudyChip } from '../../components/ui.jsx'
 import { formatDateTime } from '../../lib/format.js'
+import { COMPANIES } from '../../lib/leads.js'
 
 const PALETTE = ['#00FF81', '#FF79F5', '#FF7A78', '#8A86FF', '#FFFF82', '#8CE5FF', '#D06EFA', '#FFA83D', '#A9E58A', '#FF9E7A', '#5B84E8']
 
@@ -18,7 +19,8 @@ export function CatalogSettings() {
   return (
     <div className="ed-stack">
       <Alert tone="info">
-        Cada estudio tiene un <strong>tipo</strong> (para filtrar «todos los de máster») y un <strong>área</strong> (para reconocerlo al importar).
+        Cada estudio es de una <strong>empresa</strong>: un lead es de Estación Diseño si alguno de sus estudios lo es y, si no, de Grupo EFP.
+        Tiene también un <strong>tipo</strong> (para filtrar «todos los de máster») y un <strong>área</strong> (para reconocerlo al importar).
         Los <strong>alias</strong> son formas en que llega escrito en los ficheros; se aprenden solos al importar.
       </Alert>
 
@@ -28,11 +30,12 @@ export function CatalogSettings() {
       </div>
       <div className="ed-table-wrap">
         <table className="ed-table">
-          <thead><tr><th>Estudio</th><th>Tipo</th><th>Área</th><th>Centros</th><th>Alias</th><th>Creado por</th><th /></tr></thead>
+          <thead><tr><th>Estudio</th><th>Empresa</th><th>Tipo</th><th>Área</th><th>Centros</th><th>Alias</th><th>Creado por</th><th /></tr></thead>
           <tbody>
             {catalog.estudios.map((s) => (
               <tr key={s.id} style={{ opacity: s.activo ? 1 : 0.5 }}>
                 <td><StudyChip study={s} />{!s.activo && <span className="ed-tag ed-tag--ghost" style={{ marginLeft: 6 }}>inactivo</span>}</td>
+                <td><CompanyTag company={s.empresa} /></td>
                 <td>{catalog.tipos[s.tipo] ?? s.tipo}</td>
                 <td>{catalog.areas[s.area] ?? '—'}</td>
                 <td>{s.centroIds.map(centerName).join(', ') || '—'}</td>
@@ -88,7 +91,7 @@ export function StudyModal({ study, onClose, onSaved, onAliasChange = () => {} }
   const isNew = !study.id
   const [existing, setExisting] = useState(null)
   const [form, setForm] = useState({
-    nombre: study.nombre || '', tipo: study.tipo || (isAdmin ? 'GRADO' : 'CURSO'), area: study.area || '',
+    nombre: study.nombre || '', tipo: study.tipo || (isAdmin ? 'GRADO' : 'CURSO'), area: study.area || '', empresa: study.empresa || 'EFP',
     color: study.color || PALETTE[catalog.estudios.length % PALETTE.length],
     orden: study.orden ?? catalog.estudios.length + 1, activo: study.activo ?? true,
     centroIds: study.centroIds || catalog.centros.map((c) => c.id),
@@ -105,7 +108,7 @@ export function StudyModal({ study, onClose, onSaved, onAliasChange = () => {} }
     setExisting(null)
     try {
       // Una comercial no elige orden, centros ni si está activo: lo decide el servidor.
-      const payload = isAdmin ? form : { nombre: form.nombre, tipo: form.tipo, area: form.area, color: form.color }
+      const payload = isAdmin ? form : { nombre: form.nombre, tipo: form.tipo, area: form.area, color: form.color, empresa: form.empresa }
       const saved = isNew ? await catalogApi.createStudy(payload) : await catalogApi.updateStudy(study.id, payload)
       toast.ok(isNew ? `«${saved.nombre}» creado` : 'Estudio guardado')
       onSaved(saved)
@@ -188,6 +191,11 @@ export function StudyModal({ study, onClose, onSaved, onAliasChange = () => {} }
             <select className="ed-select" value={form.area} onChange={set('area')}>
               <option value="">Sin área</option>
               {Object.entries(catalog.areas).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+            </select>
+          </Field>
+          <Field label="Empresa" hint="Los leads con este estudio van a esta empresa">
+            <select className="ed-select" value={form.empresa} onChange={set('empresa')}>
+              {COMPANIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
             </select>
           </Field>
           {isAdmin && <Field label="Orden"><input className="ed-input" type="number" value={form.orden} onChange={set('orden')} /></Field>}

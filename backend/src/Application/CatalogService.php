@@ -7,6 +7,7 @@ namespace Leads\Application;
 use Leads\Core\Clock;
 use Leads\Core\HttpException;
 use Leads\Core\Input;
+use Leads\Domain\Lead\Company;
 use Leads\Domain\Lead\LeadOrigin;
 use Leads\Domain\Shared\Text;
 use Leads\Domain\User\Role;
@@ -40,6 +41,7 @@ final class CatalogService
             'centros' => $this->catalog->centers(),
             'tipos' => self::STUDY_TYPES,
             'areas' => self::AREAS,
+            'empresas' => Company::catalog(),
             'origenes' => LeadOrigin::catalog(),
         ];
     }
@@ -52,7 +54,8 @@ final class CatalogService
      */
     public function saveStudy(?int $id, array $data, ?array $viewer = null): array
     {
-        if ($id !== null && $this->catalog->study($id) === null) {
+        $current = $id === null ? null : $this->catalog->study($id);
+        if ($id !== null && $current === null) {
             throw HttpException::notFound('Estudio no encontrado');
         }
         $isAdmin = $viewer === null || ($viewer['rol'] ?? null) === Role::ADMIN->value;
@@ -62,6 +65,8 @@ final class CatalogService
         $name = trim((string) preg_replace('/\s+/u', ' ', Input::text($data, 'nombre')));
         $type = Input::text($data, 'tipo', $isAdmin ? '' : 'CURSO');
         $area = Input::text($data, 'area');
+        // Quien lo crea puede decir de qué empresa es; si no lo dice, de Grupo EFP (o la que ya tenía).
+        $company = Company::tryFrom(Input::text($data, 'empresa', $current['empresa'] ?? Company::EFP->value));
         $color = strtoupper(trim(Input::text($data, 'color', '#00FF81')));
         if ($name === '' || mb_strlen($name) > 160) {
             throw new \InvalidArgumentException('Indica el nombre del estudio');
@@ -71,6 +76,9 @@ final class CatalogService
         }
         if ($area !== '' && !isset(self::AREAS[$area])) {
             throw new \InvalidArgumentException('Área no válida');
+        }
+        if ($company === null) {
+            throw new \InvalidArgumentException('Empresa no válida');
         }
         if (!preg_match('/^#[0-9A-F]{6}$/', $color)) {
             throw new \InvalidArgumentException('El color debe tener formato #RRGGBB');
@@ -94,6 +102,7 @@ final class CatalogService
             'nombre' => $name,
             'tipo' => $type,
             'area' => $area === '' ? null : $area,
+            'empresa' => $company->value,
             'color' => $color,
             'orden' => $order,
             'activo' => !$isAdmin || filter_var($data['activo'] ?? true, FILTER_VALIDATE_BOOLEAN) ? 1 : 0,

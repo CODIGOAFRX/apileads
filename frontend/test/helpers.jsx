@@ -11,8 +11,9 @@ export const ORIGINS = [
 
 export const CATALOG = {
   estudios: [
-    { id: 1, nombre: 'Grado Diseño Moda', color: '#FF79F5', tipo: 'GRADO', activo: true },
-    { id: 2, nombre: 'Grado Diseño Gráfico', color: '#FF7A78', tipo: 'GRADO', activo: true },
+    { id: 1, nombre: 'Grado Diseño Moda', color: '#FF79F5', tipo: 'GRADO', activo: true, empresa: 'ESTACION' },
+    { id: 2, nombre: 'Grado Diseño Gráfico', color: '#FF7A78', tipo: 'GRADO', activo: true, empresa: 'ESTACION' },
+    { id: 11, nombre: 'Gestión de recepción', color: '#FFFF82', tipo: 'CURSO', activo: true, empresa: 'EFP' },
   ],
   centros: [{ id: 1, nombre: 'Estación Diseño Granada', activo: true }],
   origenes: ORIGINS,

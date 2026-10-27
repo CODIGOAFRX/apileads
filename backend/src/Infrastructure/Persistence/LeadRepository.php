@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Leads\Infrastructure\Persistence;
 
 use DateTimeImmutable;
+use Leads\Domain\Lead\Company;
 use Leads\Domain\Lead\Inbox;
 use Leads\Domain\Lead\LeadSearch;
 use Leads\Domain\Shared\Text;
@@ -260,6 +261,12 @@ final class LeadRepository extends BaseRepository
                         WHERE le2.lead_id = l.id AND e2.tipo = :study_type)';
             $params['study_type'] = $search->studyType;
         }
+        if ($search->company !== null) {
+            // De Estación Diseño si alguno de sus estudios lo es; si no, de Grupo EFP (ver Company).
+            $where[] = ($search->company === Company::ESTACION->value ? '' : 'NOT ')
+                . "EXISTS (SELECT 1 FROM lead_estudio le4 JOIN estudio e4 ON e4.id = le4.estudio_id
+                   WHERE le4.lead_id = l.id AND e4.empresa = '" . Company::ESTACION->value . "')";
+        }
         if ($search->withoutStudy) {
             $where[] = 'NOT EXISTS (SELECT 1 FROM lead_estudio le3 WHERE le3.lead_id = l.id)';
         }
@@ -313,7 +320,7 @@ final class LeadRepository extends BaseRepository
         }
         [$in, $params] = $this->inClause('lead', array_column($rows, 'id'));
         $studies = $this->all(
-            "SELECT le.lead_id, e.id, e.nombre, e.tipo, e.color
+            "SELECT le.lead_id, e.id, e.nombre, e.tipo, e.color, e.empresa
              FROM lead_estudio le JOIN estudio e ON e.id = le.estudio_id
              WHERE le.lead_id IN ({$in}) ORDER BY e.orden, e.nombre",
             $params
@@ -325,6 +332,7 @@ final class LeadRepository extends BaseRepository
                 'nombre' => $study['nombre'],
                 'tipo' => $study['tipo'],
                 'color' => $study['color'],
+                'empresa' => $study['empresa'],
             ];
         }
         foreach ($rows as &$row) {

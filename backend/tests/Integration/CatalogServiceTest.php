@@ -174,6 +174,34 @@ final class CatalogServiceTest extends DatabaseTestCase
         self::assertSame('Grado Diseño Gráfico', $catalog->saveStudy(2, ['nombre' => 'Grado Diseño Gráfico', 'tipo' => 'GRADO'])['nombre']);
     }
 
+    public function testLosEstudiosDeLaWebSonDeEstacionDisenoYElRestoDeGrupoEfp(): void
+    {
+        $company = array_column($this->app->catalogRepository()->studies(), 'empresa', 'nombre');
+        foreach ([
+            'Grado Diseño Moda', 'Grado Diseño Gráfico', 'CFGS Gráfica Audiovisual', 'CFGS Ilustración', 'CFGS Cómic',
+            'CFGS Gráfica Interactiva', 'Máster Ilustración', 'Máster Profesional Ilustración Avanzada', 'Máster Profesional Moda',
+            'Máster Profesional Gráfico', 'Máster Profesional Modelado y Animación 3D', 'Taller de mangas', 'Diseño artístico de videojuegos',
+        ] as $name) {
+            self::assertSame('ESTACION', $company[$name] ?? null, $name);
+        }
+        self::assertSame('EFP', $company['Instagram para tu negocio']);
+        self::assertSame(['ESTACION' => 'Estación Diseño', 'EFP' => 'Grupo EFP'], $this->app->catalog()->catalog()['empresas']);
+    }
+
+    public function testSeEligeLaEmpresaDelEstudio(): void
+    {
+        $catalog = $this->app->catalog();
+        self::assertSame('EFP', $this->study()['empresa'], 'si no se dice, de Grupo EFP');
+
+        $course = $catalog->saveStudy(null, ['nombre' => 'Curso de Procreate', 'empresa' => 'ESTACION'], $this->comercial);
+        self::assertSame('ESTACION', $course['empresa'], 'una comercial también puede decirlo al crearlo');
+        self::assertSame('ESTACION', $catalog->saveStudy($course['id'], ['nombre' => 'Curso de Procreate avanzado', 'tipo' => 'CURSO'])['empresa'], 'al editar sin decirla se conserva');
+        self::assertSame('EFP', $catalog->saveStudy($course['id'], ['nombre' => 'Curso de Procreate', 'tipo' => 'CURSO', 'empresa' => 'EFP'])['empresa']);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->study(['nombre' => 'Otro', 'empresa' => 'ACME']);
+    }
+
     public function testUnaComercialNoCambiaNiBorraEstudios(): void
     {
         $this->expectException(HttpException::class);

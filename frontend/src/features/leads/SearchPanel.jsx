@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { Icon } from '../../components/Icon.jsx'
 import { Checkbox, Field, StudyPicker } from '../../components/ui.jsx'
 import { useApp } from '../../AppContext.js'
-import { EMPTY_FILTERS, STUDY_TYPES, activeFilterCount } from '../../lib/leads.js'
+import { COMPANIES, EMPTY_FILTERS, STUDY_TYPES, activeFilterCount } from '../../lib/leads.js'
 
 /**
  * Buscador: una caja general ("contiene" en nombre, correo, teléfono, ubicación…)
- * y filtros avanzados por campo, estudio, tipo, origen y fechas.
+ * y filtros avanzados por campo, estudio, tipo, empresa, origen y fechas.
  */
 export function SearchPanel({ filters, onChange, studies }) {
   const { catalog } = useApp()
@@ -59,6 +59,12 @@ export function SearchPanel({ filters, onChange, studies }) {
 
       <div className="ed-row" style={{ gap: 6 }}>
         <span className="ed-label">Rápido:</span>
+        {COMPANIES.map((company) => (
+          <button key={company.id} type="button" className="ed-btn ed-btn--sm" data-on={filters.empresa === company.id}
+            onClick={() => set('empresa', filters.empresa === company.id ? '' : company.id)} aria-pressed={filters.empresa === company.id}>
+            {company.label}
+          </button>
+        ))}
         {STUDY_TYPES.map((type) => (
           <button key={type.id} type="button" className="ed-btn ed-btn--sm" data-on={filters.tipo === type.id}
             onClick={() => set('tipo', filters.tipo === type.id ? '' : type.id)} aria-pressed={filters.tipo === type.id}>
@@ -89,6 +95,12 @@ export function SearchPanel({ filters, onChange, studies }) {
               <select className="ed-select" value={filters.tipo} onChange={(e) => set('tipo', e.target.value)}>
                 <option value="">Todos</option>
                 {STUDY_TYPES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+              </select>
+            </Field>
+            <Field label="Empresa" hint="Según sus estudios de interés">
+              <select className="ed-select" value={filters.empresa} onChange={(e) => set('empresa', e.target.value)}>
+                <option value="">Las dos</option>
+                {COMPANIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
               </select>
             </Field>
             <Field label="Entrada desde"><input className="ed-input" type="date" value={filters.desde} onChange={(e) => set('desde', e.target.value)} /></Field>

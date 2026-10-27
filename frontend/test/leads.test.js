@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { EMPTY_FILTERS, activeFilterCount, buildLeadQuery, displayName, followUp, followUpAfter, suggestStudyName } from '../src/lib/leads.js'
+import { EMPTY_FILTERS, activeFilterCount, buildLeadQuery, companyOf, displayName, followUp, followUpAfter, suggestStudyName } from '../src/lib/leads.js'
 import { toQuery } from '../src/api/http.js'
 
 test('construye la consulta del buscador sin parámetros vacíos', () => {
@@ -59,4 +59,17 @@ test('orígenes: solo se eligen los seleccionables y los antiguos salen como «S
   assert.equal(originLabel(origins, 'EDUCAWEB'), 'EducaWeb')
   assert.equal(originLabel(origins, 'FACEBOOK'), 'Sin indicar')
   assert.equal(originLabel(origins, ''), '—')
+})
+
+test('la empresa del lead sale de sus estudios: Estación Diseño si alguno lo es', () => {
+  const studies = [{ id: 1, empresa: 'ESTACION' }, { id: 11, empresa: 'EFP' }]
+  assert.equal(companyOf([11, 1], studies), 'ESTACION')
+  assert.equal(companyOf([11], studies), 'EFP')
+  assert.equal(companyOf([], studies), 'EFP')
+  assert.equal(companyOf([999], studies), 'EFP')
+})
+
+test('filtra por empresa', () => {
+  const query = buildLeadQuery({ inbox: 'todos', filters: { ...EMPTY_FILTERS, empresa: 'ESTACION' }, page: 1, perPage: 50 })
+  assert.equal(toQuery(query), '?bandeja=todos&empresa=ESTACION&porPagina=50')
 })

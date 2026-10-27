@@ -2,7 +2,7 @@ import { memo, useRef, useState } from 'react'
 import { leadsApi } from '../../api/endpoints.js'
 import { Icon } from '../../components/Icon.jsx'
 import { useToast } from '../../components/Toasts.jsx'
-import { Spinner, StatusTag, StudyList } from '../../components/ui.jsx'
+import { CompanyTag, Spinner, StatusTag, StudyList } from '../../components/ui.jsx'
 import { formatRelative, formatRelativeTime } from '../../lib/format.js'
 import { displayName, followUp, followUpAfter } from '../../lib/leads.js'
 import { CallMenu } from './CallMenu.jsx'
@@ -52,6 +52,7 @@ function LeadRowView({ lead, onOpen, onChanged, onFollowUp }) {
       <div className="ed-lead__cell">
         <button type="button" className="ed-lead__name ed-ellipsis" onClick={onOpen}>{displayName(lead)}</button>
         <div className="ed-lead__meta">
+          <CompanyTag company={lead.empresa} />
           {location && <span className="ed-ellipsis">{location}</span>}
           {lockedByOther && <span className="ed-tag ed-tag--warn"><Icon name="phone" size={11} /> {lead.bloqueo.usuario} llamando</span>}
         </div>

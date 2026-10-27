@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useApp } from '../../AppContext.js'
 import { Icon } from '../../components/Icon.jsx'
-import { StudyChip } from '../../components/ui.jsx'
+import { CompanyTag, StudyChip } from '../../components/ui.jsx'
 import { formatDate } from '../../lib/format.js'
+import { COMPANIES } from '../../lib/leads.js'
 import { StudyModal } from './CatalogSettings.jsx'
 
 /**
@@ -14,8 +15,9 @@ export function StudiesOverview() {
   const { catalog, reloadCatalog } = useApp()
   const [creating, setCreating] = useState(false)
   const active = catalog.estudios.filter((s) => s.activo)
-  const groups = Object.entries(catalog.tipos)
-    .map(([type, label]) => ({ type, label, studies: active.filter((s) => s.tipo === type) }))
+  // Por empresa y, dentro, por tipo: así se ve qué estudios hacen que un lead sea de Estación Diseño.
+  const groups = COMPANIES.flatMap((company) => Object.entries(catalog.tipos)
+    .map(([type, label]) => ({ key: `${company.id}-${type}`, company, label, studies: active.filter((s) => s.empresa === company.id && s.tipo === type) })))
     .filter((g) => g.studies.length > 0)
 
   return (
@@ -29,8 +31,11 @@ export function StudiesOverview() {
         </button>
       </div>
       {groups.map((group) => (
-        <div key={group.type} className="ed-panel ed-stack ed-stack--sm">
-          <p className="ed-label" style={{ margin: 0 }}>{group.label} · {group.studies.length}</p>
+        <div key={group.key} className="ed-panel ed-stack ed-stack--sm">
+          <div className="ed-row" style={{ gap: 8 }}>
+            <CompanyTag company={group.company.id} />
+            <p className="ed-label" style={{ margin: 0 }}>{group.label} · {group.studies.length}</p>
+          </div>
           <div className="ed-row" style={{ gap: 6 }}>
             {group.studies.map((s) => (
               <span key={s.id} title={s.creadoPor ? `Añadido por ${s.creadoPor}${s.creadoEn ? ` el ${formatDate(s.creadoEn)}` : ''}` : undefined}>

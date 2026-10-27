@@ -4,8 +4,8 @@ import { useApp } from '../../AppContext.js'
 import { Icon } from '../../components/Icon.jsx'
 import { Modal } from '../../components/Modal.jsx'
 import { useToast } from '../../components/Toasts.jsx'
-import { Alert, ChoicePicker, Field, Spinner, StudyPicker } from '../../components/ui.jsx'
-import { displayName, selectableOrigins } from '../../lib/leads.js'
+import { Alert, ChoicePicker, CompanyTag, Field, Spinner, StudyPicker } from '../../components/ui.jsx'
+import { companyOf, displayName, selectableOrigins } from '../../lib/leads.js'
 import { StudyModal } from '../settings/CatalogSettings.jsx'
 
 const EMPTY = {
@@ -138,6 +138,10 @@ export function LeadFormModal({ lead, section, onClose, onSaved, onOpenExisting 
 
         <Field label="Estudios de interés">
           <StudyPicker studies={activeStudies} value={form.estudioIds} onChange={set('estudioIds')} />
+          <div className="ed-row" style={{ gap: 8 }}>
+            <span className="ed-hint">Este lead es de</span>
+            <CompanyTag company={companyOf(form.estudioIds, catalog.estudios)} />
+          </div>
           <div>
             <button type="button" className="ed-btn ed-btn--sm" onClick={() => setNewStudy(true)}>
               <Icon name="plus" size={13} /> No está en la lista: crear estudio

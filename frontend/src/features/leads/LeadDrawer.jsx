@@ -3,7 +3,7 @@ import { leadsApi } from '../../api/endpoints.js'
 import { Icon } from '../../components/Icon.jsx'
 import { Drawer, Modal } from '../../components/Modal.jsx'
 import { useToast } from '../../components/Toasts.jsx'
-import { Alert, Field, Loading, Spinner, StatusTag, StudyChip } from '../../components/ui.jsx'
+import { Alert, CompanyTag, Field, Loading, Spinner, StatusTag, StudyChip } from '../../components/ui.jsx'
 import { formatDateTime, formatRelative, toLocalInput } from '../../lib/format.js'
 import { displayName, followUpAfter } from '../../lib/leads.js'
 import { CallMenu } from './CallMenu.jsx'
@@ -136,6 +136,7 @@ export function LeadDrawer({ id, section, onClose, onChanged }) {
           <dt>Correo</dt>
           <dd>{lead.email ? <span className={lead.emailValido ? '' : 'ed-lead__invalid'}>{lead.email}{!lead.emailValido && ' (formato dudoso)'}</span> : '—'}</dd>
           <dt>Ubicación</dt><dd>{lead.ubicacion || '—'}</dd>
+          <dt>Empresa</dt><dd><CompanyTag company={lead.empresa} /></dd>
           <dt>Estudios</dt>
           <dd>
             {lead.estudios.length

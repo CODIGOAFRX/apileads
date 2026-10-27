@@ -6,6 +6,7 @@ namespace Leads\Application;
 
 use DateTimeZone;
 use Leads\Core\Clock;
+use Leads\Domain\Lead\Company;
 use Leads\Domain\Lead\LeadOrigin;
 use Leads\Domain\Lead\LeadSearch;
 use Leads\Domain\Lead\LeadStatus;
@@ -16,7 +17,7 @@ use Leads\Infrastructure\Spreadsheet\CsvWriter;
 /** Exporta a CSV el resultado del buscador (p. ej. descartados para campañas de correo). */
 final class ExportService
 {
-    private const HEADERS = ['ID', 'Nombre', 'Apellidos', 'Email', 'Teléfono', 'Ubicación', 'Estudios', 'Interés (texto)', 'Origen', 'Estado', 'Intentos', 'Motivo descarte', 'Entrada', 'Última llamada', 'Comentarios'];
+    private const HEADERS = ['ID', 'Nombre', 'Apellidos', 'Email', 'Teléfono', 'Ubicación', 'Estudios', 'Empresa', 'Interés (texto)', 'Origen', 'Estado', 'Intentos', 'Motivo descarte', 'Entrada', 'Última llamada', 'Comentarios'];
 
     public function __construct(
         private readonly LeadRepository $leads,
@@ -41,6 +42,7 @@ final class ExportService
                     $row['telefono'],
                     $row['ubicacion'],
                     implode(', ', array_column($row['estudios'], 'nombre')),
+                    Company::ofStudies($row['estudios'])->label(),
                     $row['interes_texto'],
                     (LeadOrigin::tryFrom((string) $row['origen']) ?? LeadOrigin::OTRO)->label(),
                     LeadStatus::from($row['estado'])->label(),
