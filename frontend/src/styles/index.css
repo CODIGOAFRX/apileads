@@ -67,6 +67,7 @@
 [data-section="interesados"] { --acc: var(--cyan); }
 [data-section="matriculados"] { --acc: var(--purple); }
 [data-section="descartados"] { --acc: var(--salmon); }
+[data-section="historico"] { --acc: var(--blue); }
 [data-section="todos"] { --acc: var(--peri); }
 [data-section="importar"] { --acc: var(--orange); }
 [data-section="ajustes"] { --acc: var(--lime); }
@@ -426,6 +427,7 @@ a { color: inherit; }
 .ed-tab[data-tab="interesados"][data-on="true"] { background: var(--cyan); }
 .ed-tab[data-tab="matriculados"][data-on="true"] { background: var(--purple); }
 .ed-tab[data-tab="descartados"][data-on="true"] { background: var(--salmon); }
+.ed-tab[data-tab="historico"][data-on="true"] { background: var(--blue); }
 .ed-tab[data-tab="todos"][data-on="true"] { background: var(--peri); }
 .ed-tab__badge {
   display: inline-flex; align-items: center; justify-content: center;

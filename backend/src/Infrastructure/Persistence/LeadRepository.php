@@ -19,12 +19,14 @@ final class LeadRepository extends BaseRepository
     private const INBOX_SQL = [
         'pendientes' => "((l.llamada_agendada IS NULL AND (l.estado IN ('NUEVO', 'AGENDADO')
                               OR (l.estado = 'NO_CONTESTA' AND (l.proxima_llamada IS NULL OR l.proxima_llamada <= :now))))
-                          OR (l.llamada_agendada <= :now AND l.estado NOT IN ('MATRICULADO', 'DESCARTADO')))",
-        'agendadas' => "(l.llamada_agendada > :now AND l.estado NOT IN ('MATRICULADO', 'DESCARTADO'))",
+                          OR (l.llamada_agendada <= :now AND l.estado NOT IN ('MATRICULADO', 'DESCARTADO', 'HISTORICO')))",
+        'agendadas' => "(l.llamada_agendada > :now AND l.estado NOT IN ('MATRICULADO', 'DESCARTADO', 'HISTORICO'))",
         'no-contestan' => "(l.llamada_agendada IS NULL AND l.estado = 'NO_CONTESTA' AND l.proxima_llamada > :now)",
         'interesados' => "(l.llamada_agendada IS NULL AND l.estado IN ('INTERESADO', 'CITA'))",
         'matriculados' => "l.estado = 'MATRICULADO'",
         'descartados' => "l.estado = 'DESCARTADO'",
+        // Todos menos los descartados (los que están en gestión y los contactos históricos).
+        'historico' => "l.estado <> 'DESCARTADO'",
     ];
 
     private const SORT_SQL = [

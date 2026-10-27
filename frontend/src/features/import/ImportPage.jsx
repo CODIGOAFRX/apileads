@@ -3,7 +3,7 @@ import { importApi } from '../../api/endpoints.js'
 import { useApp } from '../../AppContext.js'
 import { Icon } from '../../components/Icon.jsx'
 import { useToast } from '../../components/Toasts.jsx'
-import { Alert, Field, Loading, Spinner } from '../../components/ui.jsx'
+import { Alert, Checkbox, Field, Loading, Spinner } from '../../components/ui.jsx'
 import { formatDateTime, plural } from '../../lib/format.js'
 import { originLabel, selectableOrigins } from '../../lib/leads.js'
 import { ColumnMapping, SampleTable, StudyResolver } from './ImportPreview.jsx'
@@ -21,7 +21,7 @@ export function ImportPage({ onDone }) {
   const inputRef = useRef(null)
   const [file, setFile] = useState(null)
   const [dragOver, setDragOver] = useState(false)
-  const [options, setOptions] = useState({ origen: '', centroId: '', columnas: {}, estudios: {}, guardarAlias: true })
+  const [options, setOptions] = useState({ origen: '', centroId: '', columnas: {}, estudios: {}, guardarAlias: true, historico: false })
   const [preview, setPreview] = useState(null)
   const [report, setReport] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -51,7 +51,7 @@ export function ImportPage({ onDone }) {
 
   const choose = (selected) => {
     if (!selected) return
-    const fresh = { origen: '', centroId: '', columnas: {}, estudios: {}, guardarAlias: true }
+    const fresh = { origen: '', centroId: '', columnas: {}, estudios: {}, guardarAlias: true, historico: false }
     setFile(selected)
     setOptions(fresh)
     setReport(null)
@@ -189,6 +189,15 @@ export function ImportPage({ onDone }) {
                   </select>
                 </Field>
               )}
+              <div style={{ gridColumn: '1 / -1' }}>
+                <Checkbox checked={options.historico} onChange={(historico) => updateOptions({ historico })}>
+                  <strong>Contactos antiguos: importar al histórico</strong>
+                </Checkbox>
+                <p className="ed-hint" style={{ margin: '4px 0 0 32px' }}>
+                  No pasan a pendientes: quedan en la pestaña «Histórico» con su fecha de alta. Los que ya estaban en la aplicación
+                  solo se completan, sin cambiarlos de pestaña.
+                </p>
+              </div>
             </div>
 
             <StudyResolver
@@ -213,7 +222,7 @@ export function ImportPage({ onDone }) {
               {pending.length > 0 && <span className="ed-hint">{plural(pending.length, 'estudio')} sin asignar: esos leads entrarán sin estudio.</span>}
               <button type="button" className="ed-btn" onClick={reset}>Cancelar</button>
               <button type="button" className="ed-btn ed-btn--solid ed-btn--lg" onClick={runImport} disabled={busy || preview.importables === 0}>
-                {busy ? <Spinner /> : <Icon name="upload" size={14} />} Importar {plural(preview.importables, 'lead')}
+                {busy ? <Spinner /> : <Icon name="upload" size={14} />} Importar {plural(preview.importables, 'lead')}{options.historico && ' al histórico'}
               </button>
             </div>
           </div>
@@ -221,10 +230,11 @@ export function ImportPage({ onDone }) {
 
         {step === 2 && report && (
           <div className="ed-stack">
+            {report.historico && <Alert tone="info">Importados al histórico: los nuevos están en la pestaña «Histórico», no en pendientes.</Alert>}
             <div className="ed-grid ed-grid--3">
               <Stat label="Nuevos" value={report.creados} tone="acc" />
               <Stat label="Completados (ya existían)" value={report.fusionados} />
-              <Stat label="Vuelven a pendientes" value={report.reactivados} />
+              {!report.historico && <Stat label="Vuelven a pendientes" value={report.reactivados} />}
               <Stat label="Omitidos" value={report.omitidos} tone={report.omitidos ? 'busy' : undefined} />
             </div>
             {report.incidencias.length > 0 && (

@@ -146,12 +146,14 @@ final class ImportService
             'creado_en' => DbTime::toDb($now),
         ]);
 
-        $report = ['creados' => 0, 'fusionados' => 0, 'reactivados' => 0, 'omitidos' => 0, 'conAvisos' => 0, 'incidencias' => []];
+        // Contactos antiguos: van a «Histórico» y no a pendientes (ver LeadService::ingest).
+        $historical = filter_var($options['historico'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $report = ['historico' => $historical, 'creados' => 0, 'fusionados' => 0, 'reactivados' => 0, 'omitidos' => 0, 'conAvisos' => 0, 'incidencias' => []];
         foreach (array_chunk($mapping->dataRows, self::CHUNK, true) as $chunk) {
             $this->pdo->beginTransaction();
             try {
                 foreach ($chunk as $index => $row) {
-                    $this->importRow($rowMapper, $row, $index + 1, $userId, $importId, $report);
+                    $this->importRow($rowMapper, $row, $index + 1, $userId, $importId, $historical, $report);
                 }
                 $this->pdo->commit();
             } catch (\Throwable $e) {
@@ -192,7 +194,7 @@ final class ImportService
         return $this->imports->latest();
     }
 
-    private function importRow(RowMapper $rowMapper, array $row, int $rowNumber, int $userId, int $importId, array &$report): void
+    private function importRow(RowMapper $rowMapper, array $row, int $rowNumber, int $userId, int $importId, bool $historical, array &$report): void
     {
         $this->pdo->exec('SAVEPOINT fila');
         try {
@@ -205,7 +207,7 @@ final class ImportService
                 return;
             }
 
-            $result = $this->leadService->ingest($input, $userId, $importId, ActivityType::IMPORTADO);
+            $result = $this->leadService->ingest($input, $userId, $importId, ActivityType::IMPORTADO, $historical);
             $report[$result['accion'] === LeadService::INGEST_CREATED ? 'creados' : 'fusionados']++;
             if ($result['reactivado']) {
                 $report['reactivados']++;

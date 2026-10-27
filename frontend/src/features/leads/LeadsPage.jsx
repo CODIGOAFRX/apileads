@@ -118,7 +118,7 @@ export function LeadsPage() {
           <button key={tab.id} type="button" className="ed-tab" data-tab={tab.id} data-on={inbox === tab.id}
             onClick={() => changeInbox(tab.id)} aria-pressed={inbox === tab.id} title={tab.hint}>
             {tab.label}
-            {tab.id !== 'todos' && counters[tab.id] > 0 && <span className="ed-tab__badge">{counters[tab.id]}</span>}
+            {!['historico', 'todos'].includes(tab.id) && counters[tab.id] > 0 && <span className="ed-tab__badge">{counters[tab.id]}</span>}
           </button>
         ))}
       </nav>

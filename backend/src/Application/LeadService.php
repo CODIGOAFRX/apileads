@@ -146,9 +146,13 @@ final class LeadService
      * Da de alta un lead o, si ya existe (mismo correo o teléfono), completa el
      * existente. Debe ejecutarse dentro de una transacción.
      *
+     * $historical: contacto antiguo (importar al histórico). Si es nuevo queda en
+     * «Histórico» con su fecha de alta como entrada; si ya existía, solo se completan
+     * sus datos, sin cambiarlo de pestaña ni ponerlo el primero.
+     *
      * @return array{id:int, accion:string, reactivado:bool}
      */
-    public function ingest(LeadInput $input, ?int $userId, ?int $importId, string $activityType): array
+    public function ingest(LeadInput $input, ?int $userId, ?int $importId, string $activityType, bool $historical = false): array
     {
         $now = $this->clock->now();
         $existing = $this->leads->findDuplicate($input->email, $input->phone?->digits());
@@ -158,35 +162,42 @@ final class LeadService
                 'origen' => $input->origin->value,
                 'comentarios' => $input->comments,
                 'datos_extra' => $input->extra === [] ? null : json_encode($input->extra, JSON_UNESCAPED_UNICODE),
-                'estado' => LeadStatus::NUEVO->value,
+                'estado' => ($historical ? LeadStatus::HISTORICO : LeadStatus::NUEVO)->value,
                 'intentos_sin_respuesta' => 0,
                 'centro_id' => $input->centerId,
                 'fecha_origen' => DbTime::toDb($input->sourceDate),
-                'ultima_entrada' => DbTime::toDb($now),
+                'ultima_entrada' => DbTime::toDb($historical && $input->sourceDate !== null && $input->sourceDate < $now ? $input->sourceDate : $now),
                 'importacion_id' => $importId,
                 'creado_por' => $userId,
                 'creado_en' => DbTime::toDb($now),
                 'actualizado_en' => DbTime::toDb($now),
             ]);
             $this->leads->addStudies($id, $input->studyIds);
-            $summary = $activityType === ActivityType::IMPORTADO
-                ? 'Importado (' . $input->origin->label() . ')'
-                : 'Alta manual';
+            $summary = match (true) {
+                $historical => 'Importado al histórico (' . $input->origin->label() . ')',
+                $activityType === ActivityType::IMPORTADO => 'Importado (' . $input->origin->label() . ')',
+                default => 'Alta manual',
+            };
             $this->activity->log($id, $userId, $activityType, $summary, $importId ? ['importacion' => $importId] : [], $now);
 
             return ['id' => $id, 'accion' => self::INGEST_CREATED, 'reactivado' => false];
         }
 
         $id = (int) $existing['id'];
-        $this->leads->save($id, $this->mergeColumns($existing, $input, $now));
+        $merged = $this->mergeColumns($existing, $input, $now);
+        if ($historical) {
+            $merged['ultima_entrada'] = $existing['ultima_entrada'];
+        }
+        $this->leads->save($id, $merged);
         $this->leads->addStudies($id, $input->studyIds);
-        $this->activity->log($id, $userId, ActivityType::FUSIONADO, 'Volvió a entrar por ' . $input->origin->label(), array_filter([
+        $summary = $historical ? 'Datos completados con el histórico' : 'Volvió a entrar por ' . $input->origin->label();
+        $this->activity->log($id, $userId, ActivityType::FUSIONADO, $summary, array_filter([
             'importacion' => $importId,
             'origen' => $input->origin->value,
             'campana' => $input->campaign,
         ]), $now);
 
-        $transition = $this->workflow->reentry($this->stateOf($existing), $now);
+        $transition = $historical ? null : $this->workflow->reentry($this->stateOf($existing), $now);
         if ($transition !== null) {
             $this->applyTransition($id, $transition, $userId, $now);
         }

@@ -7,6 +7,7 @@ export const INBOXES = [
   { id: 'interesados', label: 'interesados', title: 'Interesados', hint: 'Con interés o cita agendada' },
   { id: 'matriculados', label: 'matriculados', title: 'Matriculados', hint: 'Leads convertidos' },
   { id: 'descartados', label: 'descartados', title: 'Descartados', hint: 'No se borran: sirven para campañas de correo' },
+  { id: 'historico', label: 'histórico', title: 'Histórico', hint: 'Todos los contactos, también los antiguos importados al histórico, menos los descartados' },
   { id: 'todos', label: 'todos', title: 'Todos los leads', hint: 'Búsqueda en toda la base de datos' },
 ]
 
@@ -26,6 +27,7 @@ export const STATUS_TONE = {
   CITA: 'ok',
   MATRICULADO: 'purple',
   DESCARTADO: 'ghost',
+  HISTORICO: 'cyan',
 }
 
 export const STUDY_TYPES = [

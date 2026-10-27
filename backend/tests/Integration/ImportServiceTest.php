@@ -93,6 +93,59 @@ final class ImportServiceTest extends DatabaseTestCase
         self::assertSame('leads.csv', $this->app->imports()->history()[0]['archivo']);
     }
 
+    public function testImportaContactosAntiguosAlHistoricoSinLlevarlosAPendientes(): void
+    {
+        $leads = $this->app->leads();
+        $actual = $this->lead(['nombre' => 'Eva', 'email' => 'eva@example.com', 'estudioIds' => [2]]);
+        $descartado = $this->lead(['nombre' => 'Rosa', 'email' => 'rosa@example.com']);
+        $leads->discard($descartado, 'No le interesa', $this->comercial);
+        $this->clock->advance('+1 hour');
+
+        $report = $this->app->imports()->import($this->table(
+            "Nombre;Email;Teléfono;Estudio;Fecha;Comentarios\n"
+            . "Juan;juan@example.com;600111222;Grado Diseño Moda;2022-03-10 11:00;Antiguo alumno\n"
+            . "Eva;eva@example.com;;;2021-01-01 10:00;Del SAC\n"
+            . "Rosa;rosa@example.com;;;;\n"
+        ), 'sac.csv', ['historico' => true, 'origen' => 'ANO_PASADO'], (int) $this->comercial['id']);
+
+        self::assertTrue($report['historico']);
+        self::assertSame([1, 2, 0], [$report['creados'], $report['fusionados'], $report['reactivados']]);
+
+        $juan = $this->search(['bandeja' => 'historico', 'q' => 'juan'])[0];
+        self::assertSame(['HISTORICO', 'Histórico', 'historico'], [$juan['estado'], $juan['estadoLabel'], $juan['bandeja']]);
+        self::assertSame('2022-03-10T10:00:00Z', $juan['entrada'], 'entra con su fecha de alta, no la de hoy');
+        self::assertSame(['reabrir'], $juan['acciones']);
+
+        $counters = $leads->counters();
+        self::assertSame(1, $counters['pendientes'], 'solo Eva: el histórico no va a pendientes');
+        self::assertSame(2, $counters['historico'], 'Eva y Juan; los descartados no');
+        self::assertSame(1, $counters['descartados'], 'un descartado que estaba en el histórico no se reactiva');
+
+        $eva = $leads->get($actual, $this->comercial);
+        self::assertSame('pendientes', $eva['bandeja'], 'el que ya estaba en gestión sigue igual');
+        self::assertSame('2026-09-15T08:00:00Z', $eva['entrada'], 'y no se pone el primero');
+        self::assertStringContainsString('Del SAC', $eva['comentarios'], 'pero se completan sus datos');
+
+        // Si un contacto del histórico vuelve a pedir información, pasa a pendientes.
+        $this->lead(['nombre' => 'Juan', 'telefono' => '600111222']);
+        self::assertSame('pendientes', $leads->get($juan['id'], $this->comercial)['bandeja']);
+    }
+
+    public function testReabrirUnContactoDelHistorico(): void
+    {
+        $this->app->imports()->import($this->table("Nombre;Email\nJuan;juan@example.com\n"), 'sac.csv', ['historico' => '1'], (int) $this->comercial['id']);
+        $juan = $this->search(['bandeja' => 'historico'])[0];
+
+        $reopened = $this->app->leads()->reopen($juan['id'], $this->comercial);
+        self::assertSame(['NUEVO', 'pendientes'], [$reopened['estado'], $reopened['bandeja']]);
+        self::assertSame(1, $this->app->leads()->counters()['historico'], 'sigue en el histórico: solo faltan los descartados');
+    }
+
+    private function search(array $query): array
+    {
+        return $this->app->leads()->search($query, $this->comercial)['items'];
+    }
+
     public function testDetectaExportacionesDeFacebookYAjustesDeColumnas(): void
     {
         $csv = "id\tcreated_time\tad_name\tform_id\tfull_name\temail\tphone_number\tnota_interna\n"

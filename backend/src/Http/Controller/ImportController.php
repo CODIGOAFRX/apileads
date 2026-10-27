@@ -23,8 +23,9 @@ final class ImportController extends Controller
 
         $result = $this->app->imports()->import($table, $name, $this->jsonField($request, 'opciones'), $request->userId());
         $this->audit($request, AuditService::IMPORTACION, sprintf(
-            'Importa %s: %d nuevos, %d repetidos, %d omitidos',
+            'Importa %s%s: %d nuevos, %d repetidos, %d omitidos',
             $name,
+            $result['historico'] ? ' al histórico' : '',
             $result['creados'],
             $result['fusionados'],
             $result['omitidos'],

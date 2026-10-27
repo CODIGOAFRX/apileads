@@ -49,7 +49,7 @@ final class LeadServiceTest extends DatabaseTestCase
         self::assertContains('enviar-info', $leadA['acciones']);
         self::assertSame('descartados', $leadB['bandeja']);
         self::assertSame(['reabrir'], $leadB['acciones']);
-        self::assertSame(['pendientes' => 0, 'agendadas' => 0, 'no-contestan' => 0, 'interesados' => 1, 'matriculados' => 0, 'descartados' => 1, 'todos' => 2], $service->counters());
+        self::assertSame(['pendientes' => 0, 'agendadas' => 0, 'no-contestan' => 0, 'interesados' => 1, 'matriculados' => 0, 'descartados' => 1, 'historico' => 1, 'todos' => 2], $service->counters());
 
         $leadA = $service->scheduleAppointment($a, '2026-09-18T11:30', 'Viene con su madre', $this->comercial);
         self::assertSame('CITA', $leadA['estado']);

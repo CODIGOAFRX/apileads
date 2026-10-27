@@ -8,7 +8,8 @@ namespace Leads\Domain\Lead;
  * Pestañas del listado. "Pendientes" es la principal: leads nuevos, los que
  * no contestaron cuya próxima llamada ya ha llegado y las llamadas agendadas
  * cuya hora ha llegado. Se calcula al consultar, así que no depende de
- * ninguna tarea programada.
+ * ninguna tarea programada. "Histórico" reúne a todos menos los descartados,
+ * también los contactos antiguos importados como histórico, que solo están ahí.
  */
 enum Inbox: string
 {
@@ -18,6 +19,7 @@ enum Inbox: string
     case INTERESADOS = 'interesados';
     case MATRICULADOS = 'matriculados';
     case DESCARTADOS = 'descartados';
+    case HISTORICO = 'historico';
     case TODOS = 'todos';
 
     /** Bandeja en la que aparece un lead en un instante dado. */
@@ -38,6 +40,7 @@ enum Inbox: string
             LeadStatus::INTERESADO, LeadStatus::CITA => self::INTERESADOS,
             LeadStatus::MATRICULADO => self::MATRICULADOS,
             LeadStatus::DESCARTADO => self::DESCARTADOS,
+            LeadStatus::HISTORICO => self::HISTORICO,
         };
     }
 }

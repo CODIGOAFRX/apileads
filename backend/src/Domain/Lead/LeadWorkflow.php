@@ -148,7 +148,7 @@ final class LeadWorkflow
     public function reentry(LeadState $state, DateTimeImmutable $now): ?Transition
     {
         return match ($state->status) {
-            LeadStatus::DESCARTADO => new Transition(
+            LeadStatus::DESCARTADO, LeadStatus::HISTORICO => new Transition(
                 $this->freshState($state),
                 ActivityType::CAMBIO_ESTADO,
                 'Reactivado: volvió a pedir información',
