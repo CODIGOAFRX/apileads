@@ -1,0 +1,11 @@
+# Lo que se genera al montar el manual
+manual.html
+estilo.build.css
+cover.build.html
+portada.pdf
+cuerpo.pdf
+Manual.pdf
+paginas.json
+rev/
+capturas/_*.png
+*.sqlite

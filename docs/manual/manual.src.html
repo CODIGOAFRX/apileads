@@ -1,0 +1,897 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Manual de Leads · Equipo comercial</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<!-- ════════════════════════ ÍNDICE ════════════════════════ -->
+<section>
+  <div class="toc-head"><p class="lbl">Manual de Leads · Edición octubre 2026</p><h1>ÍNDICE</h1></div>
+  <ol class="toc">
+    <li><span class="dot" style="background:var(--green)">1</span><span class="tt">Qué es Leads</span><span class="sub">Empieza aquí</span><span class="pg">{{pg:01}}</span></li>
+    <li><span class="dot" style="background:var(--peri)">2</span><span class="tt">Entrar y salir</span><span class="sub">2 minutos</span><span class="pg">{{pg:02}}</span></li>
+    <li><span class="dot" style="background:var(--green)">3</span><span class="tt">La pantalla principal</span><span class="sub">5 minutos</span><span class="pg">{{pg:03}}</span></li>
+    <li><span class="dot" style="background:var(--green)">4</span><span class="tt">Una fila, pieza a pieza</span><span class="sub">5 minutos</span><span class="pg">{{pg:04}}</span></li>
+    <li><span class="dot" style="background:var(--green)">5</span><span class="tt">Tu rutina: llamar</span><span class="sub">Lo que harás cada día</span><span class="pg">{{pg:05}}</span></li>
+    <li><span class="dot" style="background:var(--yellow)">6</span><span class="tt">Los 4 resultados de una llamada</span><span class="sub">Con ejemplos y el aviso a la hora</span><span class="pg">{{pg:06}}</span></li>
+    <li><span class="dot" style="background:var(--cyan)">7</span><span class="tt">WhatsApp y correo</span><span class="sub">Escribir a un lead</span><span class="pg">{{pg:07}}</span></li>
+    <li><span class="dot" style="background:var(--cyan)">8</span><span class="tt">La ficha del lead</span><span class="sub">Todos los datos de una persona</span><span class="pg">{{pg:08}}</span></li>
+    <li><span class="dot" style="background:var(--peri)">9</span><span class="tt">Buscar, filtrar y exportar</span><span class="sub">Encontrar a cualquiera</span><span class="pg">{{pg:09}}</span></li>
+    <li><span class="dot" style="background:var(--green)">10</span><span class="tt">Dar de alta un lead a mano</span><span class="sub">Y crear un estudio que falta</span><span class="pg">{{pg:10}}</span></li>
+    <li><span class="dot" style="background:var(--orange)">11</span><span class="tt">Importar leads desde Excel</span><span class="sub">Muchos leads de golpe y el histórico</span><span class="pg">{{pg:11}}</span></li>
+    <li><span class="dot" style="background:var(--purple)">12</span><span class="tt">Estación Diseño y Grupo EFP</span><span class="sub">Dos empresas, una herramienta</span><span class="new">NUEVO</span><span class="pg">{{pg:12}}</span></li>
+    <li><span class="dot" style="background:var(--pink)">13</span><span class="tt">Trabajar en equipo</span><span class="sub">Sin pisarnos</span><span class="pg">{{pg:13}}</span></li>
+    <li><span class="dot" style="background:var(--green)">14</span><span class="tt">Leads en el móvil</span><span class="sub">Desde cualquier sitio</span><span class="pg">{{pg:14}}</span></li>
+    <li><span class="dot" style="background:var(--pink)">15</span><span class="tt">Casos prácticos: ¿qué hago si…?</span><span class="sub">Para consultar</span><span class="pg">{{pg:15}}</span></li>
+    <li><span class="dot" style="background:var(--salmon)">16</span><span class="tt">Preguntas y problemas</span><span class="sub">Cuando algo no sale</span><span class="pg">{{pg:16}}</span></li>
+    <li><span class="dot" style="background:var(--lime)">17</span><span class="tt">Para administración</span><span class="sub">Solo rol Admin</span><span class="pg">{{pg:17}}</span></li>
+    <li><span class="dot" style="background:var(--ink);color:#fff">★</span><span class="tt">Chuleta</span><span class="sub">Una página para imprimir</span><span class="pg">{{pg:18}}</span></li>
+  </ol>
+  <div class="box nuevo" style="margin-top:16pt">
+    <p class="t">Novedades de esta edición</p>
+    <p>Si ya leíste el manual de septiembre, esto es lo que ha cambiado (lo marcamos con <span class="new-mark">NUEVO</span> en cada capítulo):</p>
+    <ul>
+      <li><b>Dos empresas:</b> cada lead es de <b>Estación Diseño</b> o de <b>Grupo EFP</b> según sus estudios (capítulo 12).</li>
+      <li><b>Aviso a la hora</b> de cada llamada agendada, aunque estés en otra pestaña (capítulo 6).</li>
+      <li><b>Los correos salen de tu buzón</b>, con tu firma y el dossier del estudio; como mucho uno cada 72 segundos (capítulo 7).</li>
+      <li><b>Nuevos orígenes</b>, obligatorios al dar de alta, y <b>cualquiera puede crear el estudio que falte</b> (capítulo 10).</li>
+      <li>Pestaña <b>Histórico</b> para los contactos antiguos (capítulo 11) y el buscador ahora también encuentra por <b>nombre del estudio</b> (capítulo 9).</li>
+      <li>Ya no existe el campo «Campaña / formulario».</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ════════════════════════ 1 ════════════════════════ -->
+<section class="chap" style="--acc:var(--green)">
+  <div class="ch-head"><p class="lbl">Capítulo 1 · Empieza aquí</p><h1>Qué es Leads</h1><div class="num">01</div></div>
+  <p class="intro">Qué es, para qué sirve y las palabras que tienes que conocer.</p>
+  <p>Leads es la web donde el equipo comercial tiene <b>todas las personas que han pedido información</b>: por la web, las redes sociales, portales como Emagister o EducaWeb, una feria, un colegio, una recomendación… A cada una de esas personas la llamamos <b>lead</b>.</p>
+  <p>Si vienes de trabajar con Excel, piensa en Leads como <b>una hoja de Excel compartida que piensa por ti</b>:</p>
+  <div class="cols">
+    <div class="card bone"><h4>Con un Excel</h4><ul>
+      <li>Tienes que acordarte de a quién llamar y cuándo.</li>
+      <li>Apuntas a mano «no contesta», «volver a llamar el lunes»…</li>
+      <li>Si dos compañeras abren el fichero, se pisan.</li>
+      <li>Los repetidos se cuelan y nadie sabe quién hizo qué.</li></ul></div>
+    <div class="card green"><h4>Con Leads</h4><ul>
+      <li>La web te enseña <b>a quién toca llamar ahora</b>, en orden.</li>
+      <li>Pulsas un botón con el resultado de la llamada y ella sola decide cuándo vuelve a salir.</li>
+      <li>Mientras llamas a alguien, tus compañeras ven que está ocupado.</li>
+      <li>No se repite nadie, nunca se borra nada y todo queda apuntado con nombre y hora.</li></ul></div>
+  </div>
+  <h2>Las palabras que vas a leer</h2>
+  <table class="kv">
+    <tr><td>Lead</td><td>Una persona que ha pedido información. Tiene nombre, teléfono, correo, ciudad, de dónde vino (su <b>origen</b>) y lo que quiere estudiar.</td></tr>
+    <tr><td>Pestaña</td><td>Cada uno de los «montones» en los que se reparten los leads: [[t:pendientes]] [[t:agendadas]] [[t:no-contestan|no contestan]]… Los verás arriba del todo, como las pestañas de un Excel.</td></tr>
+    <tr><td>Estado</td><td>En qué punto está el lead: [[s:NUEVO|Nuevo]] [[s:NO_CONTESTA|No contesta]] [[s:AGENDADO|Llamada agendada]] [[s:INTERESADO|Interesado]] [[s:CITA|Cita agendada]] [[s:MATRICULADO|Matriculado]] [[s:DESCARTADO|Descartado]] [[s:HISTORICO|Histórico]].</td></tr>
+    <tr><td>Empresa <span class="new-mark">NUEVO</span></td><td>Cada lead es de [[c:ESTACION]] o de [[c:EFP]], según lo que quiere estudiar (capítulo 12).</td></tr>
+    <tr><td>Ficha</td><td>La página completa de un lead, con todos sus datos, sus notas y su historial. Se abre al pulsar su nombre.</td></tr>
+    <tr><td>Intento</td><td>Cada vez que llamas y no contesta. La web los cuenta por ti.</td></tr>
+    <tr><td>Reserva</td><td>Cuando abres el menú de llamada, el lead queda «reservado» a tu nombre 5 minutos para que nadie más le llame a la vez.</td></tr>
+    <tr><td>Importar</td><td>Meter de golpe muchos leads desde un fichero de Excel o CSV (por ejemplo, el que baja marketing de Instagram o de un portal).</td></tr>
+    <tr><td>Histórico <span class="new-mark">NUEVO</span></td><td>Contactos antiguos que se guardan para consultarlos, sin llamarlos (capítulo 11).</td></tr>
+  </table>
+  <h2>El camino de un lead</h2>
+  <p>Todos los leads siguen el mismo camino, de izquierda a derecha. Desde cualquier punto se puede <b>descartar</b> (y siempre se puede <b>reabrir</b>: en Leads no se borra nunca nada).</p>
+  <div class="path keep">
+    <div class="step" style="background:var(--green)"><b>NUEVO</b>acaba de llegar</div><span class="arr">→</span>
+    <div class="step" style="background:var(--yellow)"><b>NO CONTESTA</b>vuelve solo al día siguiente</div><span class="arr">→</span>
+    <div class="step" style="background:var(--cyan)"><b>INTERESADO</b>le interesa</div><span class="arr">→</span>
+    <div class="step" style="background:var(--cyan)"><b>CITA</b>viene a vernos</div><span class="arr">→</span>
+    <div class="step" style="background:var(--purple)"><b>MATRICULADO</b>¡conseguido!</div>
+  </div>
+  <div class="path-side keep" style="margin-bottom:10pt">
+    <div class="step" style="background:var(--salmon)"><b>DESCARTADO</b>no le interesa · no se borra · se puede reabrir</div>
+    <div class="step" style="background:#c9d6f7"><b>HISTÓRICO</b>contacto antiguo · no se llama · se puede reabrir</div>
+  </div>
+  <div class="box importante"><p class="t">Lo más importante</p>
+    <p>Tu trabajo diario cabe en una frase: <b>entra en «pendientes» y ve bajando de arriba a abajo</b>. Llama, pulsa el resultado y pasa al siguiente. La web se encarga de todo lo demás. El capítulo 5 lo explica paso a paso.</p></div>
+  <h2>Cómo leer este manual</h2>
+  <ul>
+    <li>El primer día lee los <b>capítulos 1 a 8</b> (unos 30 minutos). Con eso ya puedes trabajar.</li>
+    <li>Cuando tengas una duda ve al capítulo 15, «Casos prácticos: ¿qué hago si…?», o al 16, «Preguntas y problemas».</li>
+    <li>En las capturas verás círculos rosas con números [[n:1]] [[n:2]] [[n:3]]. Debajo de cada captura se explica qué es cada número.</li>
+    <li>Al final tienes una <b>chuleta</b> de una página para imprimir y tener al lado del teléfono.</li>
+  </ul>
+  <p class="small muted">Las capturas son de una copia de prueba con datos inventados (nombres falsos y correos @example.com). En tu pantalla verás leads de verdad, pero todo estará en el mismo sitio.</p>
+</section>
+
+<!-- ════════════════════════ 2 ════════════════════════ -->
+<section class="chap" style="--acc:var(--peri)">
+  <div class="ch-head"><p class="lbl">Capítulo 2 · 2 minutos</p><h1>Entrar y salir</h1><div class="num">02</div></div>
+  <p class="intro">Leads es una página web: no hay que instalar nada. Funciona en el ordenador y en el móvil, con Chrome, Edge, Safari o Firefox.</p>
+  <ol class="marks">
+    <li>[[n:1]] Abre el navegador y escribe la dirección que te haya dado administración (será parecida a <b>leads.estaciondiseno.es</b>). Guárdala en favoritos para no tener que escribirla cada día.</li>
+    <li>[[n:2]] Escribe tu correo del trabajo y tu contraseña.</li>
+    <li>[[n:3]] Pulsa <b>Entrar</b>.</li>
+  </ol>
+  {{img:login|Pantalla de entrada.|w70}}
+  <ol class="marks">
+    <li>[[n:1]] <b>Correo o usuario.</b> Tu correo de Estación Diseño, por ejemplo marta@estaciondiseno.es.</li>
+    <li>[[n:2]] <b>Contraseña.</b> Te la da administración la primera vez. Da igual mayúsculas o minúsculas en el correo, pero en la contraseña no.</li>
+    <li>[[n:3]] <b>Mantener la sesión en este ordenador.</b> Déjalo marcado en tu ordenador de siempre. Desmárcalo si usas un ordenador compartido: así la sesión se cierra al cerrar la pestaña.</li>
+    <li>[[n:4]] <b>Entrar.</b></li>
+  </ol>
+  <div class="box ojo"><p class="t">Cosas que conviene saber</p><ul>
+    <li>La sesión dura <b>12 horas</b>. Pasado ese tiempo la web te vuelve a pedir la contraseña. Es normal.</li>
+    <li>Si te equivocas muchas veces con la contraseña, verás «Demasiados intentos. Espera unos minutos y vuelve a probar». Espera un rato y prueba otra vez con calma.</li>
+    <li>¿Has olvidado la contraseña? Pídesela a la persona que administra la herramienta. Ella te pone una nueva.</li></ul></div>
+  <h2>Cambiar tu contraseña y salir</h2>
+  <p><b>Cambiar tu contraseña:</b> arriba a la derecha, [[b:settings|Ajustes]] → <b>Mi cuenta</b> → «Cambiar contraseña». Tiene que tener al menos 10 caracteres.</p>
+  <p><b>Salir:</b> pulsa el botón redondo con la flecha [[i:logout]] arriba a la derecha, al lado de tu nombre.</p>
+  {{img:mi-cuenta|Ajustes → Mi cuenta: con qué usuario has entrado y el formulario para cambiar la contraseña. Al lado tienes «Estudios» (capítulo 10).}}
+</section>
+
+<!-- ════════════════════════ 3 ════════════════════════ -->
+<section class="chap" style="--acc:var(--green)">
+  <div class="ch-head"><p class="lbl">Capítulo 3 · 5 minutos</p><h1>La pantalla principal</h1><div class="num">03</div></div>
+  <p class="intro">Nada más entrar verás la lista de leads, abierta en la pestaña [[t:pendientes]]. Es la pantalla en la que vas a pasar el 90 % del tiempo.</p>
+  {{img:principal|La pantalla principal, con cada zona numerada.}}
+  <ol class="marks">
+    <li>[[n:1]] <b>Menú de arriba.</b> [[bs:list|Leads]] la lista (esta pantalla) · [[b:upload|Importar]] meter leads desde un Excel · [[b:settings|Ajustes]] tu cuenta y los estudios. La etiqueta verde es tu nombre y el último botón [[i:logout]] sirve para salir. Administración ve además [[b:clock|Actividad]].</li>
+    <li>[[n:2]] <b>Pestañas.</b> Cada una es un «montón» de leads. El número negro dice cuántos hay. Te las explicamos una a una abajo.</li>
+    <li>[[n:3]] <b>Cabecera.</b> Dice en qué pestaña estás, qué contiene y cuántos leads hay (aquí, 33). Cambia de color con cada pestaña.</li>
+    <li>[[n:4]] <b>Buscador.</b> Escribe un nombre, un correo, un trozo de teléfono, una ciudad o un estudio (capítulo 9).</li>
+    <li>[[n:5]] <b>Filtros.</b> Para buscar con más detalle: por estudio, empresa, origen, fechas… (capítulo 9).</li>
+    <li>[[n:6]] <b>Filtros rápidos.</b> Un clic para ver solo los de <b>Estación Diseño</b> o <b>Grupo EFP</b>, o solo Grados, Ciclos, Másteres o Cursos. Otro clic lo quita.</li>
+    <li>[[n:7]] <b>Ordenar.</b> Por fecha de entrada (lo normal), nombre, próxima llamada o última llamada. La flecha de al lado cambia el sentido.</li>
+    <li>[[n:8]] <b>Exportar CSV.</b> Descarga en un fichero que se abre con Excel lo que estás viendo (capítulo 9).</li>
+    <li>[[n:9]] <b>Nuevo lead.</b> Para dar de alta a mano a alguien que ha llamado o ha venido (capítulo 10).</li>
+    <li>[[n:10]] <b>La lista de leads.</b> Una fila por persona. El capítulo 4 explica cada parte de la fila.</li>
+  </ol>
+  <h2>Las ocho pestañas</h2>
+  {{img:pestanas|Las pestañas. Un lead solo está en una de las seis primeras a la vez.|noborder}}
+  <p>No tienes que mover los leads de pestaña: cambian solos según lo que pulses al llamar.</p>
+  <table class="kv wide">
+    <tr><td>[[t:pendientes]]</td><td>A quién hay que llamar <b>ahora</b>. Los nuevos, los que no contestaron y ya les toca otra vez, y las llamadas agendadas cuya hora ha llegado (estas salen las primeras y en verde). <b>Es tu pestaña de trabajo.</b></td></tr>
+    <tr><td>[[t:agendadas]]</td><td>Llamadas con día y hora acordados («llámame a las 5»). Esperan aquí y, llegada la hora, pasan solas a pendientes.</td></tr>
+    <tr><td>[[t:no-contestan|no contestan]]</td><td>Los que no cogieron el teléfono. Esperan aquí hasta el siguiente día laborable a las 9:00 y entonces vuelven solos a pendientes.</td></tr>
+    <tr><td>[[t:interesados]]</td><td>Los que han dicho que les interesa, y los que tienen una cita para venir a la escuela.</td></tr>
+    <tr><td>[[t:matriculados]]</td><td>Los que se han matriculado. ¡Objetivo cumplido!</td></tr>
+    <tr><td>[[t:descartados]]</td><td>Los que no están interesados o no hay forma de localizar. No se borran: sirven para campañas y se pueden reabrir.</td></tr>
+    <tr><td>[[t:historico|histórico]] <span class="new-mark">NUEVO</span></td><td>Todos los contactos menos los descartados: los que se están trabajando y los <b>contactos antiguos</b> importados al histórico, que solo están aquí (capítulo 11). No lleva número.</td></tr>
+    <tr><td>[[t:todos]]</td><td>Todos los leads juntos, estén donde estén. Úsala para buscar a alguien cuando no sabes en qué pestaña está.</td></tr>
+  </table>
+  <div class="box truco"><p class="t">Se actualiza sola</p>
+    <p>No hace falta recargar la página. La lista se actualiza sola cada minuto, cada vez que vuelves a la pestaña del navegador y en el momento exacto en que llega la hora de una llamada agendada. Así aparecen los que vuelven a las 9:00 y los cambios de tus compañeras.</p></div>
+  <p class="small muted">Si hay más de 50 leads en una pestaña, abajo del todo aparecen unas flechas para pasar de página: «Página 1 de 3».</p>
+</section>
+
+<!-- ════════════════════════ 4 ════════════════════════ -->
+<section class="chap" style="--acc:var(--green)">
+  <div class="ch-head"><p class="lbl">Capítulo 4 · 5 minutos</p><h1>Una fila, pieza a pieza</h1><div class="num">04</div></div>
+  <p class="intro">Cada fila de la lista es una persona. Esta es la fila de Elena Gil Ramos, un lead nuevo que entró hoy a las 7:17 y que nos conoció en una feria:</p>
+  {{img:fila-a||w90 noborder}}
+  {{img:fila-b|Una fila de lead, partida en dos para que se lea mejor: arriba la parte izquierda y abajo la derecha.|noborder}}
+  <ol class="marks">
+    <li>[[n:1]] <b>Entrada.</b> Cuándo entró en Leads («hoy 07:17»). Debajo, en gris, «form.» es cuándo rellenó el formulario la persona (puede ser antes, por ejemplo si marketing lo importa al día siguiente).</li>
+    <li>[[n:2]] <b>Nombre.</b> Púlsalo para abrir su ficha completa. Debajo, la <b>empresa</b> del lead ([[c:ESTACION]] o [[c:EFP]], capítulo 12) y, en gris, su ciudad y su origen (Web, Redes sociales, Feria, Emagister…).</li>
+    <li>[[n:3]] <b>Contacto.</b> Teléfono y correo. Si un teléfono o un correo sale en rojo, la web cree que está mal escrito (pasa el ratón por encima para ver el aviso).</li>
+    <li>[[n:4]] <b>Estudios.</b> Lo que quiere estudiar, con el color de su titulación. Si sale con <b>borde de puntos</b>, es el texto que escribió la persona pero no corresponde a ningún estudio de la lista: está sin asignar.</li>
+    <li>[[n:5]] <b>Seguimiento.</b> Su estado ([[s:NUEVO|Nuevo]], [[s:NO_CONTESTA|No contesta]]…) y debajo el detalle: intentos, cuándo vuelve, la hora de la llamada agendada o la fecha de la cita.</li>
+    <li>[[n:6]] [[i:wa]] <b>WhatsApp.</b> Abre WhatsApp con un mensaje ya escrito para esta persona.</li>
+    <li>[[n:7]] [[i:mail]] <b>Enviar información por correo.</b> Te enseña el correo con la información de sus estudios antes de enviarlo.</li>
+    <li>[[n:8]] [[i:ok]] <b>Marcar como interesado sin llamar.</b> Por ejemplo, si te ha contestado por WhatsApp que le interesa.</li>
+    <li>[[n:9]] [[i:eye]] <b>Ver ficha.</b> Lo mismo que pulsar el nombre.</li>
+    <li>[[n:10]] [[i:call]] <b>Llamada.</b> El botón más importante: abre el menú para llamar y apuntar qué ha pasado (capítulo 5). Si tiene un numerito, son los intentos sin respuesta.</li>
+  </ol>
+  <div class="box ojo"><p class="t">No todos los leads tienen todos los botones</p><ul>
+    <li>Si no tiene teléfono, no aparecen [[i:call]] ni [[i:wa]]: solo puedes enviarle información por correo.</li>
+    <li>Si no tiene correo (o está mal escrito), no aparece [[i:mail]].</li>
+    <li>Si ya está interesado, no aparece [[i:ok]] (ya lo está).</li>
+    <li>En descartados, matriculados y en los contactos del histórico solo verás [[b:reopen|Reabrir]] y [[i:eye]].</li></ul></div>
+  <h2>Filas especiales</h2>
+  {{img:fila-agendada|Fila entera en verde con la etiqueta «LLAMADA AGENDADA»: es una llamada que habías quedado en hacer y ya es la hora. Siempre sale la primera de pendientes. Llámala antes que a las demás.|noborder}}
+  {{img:fila-llamando|Fila rayada con «NURIA PRADO LLAMANDO»: una compañera la está llamando ahora mismo. No la llames tú; pasa a la siguiente (capítulo 13).|noborder}}
+  {{img:fila-efp|Un lead de Grupo EFP: pidió información de un curso de Grupo EFP («Instagram para tu negocio») y llegó por el portal AprendeMás.|noborder}}
+</section>
+
+<!-- ════════════════════════ 5 ════════════════════════ -->
+<section class="chap" style="--acc:var(--green)">
+  <div class="ch-head"><p class="lbl">Capítulo 5 · Lo que harás cada día</p><h1>Tu rutina: llamar</h1><div class="num">05</div></div>
+  <p class="intro">Esta es la forma de trabajar con Leads. Si solo te quedas con un capítulo, que sea este.</p>
+  <ol class="marks">
+    <li>[[n:1]] Entra en la pestaña [[t:pendientes]]. Si hay filas verdes arriba, son llamadas agendadas que ya tocan: empieza por ellas.</li>
+    <li>[[n:2]] Ve bajando por la lista. En la persona a la que vas a llamar, pulsa el botón verde del teléfono [[i:call]]. Se abre el menú de llamada y el lead queda reservado a tu nombre para que nadie más le llame a la vez.</li>
+    <li>[[n:3]] Llama por teléfono (desde tu teléfono de siempre, o pulsando el número si tu ordenador o tu móvil puede llamar).</li>
+    <li>[[n:4]] Cuando cuelgues, pulsa en el menú lo que ha pasado. Son 4 opciones: haz clic en la que corresponda o, si no has escrito nota, pulsa las teclas [[k:1]] [[k:2]] [[k:3]] [[k:4]] del teclado. Si quieres, escribe antes una nota («prefiere que la llamen por la tarde») y luego haz clic en el resultado.</li>
+    <li>[[n:5]] La web te propone el siguiente paso (enviar el correo de información, abrir WhatsApp…). Acéptalo o pulsa «Ahora no».</li>
+    <li>[[n:6]] El lead desaparece de pendientes y se va a la pestaña que le toca. Pasa al siguiente.</li>
+  </ol>
+  <div class="box importante"><p class="t">El objetivo del día</p>
+    <p>Cuando pendientes se queda vacía verás el mensaje <b>«Buen trabajo: no queda nadie por llamar ahora mismo»</b>. Mañana a las 9:00 volverán solos los que hoy no contestaron.</p></div>
+  <h2>El menú de llamada</h2>
+  <div class="fig-row">
+    {{img:menu-llamada|El menú que se abre al pulsar el teléfono verde de Elena.}}
+    <div>
+      <ol class="marks" style="margin-top:8pt">
+        <li>[[n:1]] <b>El número de teléfono.</b> Si tu ordenador o tu móvil puede llamar, al pulsarlo empieza la llamada.</li>
+        <li>[[n:2]] [[bs:whatsapp|WhatsApp]] abre WhatsApp con un mensaje ya escrito (capítulo 7).</li>
+        <li>[[n:3]] [[b:send|Correo]] abre el correo de información (capítulo 7).</li>
+        <li>[[n:4]] <b>Nota (opcional).</b> Lo que te ha dicho. Se guarda en su historial junto al resultado.</li>
+        <li>[[n:5]] [[k:1]] <b>No contesta.</b> No coge, está apagado, salta el buzón…</li>
+        <li>[[n:6]] [[k:2]] <b>Contesta · no interesado.</b> Ha dicho que no le interesa.</li>
+        <li>[[n:7]] [[k:3]] <b>Contesta · interesado.</b> Le interesa.</li>
+        <li>[[n:8]] [[k:4]] <b>Agendar otra llamada.</b> Contesta pero te pide que le llames otro día u otra hora.</li>
+      </ol>
+    </div>
+  </div>
+  <div class="box truco"><p class="t">Las teclas y la nota</p>
+    <p>Las teclas 1 a 4 no funcionan mientras estás escribiendo en la nota (se escribiría el número en la nota). Cuando hayas escrito la nota, haz clic en el botón del resultado con el ratón.</p>
+    <p>Arriba del menú pone «Llamada · intento 1», «intento 2»… para que sepas cuántas veces se le ha llamado. Para cerrar el menú sin apuntar nada, pulsa <kbd>Esc</kbd> o haz clic fuera.</p></div>
+  <div class="box ojo"><p class="t">Ojo</p>
+    <p>Mientras el menú está abierto, el lead está reservado a tu nombre. Al elegir un resultado (o al cerrar el menú) se libera. Si te olvidas el menú abierto, la reserva caduca sola a los 5 minutos.</p></div>
+</section>
+
+<!-- ════════════════════════ 6 ════════════════════════ -->
+<section class="chap" style="--acc:var(--yellow)">
+  <div class="ch-head"><p class="lbl">Capítulo 6 · Con ejemplos</p><h1>Los 4 resultados de una llamada</h1><div class="num">06</div></div>
+  <p class="intro">Aquí tienes qué pasa exactamente con cada uno de los cuatro botones, con un ejemplo de cada uno.</p>
+
+  <h2><span class="n" style="width:24px;height:24px;font-size:11pt;background:var(--yellow);border-radius:6px">1</span>No contesta</h2>
+  <div class="box ejemplo"><p class="t">Ejemplo</p><p><b>Martes 27 de octubre, por la tarde.</b> Marta llama a Elena Gil Ramos. No lo coge. Marta pulsa la tecla [[k:1]].</p></div>
+  <p>Pasan tres cosas:</p>
+  <p><b>1. Sale un aviso verde</b> abajo a la derecha:</p>
+  {{img:aviso-no-contesta||w50 noborder}}
+  <p>Vuelve <b>mañana a las 9:00</b>. Si fuera viernes, volvería el <b>lunes</b> a las 9:00 y no el sábado, porque la web solo cuenta días laborables (de lunes a viernes, sin festivos).</p>
+  <p><b>2. Se abre una ventana</b> que te propone enviarle el correo de información <b>y</b> escribirle por WhatsApp:</p>
+  {{img:correo-no-contesta|«¿Le envías este correo?» después de un «No contesta».|w70}}
+  <ol class="marks">
+    <li>[[n:1]] <b>De:</b> el buzón desde el que sale el correo. Si administración ha configurado el tuyo, sale tu dirección y las respuestas te llegan a ti (capítulo 7).</li>
+    <li>[[n:2]] <b>Asunto</b> del correo. Puedes cambiarlo si quieres.</li>
+    <li>[[n:3]] <b>Adjuntos:</b> el dossier en PDF de su estudio. Púlsalo para verlo.</li>
+    <li>[[n:4]] <b>El correo.</b> Puedes escribir dentro, como en Word, para añadir o cambiar algo (el cambio solo vale para este envío). Debajo va tu firma.</li>
+    <li>[[n:5]] [[b:whatsapp|Solo WhatsApp]] no envía el correo; solo abre WhatsApp.</li>
+    <li>[[n:6]] [[bs:send|Enviar y abrir WhatsApp]] envía el correo y abre WhatsApp a la vez. <b>Es lo recomendado.</b></li>
+  </ol>
+  <p>Si no quieres hacer ninguna de las dos cosas, cierra la ventana con la [[i:x]] de arriba a la derecha. Los botones de WhatsApp y correo siguen siempre en la fila por si luego cambias de idea. Si el lead no tiene correo, la ventana solo te ofrece <b>«Abrir WhatsApp»</b>.</p>
+  <p><b>3. El lead se va a la pestaña</b> [[t:no-contestan|no contestan]] con la etiqueta «NO CONTESTA · 1 intento · vuelve mañana 09:00».</p>
+  {{img:fila-no-contesta|Elena en «no contestan». En el botón de llamar aparece un 1: los intentos sin respuesta.|noborder}}
+  <p>Mañana a las 9:00 Elena vuelve sola a pendientes. No tienes que hacer nada ni acordarte de nada.</p>
+  <h3>Cuántas veces se le llama</h3>
+  <table class="kv">
+    <tr><th>Intento</th><th>Qué pasa</th></tr>
+    <tr><td>1.º a 5.º</td><td>Vuelve a pendientes el siguiente día laborable a las 9:00.</td></tr>
+    <tr><td>6.º</td><td>Se descarta sola, con el motivo «Sin respuesta tras 6 intentos». Queda en descartados y se puede reabrir.</td></tr>
+  </table>
+  <p class="small muted">Ejemplo de calendario: no contesta el viernes → vuelve el lunes 9:00. No contesta el lunes → vuelve el martes 9:00. Si el día siguiente es festivo, se lo salta.</p>
+  <div class="box truco"><p class="t">¿Y si quiero insistir antes?</p>
+    <p>¿Quieres volver a llamar hoy mismo a alguien que no contestó? Búscalo en «no contestan» y pulsa su teléfono verde: puedes llamarle desde cualquier pestaña, no hace falta esperar.</p></div>
+
+  <h2><span class="n" style="width:24px;height:24px;font-size:11pt;background:var(--salmon);border-radius:6px">2</span>Contesta · no interesado</h2>
+  <div class="box ejemplo"><p class="t">Ejemplo</p><p>Sofía Navarro contesta y dice que ya se ha matriculado en otro sitio. Marta pulsa [[k:2]].</p></div>
+  {{img:aviso-no-interesado||w50 noborder}}
+  <p>Sofía pasa a [[t:descartados]] con el motivo «No interesado». No se borra: si algún día vuelve a pedir información (por ejemplo, llega en otro Excel importado), volverá sola a pendientes.</p>
+  <div class="box truco"><p class="t">Truco</p><p>Si quieres apuntar un motivo más concreto («Precio», «Ya está estudiando en otro centro»…), en vez de la tecla 2 usa el botón <b>Descartar</b> de su ficha (capítulo 8).</p></div>
+
+  <h2><span class="n" style="width:24px;height:24px;font-size:11pt;background:var(--green);border-radius:6px">3</span>Contesta · interesado</h2>
+  <div class="box ejemplo"><p class="t">Ejemplo</p><p>Nerea Gil contesta, le interesa el Grado en Diseño de Moda y quiere venir a ver la escuela. Marta escribe la nota «Quiere venir a ver la escuela» y hace clic en <b>Contesta · interesado</b> (la opción [[k:3]]).</p></div>
+  <p>Nerea pasa a [[t:interesados]] y se abre la ventana <b>Enviar información</b> con el correo de su estudio ya preparado:</p>
+  {{img:correo-informacion|El correo de información. Marta ha añadido una frase dentro del texto.|w70}}
+  <ol class="marks">
+    <li>[[n:1]] <b>De, Para, Asunto y Adjuntos.</b> Quién lo envía, a quién, el asunto (se puede cambiar) y el dossier del estudio.</li>
+    <li>[[n:2]] <b>El correo, tal y como lo va a recibir.</b> Puedes hacer clic dentro y escribir. En el ejemplo, Marta ha añadido «Te recuerdo que la matrícula de este curso cierra el viernes 6 de noviembre». Este cambio solo vale para este correo: la plantilla no cambia.</li>
+    <li>[[n:3]] [[b:reopen|Deshacer cambios]] aparece si has tocado algo: deja el correo como estaba.</li>
+    <li>[[n:4]] <b>Tu firma.</b> Se añade sola al final y no se puede retocar aquí.</li>
+    <li>[[n:5]] [[b:|Ahora no]] cierra la ventana sin enviar nada. Lo puedes enviar más tarde con [[i:mail]].</li>
+    <li>[[n:6]] [[bs:send|Enviar correo]] lo envía. Sale el aviso «Información enviada a nerea.gil27@example.com».</li>
+  </ol>
+  <p>El siguiente paso con un interesado suele ser agendar una cita para que venga a la escuela. Eso se hace desde su ficha (capítulo 8).</p>
+  <p class="small muted">Si llamas a alguien que ya está en interesados y no contesta, se apunta el intento pero sigue en interesados: no vuelve a pendientes ni se descarta solo.</p>
+
+  <h2><span class="n" style="width:24px;height:24px;font-size:11pt;background:var(--pink);border-radius:6px">4</span>Agendar otra llamada</h2>
+  <div class="box ejemplo"><p class="t">Ejemplo</p><p>Marta llama a Marta Martín. Contesta pero está en clase: «¿Me llamas a las siete y media?». Marta escribe la nota «Está en clase, que la llamemos a las 19:30» y hace clic en <b>Agendar otra llamada</b> (la opción [[k:4]]).</p></div>
+  <div class="fig-row">
+    {{img:menu-agendar|Al pulsar «Agendar otra llamada» el menú pide el día y la hora.}}
+    <div>
+      <ol class="marks" style="margin-top:10pt">
+        <li>[[n:1]] <b>Día.</b> Por defecto, hoy. Pulsa el calendario para elegir otro.</li>
+        <li>[[n:2]] <b>Hora.</b> En hora de España peninsular (Madrid), aunque tu ordenador tenga otra.</li>
+        <li>[[n:3]] [[bs:calendar|Agendar llamada]] lo guarda. Con [[b:|Volver]] vuelves a los 4 resultados.</li>
+      </ol>
+      <p>Sale el aviso «Llamada agendada hoy 19:30: ese día sale el primero». El lead se va a [[t:agendadas]], ordenada por día y hora de la llamada:</p>
+    </div>
+  </div>
+  {{img:agendadas|La pestaña «agendadas».}}
+  <p>A las 19:30 Marta Martín vuelve sola a pendientes, <b>la primera de la lista y en verde</b>, para que no se te pase. Si agendas una llamada a alguien que ya está interesado, sigue siendo interesado: espera en agendadas y a su hora sale en pendientes.</p>
+  <div class="box ojo"><p class="t">Ojo</p><p>La hora tiene que ser futura. Si eliges una hora que ya ha pasado verás «Elige un día y una hora que aún no hayan pasado».</p></div>
+
+  <h2>El aviso a la hora <span class="new-mark">NUEVO</span></h2>
+  <p>Cuando llega la hora de una llamada que <b>tú</b> agendaste, Leads te avisa como un recordatorio del calendario, aunque estés en otra pestaña del navegador:</p>
+  <div class="fig-row">
+    {{img:aviso-llamada|La tarjeta del aviso, abajo a la izquierda.}}
+    <div><ul style="margin-top:6pt">
+      <li>Sale una <b>tarjeta</b> abajo a la izquierda, suena un <b>aviso corto</b> y el <b>título de la pestaña parpadea</b> («🔔 Llamar a Irene García Gil»).</li>
+      <li>[[bs:phone|Llamar ahora]] abre su ficha para llamarla.</li>
+      <li>[[b:clock|En 5 min]] la pospone: el aviso vuelve a salir en 5 minutos.</li>
+      <li>La [[i:x]] cierra el aviso. El lead sigue el primero en pendientes, en verde.</li>
+    </ul></div>
+  </div>
+  <div class="box truco"><p class="t">Activa los avisos del ordenador</p>
+    <p>La primera vez que agendas una llamada, el navegador te pregunta si Leads puede <b>mostrar notificaciones</b>. Di <b>«Permitir»</b>: así el aviso sale en una esquina de la pantalla aunque estés en otro programa. Si aún no has contestado, la propia tarjeta te ofrece «Activar los avisos del ordenador». Si dijiste que no, se cambia en el navegador: pulsa el candado junto a la dirección de Leads → Notificaciones → Permitir.</p></div>
+  <div class="box ojo"><p class="t">Ojo</p><ul>
+    <li>El aviso solo le sale a <b>quien agendó</b> la llamada. Tus compañeras no reciben aviso, pero a todas se les actualiza la lista y el lead sale el primero en pendientes.</li>
+    <li>Leads tiene que estar <b>abierto</b> en alguna pestaña del navegador (aunque no la estés mirando). Si lo tienes cerrado, verás la fila verde al volver a entrar.</li></ul></div>
+
+  <h2>Y el tick verde [[i:ok]]</h2>
+  <p>A veces sabes que alguien está interesado sin haberle llamado: te ha contestado al WhatsApp, ha respondido al correo, ha venido a la escuela… Para esos casos pulsa el <b>tick verde</b> de su fila. Pasa a interesados igual que con la tecla 3, y también te propone enviarle el correo de información.</p>
+</section>
+
+<!-- ════════════════════════ 7 ════════════════════════ -->
+<section class="chap" style="--acc:var(--cyan)">
+  <div class="ch-head"><p class="lbl">Capítulo 7 · Escribir a un lead</p><h1>WhatsApp y correo</h1><div class="num">07</div></div>
+  <h2>WhatsApp [[i:wa]]</h2>
+  <p>Al pulsar cualquier botón de WhatsApp se abre WhatsApp (la aplicación o WhatsApp Web) con la conversación de esa persona y <b>un mensaje ya escrito</b>, como este:</p>
+  <div class="quote">Buenas tardes, Elena:
+Soy Marta, de ESTACIÓN DISEÑO, Escuela Superior de Diseño y Artes Visuales de Granada. Hemos recibido tu solicitud de información sobre nuestro: GRADO DISEÑO GRÁFICO en la feria.
+He intentado contactar contigo por teléfono para explicarte detalles sobre la forma de acceso, metodología, precios y otros aspectos relacionados con la formación. ¿En qué horario te puedo llamar?</div>
+  <p>El mensaje se ajusta solo a cada persona <span class="new-mark">NUEVO</span>:</p>
+  <ul>
+    <li><b>«Buenos días», «Buenas tardes» o «Buenas noches»</b> según la hora.</li>
+    <li><b>Tu nombre</b> y la <b>empresa del lead</b>: «ESTACIÓN DISEÑO, Escuela Superior de Diseño y Artes Visuales de Granada» o «GRUPO EFP».</li>
+    <li><b>Sus estudios</b> en mayúsculas.</li>
+    <li><b>Por dónde nos pidió información</b>: «a través de la página EMAGISTER», «a través de nuestra página web», «de nuestras redes sociales», «en la feria», «a través de tu centro educativo»… Si no lo sabemos, no se pone nada.</li>
+  </ul>
+  <ol class="marks">
+    <li>[[n:1]] <b>Revisa el mensaje.</b> Puedes cambiar lo que quieras antes de enviarlo.</li>
+    <li>[[n:2]] <b>Pulsa enviar dentro de WhatsApp.</b> La web no lo envía por ti: solo lo deja preparado.</li>
+    <li>[[n:3]] <b>Vuelve a la pestaña de Leads.</b> En el historial del lead queda apuntado «WhatsApp abierto», con tu nombre y la hora.</li>
+  </ol>
+  <div class="box ojo"><p class="t">Ojo</p><p>La primera vez, el navegador puede preguntarte si quieres abrir WhatsApp. Di que sí y marca «recordar» para que no te lo vuelva a preguntar. Para usar WhatsApp Web tienes que tenerlo vinculado con el móvil del trabajo.</p></div>
+
+  <h2>Correo de información [[i:mail]]</h2>
+  <p>El correo se prepara solo, según lo que quiera estudiar la persona:</p>
+  <table class="kv">
+    <tr><td>Un estudio</td><td>Se usa la plantilla de ese estudio (o la genérica, si aún no tiene una propia) y se adjunta su <b>dossier</b> en PDF.</td></tr>
+    <tr><td>Varios estudios</td><td>Se usa la plantilla genérica, que incluye un bloque con la información de cada uno y adjunta <b>todos sus dossieres</b>.</td></tr>
+    <tr><td>Sin estudio</td><td>Se envía el correo «Sin estudio», pensado para quien no ha dicho qué quiere. La ventana te avisa: «No sabemos qué quiere estudiar». Si lo sabes, asígnale el estudio en su ficha con <b>Editar</b> antes de enviarlo.</td></tr>
+  </table>
+  <h3>Lo que lleva cada correo <span class="new-mark">NUEVO</span></h3>
+  <ul>
+    <li><b>Sale de tu buzón.</b> Si administración ha configurado tu buzón, el correo sale de tu dirección (por ejemplo marta@estaciondiseno.es), <b>las respuestas te llegan a ti</b> y queda una copia en tu carpeta de <b>Enviados</b> (la ves en Outlook, Gmail o el móvil). Si no, sale del buzón general de la escuela. La ventana lo dice en «De».</li>
+    <li><b>Tu firma</b> va al final, debajo del texto. La prepara administración y no se puede retocar al enviar. Si no tienes, la ventana pone «Sin firma: administración la añade en Ajustes → Usuarios».</li>
+    <li><b>El dossier</b> del estudio va adjunto. Lo puedes abrir desde la ventana antes de enviar.</li>
+    <li><b>«¿Cómo nos has conocido?»</b>: el <b>primer</b> correo que recibe cada lead le pregunta cómo nos conoció (Instagram, Google, una feria, su centro…), justo antes de «Quedamos a tu disposición». Si contesta, apúntalo como nota o corrige su origen con <b>Editar</b>.</li>
+  </ul>
+  <ul>
+    <li>Antes de enviarlo <b>siempre lo ves</b> y puedes cambiar el asunto y el texto (solo para ese envío).</li>
+    <li>Si ya se le había enviado información, la ventana te avisa: «Ya se le envió información el 27/10/2026 · 17:03». Así no repites.</li>
+    <li>Queda apuntado en el historial: «Información enviada» (o «Información enviada (retocada)» si cambiaste algo).</li>
+  </ul>
+  <h2>Un correo cada 72 segundos <span class="new-mark">NUEVO</span></h2>
+  <p>Para que los servidores de correo no nos marquen como spam, <b>todo el equipo junto</b> envía como mucho un correo cada 72 segundos. Si una compañera (o tú) acaba de enviar uno, la ventana te lo dice y el botón hace la cuenta atrás:</p>
+  {{img:correo-espera||w90 noborder}}
+  {{img:correo-espera-boton|Cuando el contador llega a cero, el botón vuelve a decir «Enviar correo».|w60 noborder}}
+  <p><b>No es un error</b> y no se pierde nada: espera esos segundos (o deja la ventana abierta mientras haces otra cosa) y pulsa enviar. Si habías elegido «Enviar y abrir WhatsApp», WhatsApp se abre ya y el botón pasa a «Reintentar envío».</p>
+  <div class="box datos"><p class="t">Si sale el aviso rojo «Modo pruebas»</p>
+    <p>«Modo pruebas: este correo <b>no saldrá de verdad</b>…» significa que tu usuario no tiene buzón y el servidor no está enviando correos. No lo envíes: avisa a administración para que configure tu buzón y usa WhatsApp mientras tanto.</p></div>
+  <div class="box truco"><p class="t">Truco</p><p>Los textos de las plantillas, los dossieres y las firmas los gestiona administración (Ajustes → Correos y Ajustes → Usuarios). Si ves algo mal escrito en un correo, avísales para que lo corrijan para todas.</p></div>
+</section>
+
+<!-- ════════════════════════ 8 ════════════════════════ -->
+<section class="chap" style="--acc:var(--cyan)">
+  <div class="ch-head"><p class="lbl">Capítulo 8 · Todos los datos de una persona</p><h1>La ficha del lead</h1><div class="num">08</div></div>
+  <p class="intro">Pulsa el nombre de un lead (o el ojo [[i:eye]]) y se abre su ficha a la derecha de la pantalla. Aquí está todo lo que sabemos de esa persona y todo lo que se ha hecho con ella.</p>
+  <div class="fig-row">
+    {{img:ficha|La ficha de Nerea Gil Navarro, ya con su cita agendada.}}
+    <div>
+      <ol class="marks" style="margin-top:6pt">
+        <li>[[n:1]] <b>Cabecera.</b> Nombre, estado, de dónde vino y avisos («3 sin respuesta», «Nuria está llamando»).</li>
+        <li>[[n:2]] <b>Botones de acción.</b> Cambian según el estado (los vemos abajo).</li>
+        <li>[[n:3]] <b>Datos.</b> Teléfono, correo, ciudad, <b>empresa</b>, estudios, fechas, comentarios… Si vino de un fichero importado, también salen aquí las columnas extra de ese fichero. «Escribió: …» es el texto original que puso la persona en el formulario.</li>
+        <li>[[n:4]] <b>Añadir nota.</b> Escribe y pulsa [[bs:note|Guardar]]. Úsalo para todo lo que quieras que sepan tus compañeras.</li>
+        <li>[[n:5]] <b>Historial.</b> Todo lo que ha pasado, del más nuevo al más antiguo: llamadas, notas, correos, WhatsApp, cambios de estado… con fecha, hora y quién lo hizo.</li>
+      </ol>
+      <p>Para cerrar la ficha, pulsa la [[i:x]] de arriba a la derecha, la tecla <kbd>Esc</kbd> o haz clic en la parte gris de la izquierda.</p>
+    </div>
+  </div>
+  <h2>Los botones de la ficha</h2>
+  <table class="kv">
+    <tr><td>[[bs:phone|Llamada]]</td><td>El mismo menú de llamada de la fila (capítulo 5).</td></tr>
+    <tr><td>[[b:whatsapp|WhatsApp]]</td><td>Abre WhatsApp con el mensaje preparado.</td></tr>
+    <tr><td>[[b:send|Enviar información]]</td><td>Abre el correo de información.</td></tr>
+    <tr><td>[[b:check|Interesado]]</td><td>Lo pasa a interesados sin llamar (como el tick verde). Solo sale si aún no está interesado.</td></tr>
+    <tr><td>[[b:calendar|Agendar cita]]</td><td>Solo con interesados. Apunta el día y la hora en que viene a la escuela (o una videollamada).</td></tr>
+    <tr><td>[[b:award|Matriculado]]</td><td>Solo con interesados. Lo pasa a matriculados.</td></tr>
+    <tr><td>[[b:ban|Descartar]]</td><td>Lo pasa a descartados con el motivo que elijas.</td></tr>
+    <tr><td>[[b:reopen|Reabrir]]</td><td>Solo en descartados, matriculados y contactos del histórico. Lo devuelve a pendientes como nuevo.</td></tr>
+    <tr><td>[[b:edit|Editar]]</td><td>Corregir o completar sus datos: nombre, teléfono, correo, origen, estudios, comentarios…</td></tr>
+  </table>
+  <h2>Agendar una cita</h2>
+  <div class="box ejemplo"><p class="t">Ejemplo</p><p>Nerea quiere venir a ver la escuela con su madre el martes 3 de noviembre a las 10:00. Marta abre su ficha y pulsa <b>Agendar cita</b>.</p></div>
+  {{img:cita|Rellena la fecha y la hora, añade una nota y pulsa «Guardar cita».|w60}}
+  <p>El estado cambia a [[s:CITA|Cita agendada]] y la fecha aparece en la fila («Cita 03/11/2026») y en la ficha. Sigue en la pestaña interesados. Si la cita cambia, el botón pasa a llamarse <b>Cambiar cita</b>.</p>
+  {{img:fila-cita||noborder}}
+  <h2>Marcar como matriculado</h2>
+  {{img:matricula|La web te pide confirmación antes de marcarlo.|w60}}
+  <p>Pulsa «Sí, matriculado». Sale «¡Matrícula registrada!» y el lead pasa a [[t:matriculados]].</p>
+  <h2>Descartar con un motivo</h2>
+  <div class="box ejemplo"><p class="t">Ejemplo</p><p>Pablo Ramos le dice a Marta que ya está estudiando en otro centro. Marta abre su ficha y pulsa <b>Descartar</b>.</p></div>
+  {{img:descartar|Elige un motivo con un clic, o escribe el tuyo en «Motivo».|w60}}
+  <p>Los motivos rápidos son: No interesado · Ya está estudiando en otro centro · Precio · Datos erróneos · Duplicado · No cumple requisitos. El motivo sale luego en la fila y sirve para saber por qué perdemos leads.</p>
+  <h2>Reabrir</h2>
+  <p>En [[t:descartados]], [[t:matriculados]] y en los contactos del [[t:historico|histórico]] cada fila tiene el botón [[b:reopen|Reabrir]]:</p>
+  {{img:fila-descartado|Pablo en descartados, con su motivo y el botón Reabrir.|noborder}}
+  <p>Al pulsarlo, el lead vuelve a pendientes como si fuera nuevo (con los intentos a cero). Todo su historial se conserva. Úsalo si te equivocaste o si alguien descartado vuelve a mostrar interés.</p>
+  <div class="box truco"><p class="t">Truco</p><p>Si alguien descartado (o del histórico) vuelve a llegar en un Excel importado, o alguien intenta darlo de alta otra vez y elige «Añadir estos datos al existente», se reabre solo: no hace falta que hagas nada más.</p></div>
+</section>
+
+<!-- ════════════════════════ 9 ════════════════════════ -->
+<section class="chap" style="--acc:var(--peri)">
+  <div class="ch-head"><p class="lbl">Capítulo 9 · Encontrar a cualquiera</p><h1>Buscar, filtrar y exportar</h1><div class="num">09</div></div>
+  <h2>El buscador</h2>
+  <p>Escribe en la caja de arriba y la lista se filtra al momento. Busca en el nombre, los apellidos, el correo, el teléfono, la ciudad y, <span class="new-mark">NUEVO</span> también en el <b>nombre de sus estudios</b>.</p>
+  <div class="box importante"><p class="t">Muy importante</p><p>El buscador busca <b>solo dentro de la pestaña en la que estás</b>. Si buscas a alguien y no sabes en qué pestaña está, entra primero en [[t:todos]].</p></div>
+  {{img:buscar-granada|En la pestaña «todos», al escribir «granada» [[n:1]] salen todos los leads de Granada, estén donde estén. El número [[n:2]] dice cuántos hay.}}
+  <ul>
+    <li>Da igual mayúsculas y tildes: «andres» encuentra «Andrés».</li>
+    <li>Busca trozos: «gil» encuentra «Gil», «Gilabert» y «elena.gil19@…».</li>
+    <li>Varias palabras, en cualquier orden: «ramos elena» encuentra a «Elena Gil Ramos».</li>
+    <li>Teléfonos por trozos de cifras: «9119» encuentra el +34 600 00 91 19. Da igual si escribes espacios o el +34.</li>
+    <li><b>Estudios:</b> «moda» encuentra a todos los que quieren algo de moda; «procreate» o «patronaje», a los de esos cursos. Se puede combinar con el nombre: «garcía máster».</li>
+    <li>Para borrar la búsqueda pulsa la [[i:x]] de la caja. Atajo: pulsa la tecla <kbd>/</kbd> en cualquier momento y el cursor salta al buscador.</li>
+  </ul>
+  {{img:buscar-telefono|Buscando por «9119», el final de un teléfono.}}
+  {{img:buscar-estudio|Buscando «moda» en «todos»: salen los interesados en Grado Diseño Moda y en el Máster Profesional Moda.}}
+  <h2>Filtros rápidos</h2>
+  <p>Debajo del buscador están [[b:|Estación Diseño]] [[b:|Grupo EFP]] [[b:graduation|Grados]] [[b:graduation|Ciclos (CFGS)]] [[b:graduation|Másteres]] [[b:graduation|Cursos]]. Un clic muestra solo los leads de esa empresa o de ese tipo de estudio; otro clic lo quita. Se pueden combinar (por ejemplo, «Estación Diseño» + «Másteres»).</p>
+  <p class="small muted">Si tu usuario solo trabaja con una empresa, no verás los botones de empresa: ya solo te salen los leads de la tuya (capítulo 12).</p>
+  <h2>Filtros avanzados</h2>
+  <p>Pulsa [[b:filter|Filtros]] para abrir el panel:</p>
+  {{img:filtros|El panel de filtros, filtrando a los interesados en el Máster de Ilustración. El «1» junto a Filtros indica que hay un filtro activo.}}
+  <table class="kv">
+    <tr><td>Nombre, correo, teléfono, ubicación</td><td>«Contiene»: igual que el buscador, pero solo en ese dato.</td></tr>
+    <tr><td>Origen</td><td>Web, Redes sociales, Referencias, Año pasado, Feria, Colegios, AprendeMás, Emagister, TuMaster, EducaWeb o «Sin indicar» (leads antiguos sin origen).</td></tr>
+    <tr><td>Tipo de estudio</td><td>Grados, Ciclos, Másteres o Cursos.</td></tr>
+    <tr><td>Empresa</td><td>Estación Diseño, Grupo EFP o las dos (según sus estudios de interés).</td></tr>
+    <tr><td>Entrada desde / hasta</td><td>Solo los que entraron entre esas fechas.</td></tr>
+    <tr><td>Interesados en</td><td>Pulsa uno o varios estudios.</td></tr>
+    <tr><td>Solo leads sin estudio asignado</td><td>Para encontrar a los que hay que preguntar qué quieren estudiar.</td></tr>
+  </table>
+  <p>Los filtros se suman: por ejemplo «Másteres» + ubicación «Granada» = másteres de Granada. Para quitarlos todos de golpe, pulsa [[b:x|Limpiar todo]].</p>
+  <h2>Ordenar</h2>
+  <p>Con «Ordenar» eliges el orden de la lista: <b>Entrada</b> (lo normal: los más recientes arriba), <b>Nombre</b> (de la A a la Z), <b>Próxima llamada</b> o <b>Última llamada</b>. La flecha de al lado da la vuelta al orden. En pendientes, las llamadas agendadas que ya tocan salen siempre las primeras. En agendadas el orden es siempre por día y hora de la llamada.</p>
+  <h2>Exportar a Excel</h2>
+  <p>El botón [[b:download|Exportar CSV]] descarga un fichero .csv con <b>exactamente lo que estás viendo</b>: la pestaña, la búsqueda y los filtros que tengas puestos (todas las páginas, no solo la primera). Se abre con doble clic en Excel.</p>
+  <div class="box ejemplo"><p class="t">Ejemplo</p><p>Marketing te pide los descartados por «Precio» para una campaña de becas: entra en descartados, pulsa Exportar CSV, abre el fichero con Excel y filtra la columna «Motivo descarte» por «Precio».</p></div>
+  <p>El fichero trae estas columnas: ID, Nombre, Apellidos, Email, Teléfono, Ubicación, Estudios, <b>Empresa</b>, Interés (texto), Origen, Estado, Intentos, Motivo descarte, Entrada, Última llamada y Comentarios.</p>
+  <div class="box datos"><p class="t">Protección de datos</p><p>El fichero contiene datos personales. Guárdalo solo el tiempo necesario, no lo envíes a personas de fuera de la escuela y bórralo cuando termines.</p></div>
+</section>
+
+<!-- ════════════════════════ 10 ════════════════════════ -->
+<section class="chap" style="--acc:var(--green)">
+  <div class="ch-head"><p class="lbl">Capítulo 10 · Cuando alguien llama o viene</p><h1>Dar de alta un lead a mano</h1><div class="num">10</div></div>
+  <p class="intro">Si alguien llama a recepción, viene a la escuela o te da sus datos en una feria, puedes darlo de alta tú misma con [[bs:plus|Nuevo lead]].</p>
+  <div class="box ejemplo"><p class="t">Ejemplo</p><p>Laura Castillo llama a recepción preguntando por el Grado en Diseño Gráfico. Nos vio en Instagram. Marta pulsa <b>Nuevo lead</b> y rellena sus datos.</p></div>
+  <div class="fig-row">
+    {{img:nuevo-lead|El formulario de Nuevo lead.}}
+    <div>
+      <ol class="marks" style="margin-top:6pt">
+        <li>[[n:1]] <b>Datos de contacto.</b> Nombre, apellidos, teléfono, correo y ciudad. El teléfono se puede escribir como quieras («611 22 33 44», «611223344»…); si no lleva prefijo, se entiende que es español (+34).</li>
+        <li>[[n:2]] <b>Origen (elige uno)</b> <span class="new-mark">NUEVO</span>. <b>Es obligatorio.</b> ¿Cómo nos ha conocido? Web, Redes sociales, Referencias (alguien le habló de nosotros), Año pasado, Feria, Colegios, o los portales AprendeMás, Emagister, TuMaster y EducaWeb.</li>
+        <li>[[n:3]] <b>Estudios de interés.</b> Pulsa los que le interesen (se ponen de color). Puedes marcar varios.</li>
+        <li>[[n:4]] <b>«Este lead es de…»</b> Al elegir el primer estudio, la web te dice de qué empresa será el lead (capítulo 12).</li>
+        <li>[[n:5]] <b>No está en la lista: crear estudio.</b> Si pide algo que no está (un curso corto nuevo, por ejemplo), créalo aquí mismo (abajo).</li>
+        <li>[[n:6]] <b>Comentarios.</b> Cualquier cosa útil: «Ha llamado a recepción», «Viene con una amiga»…</li>
+        <li>[[n:7]] [[bs:check|Crear lead]] lo guarda y abre su ficha.</li>
+      </ol>
+    </div>
+  </div>
+  <ul>
+    <li>Como mínimo hay que escribir un nombre, un teléfono o un correo. Si no, el botón no se activa y verás «Indica al menos un nombre, un teléfono o un correo».</li>
+    <li>Si no eliges origen, al pulsar «Crear lead» verás «Elige de dónde viene el lead (origen)».</li>
+    <li>El lead nuevo aparece en pendientes, listo para llamar.</li>
+  </ul>
+  <h2>¿Y si ya existía? (duplicados)</h2>
+  <p>La web no deja que haya dos veces la misma persona. Si el teléfono o el correo que escribes ya lo tiene otro lead, al pulsar «Crear lead» te avisa:</p>
+  <div class="box ejemplo"><p class="t">Ejemplo</p><p>Elena Gil vuelve a llamar. Marta, sin saber que ya estaba, empieza a darla de alta con su teléfono.</p></div>
+  {{img:duplicado|Aviso de duplicado: «Ya existe Elena Gil Ramos (…), en «No contesta»».|noborder}}
+  <ul>
+    <li>[[b:eye|Abrir su ficha]] cierra el formulario y abre la ficha de la persona que ya existe. Normalmente es lo que quieres.</li>
+    <li>[[bs:plus|Añadir estos datos al existente]] completa la ficha existente con lo que has escrito (por ejemplo, un correo que no teníamos). No se crea nadie nuevo.</li>
+  </ul>
+  <div class="box truco"><p class="t">Qué pasa con los repetidos</p>
+    <p>Cuando alguien que ya existía vuelve a entrar (a mano o importado):</p>
+    <ul><li>Se completan los datos que faltaban y se añaden sus estudios nuevos.</li>
+      <li>Si estaba en descartados o en el histórico, vuelve a pendientes como nuevo.</li>
+      <li>Si estaba en no contestan, vuelve a pendientes ya, sin esperar a mañana.</li>
+      <li>En su historial queda «Volvió a entrar por…».</li></ul></div>
+  <h2>Corregir los datos de un lead</h2>
+  <p>Abre su ficha y pulsa [[b:edit|Editar]]. Es el mismo formulario. Cambia lo que haga falta (un teléfono mal escrito, el origen, añadir un estudio…) y pulsa <b>Guardar cambios</b>. Al editar también ves «Interés tal como llegó»: el texto original del formulario o del fichero.</p>
+  <h2>Crear un estudio que falta <span class="new-mark">NUEVO</span></h2>
+  <p>Si un lead pide algo que no está en la lista (un curso corto nuevo, un taller…), <b>cualquiera puede crearlo</b>: desde el alta («No está en la lista: crear estudio»), desde la importación («Crear estudio nuevo») o desde <b>Ajustes → Estudios</b>.</p>
+  <div class="fig-row">
+    {{img:estudio-nuevo-comercial|Nuevo estudio, creado por una comercial.}}
+    <div>
+      <ul style="margin-top:6pt">
+        <li><b>Nombre</b> del estudio, tal y como queremos que se vea.</li>
+        <li><b>Tipo</b> (Grado, CFGS, Máster o Curso) y <b>Área</b> (sirve para reconocerlo al importar).</li>
+        <li><b>Empresa</b>: a qué empresa van los leads que lo pidan. Si tu usuario solo trabaja con una, ya va a la tuya.</li>
+        <li><b>Color</b> de la etiqueta.</li>
+      </ul>
+      <p>Si ya existe uno igual (aunque esté escrito con otras mayúsculas o sin tildes), la web te avisa: «Ya existe <b>…</b>. Mejor usar ese para no tener el mismo estudio dos veces», con un botón para usarlo.</p>
+      <p>Cambiar o borrar un estudio sigue siendo cosa de administración, que puede revisar después los que se crean.</p>
+    </div>
+  </div>
+  {{img:estudios-comercial|Ajustes → Estudios: todos los estudios, agrupados por empresa y tipo. Pasa el ratón por encima de uno para ver quién lo añadió.}}
+</section>
+
+<!-- ════════════════════════ 11 ════════════════════════ -->
+<section class="chap" style="--acc:var(--orange)">
+  <div class="ch-head"><p class="lbl">Capítulo 11 · Muchos leads de golpe</p><h1>Importar leads desde Excel</h1><div class="num">11</div></div>
+  <p class="intro">Cuando marketing te pasa un fichero con leads (de Instagram, de un portal, de una feria…), no hace falta meterlos uno a uno. Con [[b:upload|Importar]] entran todos de golpe. No tienes que preparar el fichero: la web entiende casi cualquier Excel o CSV.</p>
+  <div class="box ejemplo"><p class="t">Ejemplo</p><p>Marketing le pasa a Marta el fichero <b>leads_redes_octubre.csv</b>, que ha bajado de Instagram y Facebook. Tiene 9 filas. Vamos a importarlo paso a paso.</p></div>
+  <h2>Paso 1 · Elegir el fichero</h2>
+  {{img:importar-1|La pantalla de Importar.}}
+  <ol class="marks">
+    <li>[[n:1]] [[b:download|Plantilla Excel]] y [[b:download|Plantilla CSV]] descargan una plantilla vacía, por si alguna vez quieres apuntar leads en Excel (por ejemplo, en una feria). Es opcional.</li>
+    <li>[[n:2]] Arrastra aquí el fichero desde tu carpeta, o haz clic en el recuadro para buscarlo. Vale CSV, TXT, XLSX, XLS u ODS, hasta 10 MB.</li>
+  </ol>
+  <p>Al soltar el fichero, la web lo lee y te enseña lo que ha entendido. <b>Todavía no se ha importado nada.</b></p>
+  <h2>Paso 2 · Revisar</h2>
+  {{img:importar-resumen|El resumen: 9 filas, se importarán 8, 2 ya existen y 1 se omite. Debajo, el origen y la casilla del histórico.}}
+  <table class="kv">
+    <tr><td>Filas</td><td>Cuántas filas tiene el fichero.</td></tr>
+    <tr><td>Se importarán</td><td>Cuántas van a entrar (nuevas o completando a alguien que ya existía).</td></tr>
+    <tr><td>Ya existen · se completarán</td><td>Personas que ya estaban (mismo teléfono o correo). No se duplican: se completa su ficha. En el ejemplo son Elena Gil (que estaba en «no contesta») y Pablo Ramos (que estaba descartado).</td></tr>
+    <tr><td>Sin nombre, correo ni teléfono · se omiten</td><td>Filas vacías o sin forma de contacto. Se saltan. En el ejemplo, una fila que solo tenía «Málaga».</td></tr>
+  </table>
+  <p><b>Origen de estos leads.</b> Si el fichero trae una columna con el origen (como la columna «platform» de Facebook, con «ig» o «fb»), cada fila usa el suyo: aquí, «Redes sociales». Lo que elijas en este desplegable se usa en las filas que <b>no</b> dicen de dónde vienen. Si es un fichero de una feria sin esa columna, elige «Feria».</p>
+  <p>La casilla <b>«Contactos antiguos: importar al histórico»</b> se explica al final del capítulo. Para leads nuevos que hay que llamar, déjala sin marcar.</p>
+  <h3>¿A qué estudio se refieren?</h3>
+  <p>Cada persona escribe lo que quiere estudiar a su manera («Grado en diseño de moda», «ciclo ilustración», «Máster 3D»…). La web reconoce sola la mayoría. Solo te pregunta por los textos que no entiende:</p>
+  {{img:importar-estudios|Dos textos que la web no ha reconocido.}}
+  <ul>
+    <li>Para cada texto, elige en el desplegable el estudio al que corresponde.</li>
+    <li>Si no es un estudio nuestro (en el ejemplo, «Fotografía digital» e «interiorismo»), elige <b>«Ninguno (no es un estudio nuestro)»</b>.</li>
+    <li>Si es un estudio que todavía no está en la lista, pulsa <b>«Crear estudio nuevo»</b> (capítulo 10).</li>
+    <li>Si lo dejas en «— Elegir —» no pasa nada: el lead entra igual, sin estudio, y guarda el texto (se verá con borde de puntos).</li>
+    <li>Deja marcado <b>«Recordar estas equivalencias»</b>: la próxima vez que llegue ese mismo texto, la web ya sabrá qué es.</li>
+  </ul>
+  <h3>Columnas detectadas y primeras filas</h3>
+  <p>El apartado «Columnas detectadas» (hay que pulsarlo para desplegarlo) dice qué dato ha entendido la web en cada columna del fichero. Casi nunca hay que tocarlo. Si alguna columna está mal (por ejemplo, ha tomado la ciudad como nombre), cámbiala en su desplegable.</p>
+  {{img:importar-columnas|Columnas detectadas: a la izquierda la columna del fichero, a la derecha dónde se va a guardar.}}
+  <p>Justo debajo verás «Así se guardarán las primeras filas», para comprobar que todo tiene buena pinta:</p>
+  {{img:importar-muestra|Vista previa de las filas.}}
+  {{img:importar-boton|Si todo está bien, pulsa «Importar 8 leads» [[n:1]]. Si te has equivocado de fichero, pulsa Cancelar o «Cambiar fichero».|w60 noborder}}
+  <h2>Paso 3 · Resultado</h2>
+  {{img:importar-resultado|El informe final de la importación.}}
+  <table class="kv">
+    <tr><td>Nuevos</td><td>Leads que no existían y se han creado (6). Ya están en pendientes.</td></tr>
+    <tr><td>Completados</td><td>Ya existían y se ha completado su ficha (2).</td></tr>
+    <tr><td>Vuelven a pendientes</td><td>De los que ya existían, los que estaban descartados, en el histórico o en «no contestan» y han vuelto a pendientes porque han vuelto a pedir información (2).</td></tr>
+    <tr><td>Omitidos</td><td>Filas que no se han podido importar (1).</td></tr>
+    <tr><td>Incidencias</td><td>La lista de filas con algún problema y por qué («Fila sin nombre, correo ni teléfono»). Una fila mala nunca para la importación entera.</td></tr>
+  </table>
+  <p>Abajo, <b>«Últimas importaciones»</b> guarda quién importó qué fichero, cuándo, con qué origen y con qué resultado:</p>
+  {{img:importar-ultimas||noborder}}
+  <div class="box truco"><p class="t">Truco</p><p>¿No sabes si un fichero ya se importó? Míralo en «Últimas importaciones». Y aunque lo importes dos veces, no pasa nada: los repetidos no se duplican, solo se completan.</p></div>
+
+  <h2>Contactos antiguos: al histórico <span class="new-mark">NUEVO</span></h2>
+  <p>A veces no queremos llamar a la gente de un fichero, solo <b>tenerla guardada</b>: contactos de años anteriores, del programa antiguo, de una base de datos vieja… Para eso está la casilla <b>«Contactos antiguos: importar al histórico»</b>.</p>
+  <div class="box ejemplo"><p class="t">Ejemplo</p><p>Administración le pasa a Marta <b>contactos_antiguos_sac.csv</b>, con 6 personas que pidieron información en 2024 y 2025. No hay que llamarlas ahora, pero queremos saber quiénes son si vuelven a escribir. Marta elige el origen «Año pasado» y marca la casilla [[n:1]]:</p></div>
+  {{img:importar-historico||w90 noborder}}
+  {{img:importar-historico-boton|El botón lo dice claro: «Importar 6 leads al histórico».|w50 noborder}}
+  {{img:importar-historico-resultado|El resultado: los nuevos están en la pestaña «Histórico», no en pendientes.}}
+  <ul>
+    <li>Los nuevos quedan en la pestaña [[t:historico|histórico]] con el estado [[s:HISTORICO|Histórico]] y con <b>su fecha de alta</b> como entrada. <b>No pasan a pendientes</b> y nadie los llama.</li>
+    <li>Los que ya estaban en Leads <b>solo se completan</b>: no cambian de pestaña ni se reactivan.</li>
+    <li>Un contacto del histórico vuelve a pendientes si pulsas [[b:reopen|Reabrir]] o si <b>vuelve a pedir información</b> (llega en un fichero normal o alguien lo da de alta).</li>
+  </ul>
+  {{img:fila-historico|Un contacto antiguo en el histórico: entró el 14/03/2024 y solo tiene Reabrir y Ver ficha.|noborder}}
+  {{img:historico|La pestaña «Histórico» reúne a todos los contactos menos los descartados: los que se están trabajando y los antiguos.}}
+</section>
+
+<!-- ════════════════════════ 12 ════════════════════════ -->
+<section class="chap" style="--acc:var(--purple)">
+  <div class="ch-head"><p class="lbl">Capítulo 12 · Nuevo</p><h1>Estación Diseño y Grupo EFP</h1><div class="num">12</div></div>
+  <p class="intro">En Leads trabajamos los leads de dos empresas: [[c:ESTACION]] y [[c:EFP]]. No hay que elegirla a mano: la web la saca de lo que quiere estudiar cada persona.</p>
+  <h2>La regla</h2>
+  <div class="box importante">
+    <p>Cada estudio es de una de las dos empresas. Un lead es de <b>Estación Diseño</b> si <b>alguno</b> de sus estudios de interés es de Estación Diseño. Si no, <b>o si aún no tiene estudio</b>, es de <b>Grupo EFP</b>.</p></div>
+  <table class="kv">
+    <tr><th>Quiere estudiar…</th><th>El lead es de…</th></tr>
+    <tr><td>Grado Diseño Gráfico</td><td>[[c:ESTACION]]</td></tr>
+    <tr><td>Instagram para tu negocio (curso de Grupo EFP)</td><td>[[c:EFP]]</td></tr>
+    <tr><td>Máster Ilustración + un curso de Grupo EFP</td><td>[[c:ESTACION]] (basta con uno)</td></tr>
+    <tr><td>Nada asignado (solo escribió «Informática»)</td><td>[[c:EFP]]</td></tr>
+  </table>
+  <div class="box ojo"><p class="t">Ojo con los leads sin estudio</p><p>Un lead sin estudio asignado sale como Grupo EFP aunque haya escrito algo de diseño. En cuanto le asignas un estudio de Estación Diseño con <b>Editar</b>, pasa a ser de Estación Diseño. Por eso conviene asignar el estudio siempre que lo sepas.</p></div>
+  <h2>Dónde se ve</h2>
+  <ul>
+    <li>En cada <b>fila</b>, debajo del nombre (capítulo 4), y en la <b>ficha</b>, en «Empresa».</li>
+    <li>En el <b>alta</b> de un lead: al elegir el primer estudio sale «Este lead es de…».</li>
+    <li>En los <b>filtros rápidos</b> [[b:|Estación Diseño]] [[b:|Grupo EFP]] y en el filtro avanzado «Empresa» (capítulo 9).</li>
+    <li>En la columna <b>«Empresa»</b> del CSV exportado.</li>
+    <li>En <b>Ajustes → Estudios</b>, donde la lista está agrupada por empresa.</li>
+    <li>En el <b>WhatsApp</b> y el correo: el mensaje dice «Estación Diseño» o «Grupo EFP» según el lead.</li>
+  </ul>
+  <h2>Si tu usuario trabaja con una sola empresa</h2>
+  <p>Administración puede limitar un usuario a una de las dos empresas (capítulo 17). Si es tu caso:</p>
+  <ul>
+    <li>Solo <b>ves, cuentas, buscas y exportas</b> los leads de tu empresa. Los de la otra no te salen en ninguna pestaña.</li>
+    <li>Al dar de alta solo te salen los <b>estudios de tu empresa</b>. Si trabajas con Estación Diseño, hay que elegir al menos uno; si no, al pulsar «Crear lead» verás «Elige al menos un estudio de Estación Diseño: con tu usuario solo se dan de alta leads de Estación Diseño».</li>
+    <li>Si el teléfono o el correo ya es de un lead de la otra empresa, la web te avisa sin enseñarte sus datos: «Ese correo o teléfono ya es de un lead de Grupo EFP: lo lleva su equipo».</li>
+    <li>Al <b>importar</b>, las filas de la otra empresa se omiten y salen en «Incidencias» con el motivo.</li>
+    <li>No ves los botones de empresa en los filtros rápidos: ya estás viendo solo la tuya.</li>
+  </ul>
+</section>
+
+<!-- ════════════════════════ 13 ════════════════════════ -->
+<section class="chap" style="--acc:var(--pink)">
+  <div class="ch-head"><p class="lbl">Capítulo 13 · Sin pisarnos</p><h1>Trabajar en equipo</h1><div class="num">13</div></div>
+  <p class="intro">Todas las comerciales trabajáis sobre la misma bolsa de leads: no hay leads «tuyos» y leads «míos». Para que eso funcione sin líos, la web hace cuatro cosas:</p>
+  <h2>1. Reserva mientras llamas</h2>
+  <p>Cuando alguien abre el menú de llamada de un lead, ese lead queda reservado 5 minutos a su nombre. Las demás lo ven así:</p>
+  {{img:fila-llamando|La fila sale rayada con la etiqueta «NURIA PRADO LLAMANDO».|noborder}}
+  <div class="fig-row">
+    {{img:menu-bloqueado|Si aun así pulsas su teléfono, el menú te avisa y no te deja apuntar nada.}}
+    <div><p style="margin-top:8pt">«Nuria Prado está llamando a este lead ahora mismo. Espera a que termine o elige otro lead.»</p>
+    <p>En cuanto Nuria apunta el resultado, la reserva desaparece. Si Nuria se deja el menú abierto, la reserva caduca sola a los 5 minutos.</p></div>
+  </div>
+  <h2>2. Todo queda apuntado</h2>
+  <p>Cada llamada, nota, correo, WhatsApp y cambio queda en el historial del lead con el nombre de quien lo hizo y la hora. Antes de llamar a alguien que ya se ha trabajado, echa un vistazo a su historial: sabrás qué le dijo tu compañera.</p>
+  <h2>3. La lista se actualiza sola</h2>
+  <p>Cada minuto (y cada vez que vuelves a la pestaña del navegador) la lista se refresca con los cambios de todo el equipo.</p>
+  <h2>4. Las llamadas agendadas avisan a quien las agendó</h2>
+  <p>Si agendaste tú la llamada, te sale el aviso a su hora (capítulo 6). Si la agendó una compañera, no te avisa a ti, pero el lead sale el primero y en verde en pendientes: si ella no está, cualquiera puede llamarle.</p>
+  <div class="box truco"><p class="t">Buenas costumbres</p><ul>
+    <li>Escribe notas pensando en la compañera que llamará mañana: «Dice que lo habla con sus padres el finde», «Prefiere WhatsApp».</li>
+    <li>Si vas a dejar el ordenador, no dejes el menú de llamada abierto.</li>
+    <li>No hace falta repartirse los leads: id todas a pendientes de arriba abajo y la reserva evita que coincidáis.</li></ul></div>
+</section>
+
+<!-- ════════════════════════ 14 ════════════════════════ -->
+<section class="chap" style="--acc:var(--green)">
+  <div class="ch-head"><p class="lbl">Capítulo 14 · Desde cualquier sitio</p><h1>Leads en el móvil</h1><div class="num">14</div></div>
+  <div class="fig-row">
+    <div>
+      <p class="intro">Leads funciona igual en el móvil: abre la misma dirección en el navegador del teléfono y entra con tu correo y contraseña.</p>
+      <ul>
+        <li>Arriba, el menú se queda solo con los iconos: [[i:list]] Leads, [[i:upload]] Importar, [[i:settings]] Ajustes y [[i:logout]] Salir.</li>
+        <li>Las pestañas ocupan varias líneas. Todo lo demás es igual.</li>
+        <li>En cada fila, el teléfono y el correo salen debajo del nombre.</li>
+        <li>En el móvil, al pulsar el número de teléfono del menú de llamada, <b>el móvil llama directamente</b>. Al colgar, vuelve al navegador y elige el resultado.</li>
+        <li>El botón de WhatsApp abre la aplicación de WhatsApp.</li>
+      </ul>
+      <div class="box ojo"><p class="t">Los avisos de llamadas en el móvil</p><p>En el móvil no salen los avisos del sistema: la tarjeta de «Llamada agendada» solo aparece mientras tienes Leads abierto en pantalla. Si trabajas desde el móvil, echa un vistazo a la pestaña <b>agendadas</b> de vez en cuando.</p></div>
+      <div class="box truco"><p class="t">Truco</p><p>En el móvil, guarda la web en la pantalla de inicio (en Chrome: menú ⋮ → «Añadir a pantalla de inicio»; en Safari: compartir → «Añadir a pantalla de inicio»). Así se abre como una aplicación.</p></div>
+    </div>
+    {{img:movil|Leads en el móvil.|w80 center}}
+  </div>
+</section>
+
+<!-- ════════════════════════ 15 ════════════════════════ -->
+<section class="chap" style="--acc:var(--pink)">
+  <div class="ch-head"><p class="lbl">Capítulo 15 · Para consultar</p><h1>Casos prácticos: ¿qué hago si…?</h1><div class="num">15</div></div>
+  <p class="intro">Las situaciones más habituales y qué botón pulsar en cada una.</p>
+  <div class="cases">
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> llamo y me dice «ahora no puedo, llámame a las cinco»?</p><p>Pulsa [[k:4]] Agendar otra llamada, deja el día de hoy y pon 17:00. A las 17:00 te saldrá el aviso y volverá a pendientes, la primera y en verde.</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> llamo y no lo coge (otra vez)?</p><p>Pulsa [[k:1]] No contesta y acepta «Enviar y abrir WhatsApp». Vuelve solo el siguiente día laborable a las 9:00. Al 6.º intento sin respuesta se descarta solo.</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> me ha contestado por WhatsApp que le interesa?</p><p>Pulsa el tick verde [[i:ok]] de su fila. Pasa a interesados y te ofrece enviarle el correo de información.</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> le interesa y quiere venir a ver la escuela?</p><p>Pulsa [[k:3]] Interesado, envía el correo, y luego abre su ficha → [[b:calendar|Agendar cita]] con el día y la hora.</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> ya se ha matriculado?</p><p>Abre su ficha → [[b:award|Matriculado]] → «Sí, matriculado». (Solo sale si está en interesados; si no, márcalo antes como interesado).</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> me he equivocado de botón?</p><p>Si lo descartaste o lo marcaste matriculado por error: búscalo en esa pestaña y pulsa [[b:reopen|Reabrir]]. Si lo pusiste en «no contesta» por error: sigue en «no contestan» y puedes llamarle o pulsar el resultado correcto desde allí. Añade una nota explicando el error.</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> me llama alguien que ya está en Leads?</p><p>Búscalo en la pestaña todos (por nombre o por trozo de teléfono) y abre su ficha. Si lo intentas dar de alta, la web te avisará de que ya existe y te dejará abrir su ficha.</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> ha cambiado de teléfono o quiere otro estudio?</p><p>Abre su ficha → [[b:edit|Editar]], cambia el dato y pulsa «Guardar cambios».</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> el teléfono o el correo sale en rojo?</p><p>Probablemente esté mal escrito. Si ves el error (falta una cifra, hay una letra), corrígelo con [[b:edit|Editar]]. Si no hay forma de contactar, descártalo con el motivo «Datos erróneos».</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> una compañera lo está llamando?</p><p>La fila sale rayada con «… llamando». Pasa al siguiente. En unos minutos, cuando ella termine, desaparecerá de pendientes o volverá a estar libre.</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> no sé qué quiere estudiar?</p><p>Pregúntaselo al llamar y ponlo con [[b:edit|Editar]]. Si le envías información sin saberlo, recibirá el correo «Sin estudio». Para encontrar a todos los que no tienen estudio: Filtros → «Solo leads sin estudio asignado».</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> pide un curso que no está en la lista? <span class="new-mark">NUEVO</span></p><p>Créalo: en el alta, «No está en la lista: crear estudio», o en Ajustes → Estudios → «Nuevo estudio». Si ya existe uno igual, la web te lo ofrece.</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> marketing me pasa un Excel de una feria?</p><p>[[b:upload|Importar]] → arrastra el fichero → revisa → «Importar». En «Origen» elige «Feria». Los que ya estaban no se duplican.</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> me pasan contactos antiguos que no hay que llamar? <span class="new-mark">NUEVO</span></p><p>Impórtalos marcando «Contactos antiguos: importar al histórico». Quedan en la pestaña Histórico y no pasan a pendientes.</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> un contacto del histórico vuelve a interesarse? <span class="new-mark">NUEVO</span></p><p>Búscalo en Histórico (o en todos) y pulsa [[b:reopen|Reabrir]]: vuelve a pendientes como nuevo. Si llega en un fichero normal, vuelve solo.</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> el botón de enviar pone «Enviar en 45 s»? <span class="new-mark">NUEVO</span></p><p>Otra compañera acaba de enviar un correo: como mucho sale uno cada 72 segundos. Espera a que llegue a cero y pulsa enviar. No es un error.</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> me salta un aviso de llamada y estoy liada? <span class="new-mark">NUEVO</span></p><p>Pulsa [[b:clock|En 5 min]] y te vuelve a avisar dentro de 5 minutos. El lead sigue el primero en pendientes, en verde.</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> quiero ver solo los leads de Grupo EFP?</p><p>Pulsa el filtro rápido [[b:|Grupo EFP]]. Otro clic lo quita.</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> quiero la lista de descartados para una campaña?</p><p>Pestaña descartados → [[b:download|Exportar CSV]]. Se abre con Excel.</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> quiero ver solo los interesados en Másteres de Granada?</p><p>Pestaña interesados → filtro rápido [[b:graduation|Másteres]] → [[b:filter|Filtros]] → «Ubicación contiene»: Granada.</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> no encuentro a alguien que sé que está?</p><p>Comprueba que estás en la pestaña todos (el buscador solo busca en la pestaña abierta) y que no tienes filtros puestos (pulsa «Limpiar todo»). Prueba a buscar solo por un trozo del teléfono.</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> me he ido a comer con el menú de llamada abierto?</p><p>No pasa nada: la reserva caduca sola a los 5 minutos y tus compañeras pueden volver a llamarle.</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> la web me pide otra vez la contraseña?</p><p>La sesión dura 12 horas; es normal que la pida cada día. Si no te deja entrar, pide a administración que te ponga una contraseña nueva.</p></div>
+    <div class="case"><p class="q"><span>¿Qué hago si…</span> quiero apuntar algo sin cambiar el estado?</p><p>Abre su ficha, escribe en «Añadir nota» y pulsa «Guardar». Solo se añade al historial.</p></div>
+  </div>
+</section>
+
+<!-- ════════════════════════ 16 ════════════════════════ -->
+<section class="chap" style="--acc:var(--salmon)">
+  <div class="ch-head"><p class="lbl">Capítulo 16 · Cuando algo no sale</p><h1>Preguntas y problemas</h1><div class="num">16</div></div>
+  <h2>Preguntas frecuentes</h2>
+  <h3>¿Se puede borrar un lead?</h3>
+  <p>No. En Leads nunca se borra nada: lo que no sirve se descarta, y se puede reabrir en cualquier momento. Así no se pierde información y los descartados sirven para campañas.</p>
+  <h3>¿Por qué no me sale el botón de llamar?</h3>
+  <p>Porque ese lead no tiene teléfono. Solo podrás enviarle información por correo. Si consigues su teléfono, añádelo con Editar.</p>
+  <h3>¿Por qué ha vuelto a pendientes alguien que marqué como «no contesta»?</h3>
+  <p>Porque ya ha llegado el siguiente día laborable a las 9:00. Es lo que tiene que pasar: toca volver a intentarlo.</p>
+  <h3>¿Qué pasa si llamo a un interesado y no contesta?</h3>
+  <p>Se apunta el intento, pero sigue en interesados: no vuelve a pendientes ni se descarta solo.</p>
+  <h3>¿Por qué este lead sale como Grupo EFP si pidió algo de diseño?</h3>
+  <p>Porque no tiene ningún estudio asignado (o el que tiene es de Grupo EFP). Asígnale su estudio con Editar y cambiará solo (capítulo 12).</p>
+  <h3>¿Por qué no veo leads que mis compañeras sí ven?</h3>
+  <p>Seguramente tu usuario está limitado a una empresa y esos leads son de la otra. Pregunta a administración.</p>
+  <h3>¿Por qué mi correo sale del buzón general o sin firma?</h3>
+  <p>Porque administración aún no ha configurado tu buzón o tu firma (Ajustes → Usuarios). Pídeselo.</p>
+  <h3>¿Qué día y hora usa la web?</h3>
+  <p>Siempre la hora de España peninsular (Madrid), aunque tu ordenador esté configurado con otra. Los fines de semana y los festivos que configure administración no cuentan como días laborables.</p>
+  <h3>¿Tengo que repartirme los leads con mis compañeras?</h3>
+  <p>No. Trabajad todas sobre pendientes; la reserva de 5 minutos evita que dos personas llamen a la vez a la misma persona.</p>
+  <h3>¿Quién ve lo que hago?</h3>
+  <p>Todo el equipo ve los mismos leads y su historial, con quién hizo cada cosa. Además, administración tiene un <b>registro de actividad</b> con lo que hace cada usuario cada día (entrar, abrir fichas, llamadas, correos, WhatsApp, importaciones, exportaciones…) para poder hacer seguimiento del trabajo del equipo.</p>
+  <h3>¿Puedo crear estudios nuevos o cambiar los correos?</h3>
+  <p>Estudios nuevos, sí (capítulo 10). Cambiar o borrar estudios y cambiar los textos de los correos lo hace administración (capítulo 17). Si un correo tiene un error, avísales.</p>
+  <h2>Mensajes que te puedes encontrar</h2>
+  <table class="kv">
+    <tr><td>«Correo o contraseña incorrectos»</td><td>Revisa que el correo esté bien escrito y la contraseña (ojo con las mayúsculas). Si no la recuerdas, pídesela a administración.</td></tr>
+    <tr><td>«Demasiados intentos. Espera unos minutos…»</td><td>Has fallado varias veces seguidas. Espera unos minutos antes de volver a probar.</td></tr>
+    <tr><td>«Nuria Prado está llamando a este lead ahora mismo»</td><td>Una compañera lo tiene reservado. Elige otro lead.</td></tr>
+    <tr><td>«Elige un día y una hora que aún no hayan pasado»</td><td>Al agendar una llamada has puesto una hora pasada. Pon una futura.</td></tr>
+    <tr><td>«El lead está «Descartado». Reábrelo para seguir trabajándolo.»</td><td>Estás intentando llamar o cambiar un lead cerrado (descartado, matriculado o del histórico). Pulsa Reabrir primero.</td></tr>
+    <tr><td>«El lead ya está en interesados»</td><td>Ya estaba marcado como interesado; no hace falta hacer nada.</td></tr>
+    <tr><td>«Indica al menos un nombre, un teléfono o un correo»</td><td>Al crear un lead, rellena como mínimo uno de esos datos.</td></tr>
+    <tr><td>«Elige de dónde viene el lead (origen)»</td><td>El origen es obligatorio al dar de alta. Elige uno.</td></tr>
+    <tr><td>«Elige al menos un estudio de Estación Diseño: con tu usuario…»</td><td>Tu usuario solo trabaja con Estación Diseño: marca uno de sus estudios (capítulo 12).</td></tr>
+    <tr><td>«Ese correo o teléfono ya es de un lead de Grupo EFP: lo lleva su equipo»</td><td>Esa persona ya existe en la otra empresa. No hay que darla de alta.</td></tr>
+    <tr><td>«Ya existe … Mejor usar ese…»</td><td>Al crear un estudio: ya había uno igual. Pulsa «Usar…».</td></tr>
+    <tr><td>«Para que no nos marquen como spam… Podrás enviar este en … s»</td><td>Hace menos de 72 segundos que salió otro correo. Espera la cuenta atrás.</td></tr>
+    <tr><td>«Modo pruebas: el correo NO ha salido…»</td><td>Tu usuario no tiene buzón y el servidor no envía correos. Avisa a administración.</td></tr>
+    <tr><td>«Falta la plantilla de correo genérica…»</td><td>No hay correo preparado para ese caso. Avisa a administración.</td></tr>
+    <tr><td>Un aviso rojo «No se pudo enviar el correo: …»</td><td>El correo no ha salido. Pulsa otra vez «Enviar». Si sigue fallando, avisa a administración y usa WhatsApp mientras tanto.</td></tr>
+    <tr><td>«Sin conexión con el servidor» o «El servidor está tardando demasiado…»</td><td>Revisa tu conexión a internet y vuelve a intentarlo en un momento.</td></tr>
+    <tr><td>«Algo ha fallado en esta pantalla»</td><td>No se ha perdido nada de lo guardado. Pulsa «Recargar la página». Si se repite, avisa a administración.</td></tr>
+    <tr><td>La página se queda en blanco o no carga</td><td>Recarga la página (tecla F5). Si sigue igual, comprueba tu conexión a internet y avisa a administración.</td></tr>
+  </table>
+  <p class="small muted">Los avisos verdes (abajo a la derecha) confirman que algo ha ido bien y se quitan solos en unos segundos. Los rojos avisan de un problema y duran un poco más; léelos con calma.</p>
+</section>
+
+<!-- ════════════════════════ 17 ════════════════════════ -->
+<section class="chap" style="--acc:var(--lime)">
+  <div class="ch-head"><p class="lbl">Capítulo 17 · Solo rol Admin</p><h1>Para administración</h1><div class="num">17</div></div>
+  <p class="intro">Este capítulo es solo para quien administra la herramienta. Administración puede hacer todo lo que hace una comercial y, además:</p>
+  {{img:menu-admin|El menú de administración tiene además «Actividad».|w60 noborder}}
+  <ul>
+    <li>En el menú, <b>Actividad</b>: el registro de lo que hace cada usuario (abajo).</li>
+    <li>En Ajustes, además de Mi cuenta: <b>Usuarios</b>, <b>Estudios y centros</b> y <b>Correos</b>. (Las comerciales ven Mi cuenta y Estudios.)</li>
+  </ul>
+  <h2>Usuarios</h2>
+  {{img:usuarios|La lista de usuarios: desde qué buzón envía cada uno, de qué empresa trabaja los leads, su rol, su estado y su último acceso.}}
+  <ol class="marks">
+    <li>[[n:1]] <b>Envía desde.</b> El buzón de cada usuario, o «Buzón general» si no tiene.</li>
+    <li>[[n:2]] <b>Leads de.</b> «Las dos» o la empresa a la que está limitado.</li>
+    <li>[[n:3]] [[i:mailbox]] <b>Correo de envío:</b> configurar su buzón.</li>
+    <li>[[n:4]] [[i:note]] <b>Firma de correo.</b> Sale más clarito si aún no tiene firma.</li>
+    <li>[[n:5]] [[i:edit]] <b>Editar usuario.</b></li>
+  </ol>
+  <div class="fig-row">
+    {{img:usuario-editar|Editar usuario.}}
+    <div><ul style="margin-top:6pt">
+      <li><b>Nuevo usuario:</b> nombre, correo (con el que entrará), rol, «Leads de» y contraseña (mínimo 10 caracteres). Dale la contraseña a la persona y pídele que la cambie en Mi cuenta.</li>
+      <li><b>Rol:</b> <b>Comercial</b> trabaja los leads. <b>Administración</b> además gestiona usuarios, estudios y correos, y ve la Actividad.</li>
+      <li><b>Leads de</b> <span class="new-mark">NUEVO</span>: «Las dos empresas», «Solo Estación Diseño» o «Solo Grupo EFP». Con una sola, ese usuario solo ve, da de alta e importa leads (y estudios) de esa empresa (capítulo 12).</li>
+      <li><b>Olvido de contraseña:</b> edita al usuario y escribe una nueva en «Nueva contraseña». Si la dejas vacía, no cambia.</li>
+      <li><b>Alguien deja el equipo:</b> edítalo y desmarca «Cuenta activa». Ya no podrá entrar, pero su nombre sigue en el historial de lo que hizo.</li>
+    </ul></div>
+  </div>
+  <h3>El buzón de cada usuario <span class="new-mark">NUEVO</span></h3>
+  <div class="fig-row">
+    {{img:buzon|Correo de envío de Marta.}}
+    <div><ul style="margin-top:6pt">
+      <li>Los correos de información que envíe esa persona <b>salen de su buzón</b> y las respuestas le llegan a ella.</li>
+      <li>Los datos están en Plesk → Correo → el buzón → «Configuración del cliente de correo» → «Configuración manual». Ya vienen puestos los del servidor de Estación Diseño (SMTP 465 con SSL, IMAP 993).</li>
+      <li><b>Contraseña del buzón:</b> la del correo, no la de Leads. Se guarda cifrada. Al editar, déjala vacía para no cambiarla.</li>
+      <li><b>Guardar una copia en Enviados</b> (IMAP): así el correo se ve en su Outlook, Gmail o móvil. La carpeta se busca sola.</li>
+      <li><b>Probar conexión</b> comprueba los datos sin enviar nada. Úsalo siempre antes de guardar.</li>
+      <li><b>Quitar</b>: vuelve a enviar desde el buzón general.</li>
+    </ul></div>
+  </div>
+  <h3>La firma de cada usuario <span class="new-mark">NUEVO</span></h3>
+  <div class="fig-row">
+    {{img:firma|Firma de correo de Marta.}}
+    <div><ul style="margin-top:6pt">
+      <li>Va al final de cada correo que envía, debajo del texto, y no se puede retocar al enviar.</li>
+      <li><b>Firma de Estación Diseño:</b> escribe nombre, cargo, correo y teléfono y pulsa «Crear la firma con estos datos». Se rellena la firma de siempre (logo, dirección, redes y aviso legal).</li>
+      <li><b>Otra firma</b> (por ejemplo, la de Grupo EFP): despliega «Pegar o editar el HTML» y pega su HTML.</li>
+      <li><b>Quitar firma</b>: sus correos terminan en el texto de la plantilla.</li>
+    </ul></div>
+  </div>
+  <h2>Estudios y centros</h2>
+  {{img:estudios-admin|Estudios con su empresa, tipo, área, centros, número de alias y quién lo creó.}}
+  <div class="fig-row">
+    {{img:estudio-editar|Editar un estudio.}}
+    <div><ul style="margin-top:6pt">
+      <li><b>Empresa</b> <span class="new-mark">NUEVO</span>: Estación Diseño o Grupo EFP. Decide de qué empresa son los leads que lo piden (capítulo 12).</li>
+      <li><b>Tipo:</b> Grado, CFGS, Máster o Curso. Es lo que usan los filtros rápidos.</li>
+      <li><b>Área:</b> ayuda a reconocer el estudio al importar (Moda, Gráfico, Ilustración…).</li>
+      <li><b>Color:</b> el de la etiqueta en toda la web. Usa la paleta de la marca.</li>
+      <li><b>Se imparte en</b> y <b>Orden</b>: centros donde se imparte y posición en las listas.</li>
+      <li><b>Activo:</b> si lo desactivas deja de ofrecerse en formularios y filtros, pero los leads que lo tenían lo conservan.</li>
+      <li><b>Alias:</b> otras formas en que llega escrito en los ficheros («grado moda», «diseño de moda»…). Se aprenden solos al importar cuando se marca «Recordar estas equivalencias», y también se pueden añadir o quitar a mano.</li>
+      <li><b>Eliminar:</b> solo administración. Mejor desactivarlo si ya tiene leads.</li>
+    </ul></div>
+  </div>
+  <p><b>Creado por:</b> las comerciales pueden crear estudios (capítulo 10). En la columna «Creado por» ves quién lo hizo; revísalos de vez en cuando (empresa, tipo, área y alias) y, si alguien duplicó uno, desactiva el repetido.</p>
+  <p><b>Centros:</b> las escuelas. Está preparado para repartir los leads por centro según estudios y ubicación cuando haya más de un centro.</p>
+  <h2>Correos</h2>
+  {{img:correos|Plantillas de correo: a la izquierda la lista, a la derecha el editor con el dossier y las variables.}}
+  <ol class="marks">
+    <li>[[n:1]] <b>Las plantillas.</b> <b>Genérica (varios estudios)</b>: la que se usa cuando el lead tiene varios estudios o su estudio no tiene plantilla propia. <b>Sin estudio</b>: para los leads de los que no sabemos qué quieren estudiar. <b>Una por estudio</b>: los que tienen [[i:check]] tienen plantilla propia; los que ponen «genérica» usan la genérica.</li>
+    <li>[[n:2]] <b>Asunto.</b></li>
+    <li>[[n:3]] <b>Contenido</b> en HTML sencillo: <code>&lt;p&gt;</code> para párrafos, <code>&lt;strong&gt;</code> para negrita, <code>&lt;a href="…"&gt;</code> para enlaces, <code>&lt;ul&gt;&lt;li&gt;</code> para listas. Debajo hay una vista previa que se actualiza mientras escribes.</li>
+    <li>[[n:4]] <b>Dossier adjunto</b> <span class="new-mark">NUEVO</span>: el PDF (o una imagen JPG/PNG, hasta 10 MB) que se adjunta en cada envío de esta plantilla. Botones Ver, Cambiar y Quitar. La genérica adjunta sola los dossieres de cada estudio. Hay que guardar la plantilla antes de poder adjuntarle el dossier.</li>
+    <li>[[n:5]] <b>Variables:</b> <code>{{nombre}}</code>, <code>{{nombre_completo}}</code>, <code>{{estudio}}</code> / <code>{{estudios}}</code>, <code>{{comercial}}</code> (nombre y apellidos de quien envía), <code>{{comercial_nombre}}</code> (solo el nombre: «Soy Marta…»), <code>{{bloques_estudios}}</code> (solo en la genérica) y <code>{{inicio_bloque}}</code> / <code>{{fin_bloque}}</code>. Se sustituyen al enviar. Si no sabemos el nombre, «Hola {{nombre}}:» queda como «Hola:».</li>
+  </ol>
+  <ul>
+    <li><b>Varios estudios:</b> la genérica copia de la plantilla de cada estudio solo lo que hay entre <code>{{inicio_bloque}}</code> y <code>{{fin_bloque}}</code> (sin saludo ni firma) y lo pone donde está <code>{{bloques_estudios}}</code>.</li>
+    <li><b>«Quitar plantilla»</b> en un estudio hace que vuelva a usar la genérica.</li>
+    <li>No hace falta escribir en las plantillas la <b>firma</b> (se añade la de cada usuario) ni la pregunta <b>«¿cómo nos has conocido?»</b> (se añade sola en el primer correo a cada lead, antes de «Quedamos a tu disposición…»).</li>
+  </ul>
+  <h2>Actividad <span class="new-mark">NUEVO</span></h2>
+  {{img:actividad|Actividad de un día: un resumen por persona y, debajo, cada acción con su hora.|w80}}
+  <ol class="marks">
+    <li>[[n:1]] <b>El día.</b> Con las flechas vas al anterior o al siguiente; «Hoy» vuelve al día de hoy. El día de hoy se actualiza solo cada minuto.</li>
+    <li>[[n:2]] <b>Filtros y CSV.</b> Todo el equipo o una persona, y todas las acciones o solo un tipo (llamadas, WhatsApp, correos, notas, cambios de estado, fichas y altas, entradas e importaciones…). <b>CSV</b> descarga el día para Excel.</li>
+    <li>[[n:3]] <b>Resumen por persona:</b> de qué hora a qué hora ha trabajado, cuántas acciones y leads, y el detalle (llamadas registradas, contestan / no contestan, abre la llamada, pulsa el teléfono, WhatsApp, correos enviados y con error, interesados, llamadas agendadas, citas, matrículas, descartes, notas, altas). Pulsa su nombre para ver solo sus acciones.</li>
+    <li>[[n:4]] <b>Cada acción</b> con su hora, quién la hizo y el lead. Pulsa el nombre del lead para abrir su ficha.</li>
+  </ol>
+  <div class="box ojo"><p class="t">Reglas que no están en Ajustes</p>
+    <p>Algunas reglas del funcionamiento se cambian en la configuración del servidor, no en la web: la hora a la que vuelven los «no contesta» (9:00), los festivos, el número de intentos antes de descartar (6), los minutos de reserva (5), los segundos entre correos (72), el texto del WhatsApp y el buzón general desde el que salen los correos de quien no tiene buzón propio. Si hay que cambiarlas, habla con quien mantiene el servidor.</p></div>
+</section>
+
+<!-- ════════════════════════ CHULETA ════════════════════════ -->
+<section class="chap" style="--acc:var(--green)">
+  <div class="ch-head"><p class="lbl">Para imprimir</p><h1>Chuleta</h1></div>
+  <div class="cheat">
+    <div class="card"><h4>Tu rutina</h4><ol>
+      <li>Pestaña <b>pendientes</b>. Primero las filas verdes.</li>
+      <li>[[i:call]] en el lead → llama.</li>
+      <li>Pulsa el resultado ([[k:1]]–[[k:4]]) + nota si hace falta.</li>
+      <li>Acepta el correo / WhatsApp que te propone.</li>
+      <li>Siguiente.</li></ol></div>
+    <div class="card"><h4>Los 4 resultados</h4>
+      <p class="ln">[[k:1]] <b>No contesta</b> → vuelve siguiente día laborable 9:00</p>
+      <p class="ln">[[k:2]] <b>No interesado</b> → descartados</p>
+      <p class="ln">[[k:3]] <b>Interesado</b> → interesados + correo</p>
+      <p class="ln">[[k:4]] <b>Agendar</b> → aviso a esa hora; sale el primero y en verde</p></div>
+    <div class="card"><h4>Botones de la fila</h4>
+      <p class="ln">[[i:wa]] WhatsApp con mensaje escrito</p>
+      <p class="ln">[[i:mail]] Correo de información (con dossier y tu firma)</p>
+      <p class="ln">[[i:ok]] Interesado sin llamar</p>
+      <p class="ln">[[i:eye]] Ver ficha</p>
+      <p class="ln">[[i:call]] Llamada (el número = intentos)</p></div>
+    <div class="card"><h4>Pestañas</h4>
+      <p class="ln">[[t:pendientes]] a quién llamar ahora</p>
+      <p class="ln">[[t:agendadas]] llamadas con hora</p>
+      <p class="ln">[[t:no-contestan|no contestan]] vuelven mañana 9:00</p>
+      <p class="ln">[[t:interesados]] interés o cita</p>
+      <p class="ln">[[t:matriculados]] conseguidos · [[t:descartados]] no se borran</p>
+      <p class="ln">[[t:historico|histórico]] todos menos descartados, y los antiguos</p>
+      <p class="ln">[[t:todos]] para buscar a cualquiera</p></div>
+    <div class="card"><h4>En la ficha (pulsa el nombre)</h4>
+      <p>Agendar cita · Matriculado · Descartar con motivo · Reabrir · Editar datos · Añadir nota · Historial</p>
+      <h4 style="margin-top:8px">Empresa</h4>
+      <p>Algún estudio de Estación Diseño → [[c:ESTACION]]. Si no, o sin estudio → [[c:EFP]].</p></div>
+    <div class="card"><h4>Estados</h4>
+      <p class="ln">[[s:NUEVO|Nuevo]] acaba de llegar</p>
+      <p class="ln">[[s:NO_CONTESTA|No contesta]] esperando al día siguiente</p>
+      <p class="ln">[[s:AGENDADO|Llamada agendada]] con día y hora</p>
+      <p class="ln">[[s:INTERESADO|Interesado]] [[s:CITA|Cita agendada]] le interesa</p>
+      <p class="ln">[[s:MATRICULADO|Matriculado]] ¡conseguido!</p>
+      <p class="ln">[[s:DESCARTADO|Descartado]] no se borra · [[s:HISTORICO|Histórico]] contacto antiguo</p></div>
+    <div class="card"><h4>Teclado</h4>
+      <p class="ln">[[k:1]][[k:2]][[k:3]][[k:4]] resultado de la llamada (con el menú abierto)</p>
+      <p class="ln"><kbd>Esc</kbd> cerrar menú, ventana o ficha</p>
+      <p class="ln"><kbd>/</kbd> ir al buscador</p></div>
+    <div class="card"><h4>Reglas de oro</h4>
+      <p class="ln">Nada se borra nunca: se descarta y se puede reabrir</p>
+      <p class="ln">6 intentos sin respuesta = descartado solo</p>
+      <p class="ln">Al llamar, el lead se reserva 5 minutos</p>
+      <p class="ln">Un correo cada 72 s para todo el equipo</p>
+      <p class="ln">Al dar de alta, el origen es obligatorio</p>
+      <p class="ln">El buscador busca en la pestaña abierta: usa «todos»</p></div>
+    <div class="card full"><h4>¿Dudas?</h4><p>Casos prácticos: capítulo 15 · Mensajes de error: capítulo 16 · Contraseña, buzón, firma o acceso: pregunta a administración</p></div>
+  </div>
+</section>
+</body>
+</html>

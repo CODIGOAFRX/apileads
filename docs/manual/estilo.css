@@ -1,0 +1,142 @@
+@font-face { font-family: 'HN'; src: url('FONTS/HelveticaNeue-Light.woff2') format('woff2'); font-weight: 300; }
+@font-face { font-family: 'HN'; src: url('FONTS/HelveticaNeue-Medium.woff2') format('woff2'); font-weight: 500; }
+@font-face { font-family: 'HN'; src: url('FONTS/HelveticaNeueBd.woff2') format('woff2'); font-weight: 700; }
+
+:root {
+  --ink: #1F201D; --paper: #fff; --bone: #F2F2EE; --mute: #6f706a; --hair: #E2E2DC;
+  --green: #00FF81; --pink: #FF79F5; --coral: #FF7A78; --peri: #8A86FF; --yellow: #FFFF82;
+  --cyan: #8CE5FF; --purple: #D06EFA; --orange: #FFA83D; --lime: #A9E58A; --salmon: #FF9E7A; --blue: #5B84E8;
+  --mark: #FF79F5;
+}
+@page { size: A4; margin: 17mm 17mm 19mm 27mm; }
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; font-family: 'HN', Helvetica, Arial, sans-serif; font-weight: 300; font-size: 9.6pt; line-height: 1.5; color: var(--ink); }
+strong, b { font-weight: 700; }
+p { margin: 0 0 6pt; }
+.mk-toc { font-size: 1px; color: #fff; line-height: 1px; height: 1px; overflow: hidden; }
+
+/* ── Cabecera de capítulo ── */
+.chap { break-before: page; }
+.ch-head {
+  position: relative; border: 2.5px solid var(--ink); border-radius: 0 34px 0 34px;
+  padding: 16px 22px 14px; margin: 0 0 14px; background: var(--acc, var(--green));
+}
+.ch-head .lbl { font-size: 6.6pt; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; margin: 0 0 2px; }
+.ch-head h1 { font-size: 27pt; line-height: .98; font-weight: 700; letter-spacing: -.035em; text-transform: uppercase; margin: 0; max-width: 82%; }
+.ch-head .num { position: absolute; right: 22px; bottom: 10px; font-size: 30pt; font-weight: 700; letter-spacing: -.04em; line-height: 1; }
+.intro { font-size: 11pt; margin: 0 0 10pt; }
+
+h2 { font-size: 14.5pt; font-weight: 700; letter-spacing: -.02em; text-transform: uppercase; margin: 16pt 0 6pt; line-height: 1.1; break-after: avoid; }
+h3 { font-size: 10.5pt; font-weight: 700; margin: 12pt 0 4pt; break-after: avoid; }
+h2 .n, h3 .n { margin-right: 6px; }
+ul, ol { margin: 0 0 8pt; padding-left: 16pt; }
+li { margin: 0 0 3pt; }
+
+/* ── Figuras ── */
+figure { margin: 8pt 0 10pt; break-inside: avoid; }
+figure img { display: block; max-width: 100%; border: 1.5px solid var(--hair); border-radius: 6px; }
+figure.noborder img { border: 0; }
+figure.w30 img { width: 30%; } figure.w40 img { width: 40%; } figure.w50 img { width: 50%; }
+figure.w60 img { width: 60%; } figure.w70 img { width: 70%; } figure.w80 img { width: 80%; } figure.w90 img { width: 90%; }
+figure.center img { margin: 0 auto; }
+figcaption { font-size: 7.8pt; color: var(--mute); margin-top: 4pt; }
+.fig-row { display: flex; gap: 14px; align-items: flex-start; break-inside: avoid; }
+.fig-row > * { flex: 1; }
+.keep { break-inside: avoid; }
+
+/* ── Lista de números rosas ── */
+.marks { list-style: none; padding: 0; margin: 4pt 0 10pt; }
+.marks li { position: relative; padding-left: 26px; margin-bottom: 4pt; break-inside: avoid; }
+.marks li > .n:first-child { position: absolute; left: 0; top: 0; }
+.n {
+  display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%;
+  background: var(--mark); border: 1.5px solid var(--ink); font-size: 7.5pt; font-weight: 700; line-height: 1; vertical-align: -3px;
+}
+
+/* ── Cajas ── */
+.box { border: 2px solid var(--ink); border-radius: 0 18px 0 18px; padding: 9px 14px 8px; margin: 10pt 0; break-inside: avoid; }
+.box .t { font-size: 6.8pt; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; margin: 0 0 3px; }
+.box p:last-child, .box ul:last-child { margin-bottom: 0; }
+.box.ojo { background: var(--yellow); }
+.box.truco { background: #DFFFEB; }
+.box.nuevo { background: var(--cyan); }
+.box.importante { background: var(--green); }
+.box.ejemplo { background: #EEF8FF; border-style: dashed; }
+.box.datos { background: #FFE9E8; }
+
+/* ── Tablas ── */
+table.kv { width: 100%; border-collapse: collapse; margin: 6pt 0 10pt; break-inside: auto; }
+table.kv td { padding: 5px 8px 5px 0; border-bottom: 1px solid var(--hair); vertical-align: top; }
+table.kv td:first-child { font-weight: 700; width: 30%; }
+table.kv tr { break-inside: avoid; }
+table.kv.wide td:first-child { width: 22%; }
+table.kv th { text-align: left; font-size: 6.8pt; letter-spacing: .18em; text-transform: uppercase; padding: 4px 8px 4px 0; border-bottom: 2px solid var(--ink); }
+
+/* ── Piezas de la app ── */
+.ib { display: inline-flex; align-items: center; justify-content: center; width: 19px; height: 19px; border-radius: 50%; border: 1.5px solid var(--ink); background: #fff; vertical-align: -5px; }
+.ib svg { width: 11px; height: 11px; }
+.ib.wa { background: #25D366; } .ib.mail { background: var(--cyan); } .ib.ok { background: var(--lime); } .ib.call { background: var(--green); }
+.bt { display: inline-flex; align-items: center; gap: 4px; border: 1.5px solid var(--ink); border-radius: 999px; padding: 1px 8px; font-size: 6.6pt; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; vertical-align: 1px; white-space: nowrap; background: #fff; }
+.bt.solid { background: var(--ink); color: #fff; }
+.bt svg { width: 9px; height: 9px; }
+.tab { display: inline-block; border: 1.5px solid var(--ink); border-radius: 999px; padding: 0 9px; font-size: 8.3pt; font-weight: 500; white-space: nowrap; vertical-align: 0; line-height: 1.5; }
+.tab.pendientes { background: var(--green); } .tab.agendadas { background: var(--pink); } .tab.no-contestan { background: var(--yellow); }
+.tab.interesados { background: var(--cyan); } .tab.matriculados { background: var(--purple); } .tab.descartados { background: var(--salmon); }
+.tab.historico { background: var(--blue); color: #fff; } .tab.todos { background: var(--peri); }
+.st { display: inline-block; border: 1.5px solid var(--ink); border-radius: 999px; padding: 0 7px; font-size: 6.2pt; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; line-height: 1.6; vertical-align: 1px; }
+.st.NUEVO { background: var(--green); } .st.NO_CONTESTA { background: var(--yellow); } .st.AGENDADO { background: var(--pink); }
+.st.INTERESADO, .st.CITA { background: var(--green); } .st.MATRICULADO { background: var(--purple); } .st.DESCARTADO { color: var(--mute); border-color: var(--hair); }
+.st.HISTORICO { background: var(--cyan); }
+.co { display: inline-block; border: 1.5px solid var(--ink); border-radius: 999px; padding: 0 7px; font-size: 6.2pt; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; line-height: 1.6; vertical-align: 1px; }
+.co.ESTACION { background: var(--ink); color: #fff; } .co.EFP { background: var(--cyan); }
+kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 15px; height: 15px; padding: 0 3px; border: 1.5px solid var(--ink); border-radius: 4px; font: 700 7.4pt 'HN', Arial, sans-serif; vertical-align: 0; background: #fff; line-height: 1; }
+code { font-family: Consolas, monospace; font-size: 8.2pt; background: var(--bone); border: 1px solid var(--hair); border-radius: 4px; padding: 0 4px; }
+.quote { border-left: 4px solid #25D366; background: var(--bone); padding: 8px 12px; margin: 6pt 0 10pt; font-weight: 500; white-space: pre-line; break-inside: avoid; }
+.muted { color: var(--mute); }
+.small { font-size: 8.4pt; }
+
+/* ── Dos columnas ── */
+.cols { display: flex; gap: 12px; margin: 8pt 0 10pt; }
+.cols > * { flex: 1; }
+.card { border: 2px solid var(--ink); border-radius: 0 18px 0 18px; padding: 10px 14px; break-inside: avoid; }
+.card h4 { margin: 0 0 6px; font-size: 10pt; font-weight: 700; text-transform: uppercase; letter-spacing: -.01em; }
+.card ul { margin: 0; }
+.card.green { background: var(--green); } .card.bone { background: var(--bone); } .card.cyan { background: var(--cyan); }
+
+/* ── Camino del lead ── */
+.path { display: flex; align-items: center; gap: 6px; margin: 8pt 0 4pt; }
+.path .step { flex: 1; border: 2px solid var(--ink); border-radius: 0 14px 0 14px; padding: 6px 8px; text-align: center; font-size: 7.6pt; line-height: 1.25; }
+.path .step b { display: block; font-size: 8pt; letter-spacing: .06em; }
+.path .arr { font-weight: 700; }
+.path-side { display: flex; gap: 8px; }
+.path-side .step { flex: 1; border: 2px solid var(--ink); border-radius: 0 14px 0 14px; padding: 6px 8px; text-align: center; font-size: 7.6pt; line-height: 1.25; }
+.path-side .step b { display: block; font-size: 8pt; letter-spacing: .06em; }
+
+/* ── Casos prácticos ── */
+.cases { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.case { border: 2px solid var(--ink); border-radius: 0 16px 0 16px; padding: 8px 12px; break-inside: avoid; }
+.case .q { font-weight: 700; margin-bottom: 3px; }
+.case .q span { font-weight: 300; color: var(--mute); }
+
+/* ── Índice ── */
+.toc-head { border: 2.5px solid var(--ink); border-radius: 0 34px 0 34px; background: var(--bone); padding: 16px 22px 14px; margin-bottom: 14px; }
+.toc-head .lbl { font-size: 6.6pt; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; }
+.toc-head h1 { font-size: 27pt; font-weight: 700; letter-spacing: -.035em; margin: 0; line-height: 1; }
+.toc { list-style: none; padding: 0; margin: 0; }
+.toc li { display: flex; align-items: center; gap: 10px; padding: 4.5px 0; border-bottom: 1px solid var(--hair); margin: 0; }
+.toc .dot { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--ink); display: inline-flex; align-items: center; justify-content: center; font-size: 7.5pt; font-weight: 700; flex: none; }
+.toc .tt { font-weight: 700; font-size: 10.5pt; text-transform: uppercase; letter-spacing: -.01em; }
+.toc .sub { color: var(--mute); font-size: 7.6pt; }
+.toc .new { font-size: 6pt; font-weight: 700; letter-spacing: .14em; border: 1.5px solid var(--ink); border-radius: 999px; padding: 0 6px; background: var(--yellow); }
+.toc .pg { margin-left: auto; font-weight: 700; }
+
+/* ── Chuleta ── */
+.cheat { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 8.4pt; }
+.cheat .card { padding: 8px 12px; }
+.cheat .card h4 { font-size: 9.6pt; }
+.cheat .full { grid-column: 1 / -1; }
+.cheat ol { padding-left: 14pt; margin: 0; }
+.cheat .ln { margin: 0 0 2px; }
+.new-mark { display: inline-block; font-size: 5.8pt; font-weight: 700; letter-spacing: .14em; border: 1.3px solid var(--ink); border-radius: 999px; padding: 0 5px; background: var(--yellow); vertical-align: 2px; line-height: 1.6; text-transform: uppercase; }
+h2 .new-mark, h3 .new-mark { font-size: 6.2pt; vertical-align: 4px; }
