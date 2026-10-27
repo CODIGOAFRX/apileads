@@ -191,6 +191,19 @@ final class LeadRepository extends BaseRepository
         } while (count($rows) === 500);
     }
 
+    /** Llamadas agendadas entre esas horas en leads abiertos, por orden de hora. */
+    public function scheduledCalls(DateTimeImmutable $from, DateTimeImmutable $to, ?string $company = null): array
+    {
+        return $this->all(
+            "SELECT l.id, l.nombre, l.apellidos, l.telefono, l.llamada_agendada, l.agendada_por FROM leads l
+             WHERE l.llamada_agendada >= :desde AND l.llamada_agendada <= :hasta
+               AND l.estado NOT IN ('MATRICULADO', 'DESCARTADO', 'HISTORICO')"
+            . ($company === null ? '' : ' AND ' . self::companyCondition($company))
+            . ' ORDER BY l.llamada_agendada',
+            ['desde' => DbTime::toDb($from), 'hasta' => DbTime::toDb($to)]
+        );
+    }
+
     /** De Estación Diseño si alguno de sus estudios lo es; si no, de Grupo EFP (ver Company). */
     private static function companyCondition(string $company): string
     {

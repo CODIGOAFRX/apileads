@@ -34,6 +34,10 @@ final class MailService
 
     /** Turno de envío compartido por toda la aplicación (ver ThrottleRepository). */
     private const THROTTLE_KEY = 'correo';
+    /** Solo en el primer correo que recibe cada lead: así sabemos de verdad por dónde llegó. */
+    private const HOW_FOUND_QUESTION = '<p>Antes de despedirme, una pregunta: <strong>¿cómo nos has conocido?</strong> '
+        . '(Instagram, Google, una feria, tu centro, alguien que te habló de nosotros…). Puedes contestarme a este mismo '
+        . 'correo; nos ayuda mucho saberlo.</p>';
 
     /** Parte de la plantilla de un estudio que se copia en el correo de varios estudios. */
     private const BLOCK = '/\{\{\s*inicio_bloque\s*\}\}(.*?)\{\{\s*fin_bloque\s*\}\}/s';
@@ -291,7 +295,7 @@ final class MailService
             to: (string) $lead['email'],
             toName: $variables['nombre_completo'],
             subject: $this->renderer->subject($template['asunto'], $variables),
-            html: $this->renderer->render($template['cuerpo_html'], $variables, true),
+            html: $this->withHowFoundQuestion($this->renderer->render($template['cuerpo_html'], $variables, true), (int) $lead['id']),
             // Desde su propio buzón, las respuestas ya le llegan a ella.
             replyTo: $from !== null ? null : ($this->replyTo ?? ($viewer['email'] ?? null)),
             from: $from,
@@ -299,6 +303,22 @@ final class MailService
         );
 
         return [$message, array_values(array_unique($attachmentIds))];
+    }
+
+    /**
+     * En el primer correo al lead, la pregunta de cómo nos ha conocido: antes de
+     * «Quedamos a tu disposición…» (el cierre de las plantillas) o, si no está, al final.
+     */
+    private function withHowFoundQuestion(string $html, int $leadId): string
+    {
+        if ($this->mails->lastSentAt($leadId) !== null) {
+            return $html;
+        }
+        if (preg_match('#<p\b[^>]*>\s*Quedamos a tu disposici#iu', $html, $match, PREG_OFFSET_CAPTURE) === 1) {
+            return substr_replace($html, self::HOW_FOUND_QUESTION . "\n", $match[0][1], 0);
+        }
+
+        return $html . self::HOW_FOUND_QUESTION;
     }
 
     /** Aplica los retoques de la comercial, con la misma limpieza que las plantillas. */

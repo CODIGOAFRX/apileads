@@ -29,7 +29,8 @@ final class LeadServiceTest extends DatabaseTestCase
         $this->clock->set('2026-09-17T09:30:00+02:00');
         $lead = $service->registerCall($id, 'NO_CONTESTA', null, $this->comercial);
         self::assertSame(3, $lead['intentos']);
-        self::assertStringStartsWith('https://wa.me/34612345678?text=Hola%20Eva%2C%20soy%20Marta', $lead['whatsappUrl']);
+        self::assertStringStartsWith('https://wa.me/34612345678?text=', $lead['whatsappUrl']);
+        self::assertStringStartsWith("Buenos días, Eva:\nSoy Marta, de GRUPO EFP.", rawurldecode(explode('text=', $lead['whatsappUrl'])[1]));
         self::assertSame('2026-09-18T07:00:00Z', $lead['proximaLlamada']);
 
         $service->logWhatsapp($id, $this->comercial);
@@ -267,5 +268,54 @@ final class LeadServiceTest extends DatabaseTestCase
         self::assertSame('2026-10-15T08:00:00Z', $lead['entrada'], 'sube arriba del listado');
         self::assertSame('WEB', $lead['origen'], 'se conserva el origen original');
         self::assertSame(['CAMBIO_ESTADO', 'FUSIONADO'], array_slice(array_column($lead['historial'], 'tipo'), 0, 2));
+    }
+
+    public function testElWhatsappEsElDeVeronicaConSusDatos(): void
+    {
+        $text = static fn (array $lead): string => rawurldecode(explode('text=', (string) $lead['whatsappUrl'])[1]);
+        $id = $this->lead(['nombre' => 'Candela', 'telefono' => '612345678', 'estudioIds' => [6], 'origen' => 'TUMASTER']);
+
+        self::assertSame(
+            "Buenos días, Candela:
+"
+            . 'Soy Marta, de ESTACIÓN DISEÑO, Escuela Superior de Diseño y Artes Visuales de Granada. Hemos recibido tu solicitud '
+            . 'de información sobre nuestro: MÁSTER PROFESIONAL MODA a través de la página TUMASTER.' . "
+"
+            . 'He intentado contactar contigo por teléfono para explicarte detalles sobre la forma de acceso, metodología, precios '
+            . 'y otros aspectos relacionados con la formación. ¿En qué horario te puedo llamar?',
+            $text($this->app->leads()->get($id, $this->comercial))
+        );
+
+        $this->clock->set('2026-09-15T17:00:00+02:00');
+        $sinNombre = $this->lead(['telefono' => '622333444', 'estudioIds' => [1, 2], 'origen' => 'REDES_SOCIALES']);
+        self::assertStringStartsWith(
+            "Buenas tardes:
+Soy Marta, de ESTACIÓN DISEÑO, Escuela Superior de Diseño y Artes Visuales de Granada. Hemos recibido tu solicitud "
+            . 'de información sobre nuestros estudios: GRADO DISEÑO MODA y GRADO DISEÑO GRÁFICO a través de nuestras redes sociales.',
+            $text($this->app->leads()->get($sinNombre, $this->comercial)),
+            'sin nombre, sin la coma; por la tarde, buenas tardes'
+        );
+
+        $efp = $this->lead(['nombre' => 'Luis', 'telefono' => '633444555', 'origen' => 'ANO_PASADO']);
+        self::assertStringContainsString('Soy Marta, de GRUPO EFP. Hemos recibido tu solicitud de información sobre nuestros estudios.', $text($this->app->leads()->get($efp, $this->comercial)));
+    }
+
+    public function testAvisaALaHoraDeLaLlamadaAgendadaAQuienLaAgendo(): void
+    {
+        $service = $this->app->leads();
+        $id = $this->lead(['nombre' => 'Eva', 'telefono' => '612345678', 'estudioIds' => [2]]);
+        $service->scheduleCall($id, '2026-09-15T12:30', 'Llamar tras clase', $this->comercial);
+
+        $mine = $service->reminders($this->comercial);
+        self::assertSame('2026-09-15T08:00:00Z', $mine['ahora']);
+        self::assertSame([['id' => $id, 'nombre' => 'Eva', 'telefono' => '+34 612 34 56 78', 'hora' => '2026-09-15T10:30:00Z', 'mia' => true]], $mine['llamadas']);
+        self::assertFalse($service->reminders($this->admin)['llamadas'][0]['mia'], 'las demás ven que hay llamada, pero el aviso es de quien la agendó');
+
+        // Sigue avisando un rato después de la hora si nadie ha llamado, y desaparece al llamar.
+        $this->clock->set('2026-09-15T13:00:00+02:00');
+        self::assertCount(1, $service->reminders($this->comercial)['llamadas']);
+        $service->registerCall($id, 'INTERESADO', null, $this->admin);
+        self::assertSame([], $service->reminders($this->comercial)['llamadas']);
+        self::assertNull($this->pdo->query("SELECT agendada_por FROM leads WHERE id = {$id}")->fetchColumn());
     }
 }

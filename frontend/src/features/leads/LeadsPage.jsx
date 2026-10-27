@@ -23,7 +23,7 @@ const SORTS = [
   { field: 'ultima-llamada', label: 'Última llamada' },
 ]
 
-export function LeadsPage() {
+export function LeadsPage({ openLeadId = null, onLeadOpened } = {}) {
   const { catalog } = useApp()
   const toast = useToast()
   const [inbox, setInbox] = useState('pendientes')
@@ -64,13 +64,24 @@ export function LeadsPage() {
   // y los cambios de las compañeras sin recargar.
   useEffect(() => {
     const refresh = () => document.visibilityState === 'visible' && load(true)
+    // A la hora de una llamada agendada (ver CallReminders), también con la pestaña en segundo plano.
+    const refreshNow = () => load(true)
     const timer = setInterval(refresh, REFRESH_MS)
     window.addEventListener('focus', refresh)
+    window.addEventListener('leads:refresh', refreshNow)
     return () => {
       clearInterval(timer)
       window.removeEventListener('focus', refresh)
+      window.removeEventListener('leads:refresh', refreshNow)
     }
   }, [load])
+
+  // «Llamar ahora» en un aviso: se abre su ficha.
+  useEffect(() => {
+    if (!openLeadId) return
+    setOpenId(openLeadId)
+    onLeadOpened?.()
+  }, [openLeadId, onLeadOpened])
 
   const changeInbox = (id) => {
     setInbox(id)

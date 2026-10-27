@@ -21,6 +21,12 @@ final class LeadController extends Controller
         return Response::json($this->app->leads()->counters($request->user()));
     }
 
+    /** Llamadas agendadas próximas, para avisar a su hora. */
+    public function reminders(Request $request): Response
+    {
+        return Response::json($this->app->leads()->reminders($request->user()));
+    }
+
     public function show(Request $request): Response
     {
         $lead = $this->app->leads()->get($request->intParam('id'), $request->user());

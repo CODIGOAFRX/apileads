@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { leadsApi } from '../../api/endpoints.js'
+import { askNotificationPermission } from '../../components/CallReminders.jsx'
 import { Icon } from '../../components/Icon.jsx'
 import { useToast } from '../../components/Toasts.jsx'
 import { Alert, Spinner } from '../../components/ui.jsx'
@@ -106,7 +107,10 @@ export function CallMenu({ lead, anchor, onClose, onDone, onMail }) {
     if (busy || !when.date || !when.time) return
     setBusy('AGENDAR')
     try {
+      // Al agendar se piden los avisos del ordenador (tiene que ser tras un clic).
+      askNotificationPermission()
       const updated = await leadsApi.scheduleCall(lead.id, `${when.date}T${when.time}`, note)
+      window.dispatchEvent(new CustomEvent('leads:reminders'))
       finished.current = true
       toast.ok(`Llamada agendada ${formatRelative(updated.llamadaAgendada)}: ese día sale el primero`)
       onDone(updated)

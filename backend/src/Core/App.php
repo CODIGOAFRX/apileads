@@ -134,7 +134,9 @@ final class App
             $this->workflowSettings(),
             new LeadPresenter(
                 new LeadActionPolicy(),
-                Env::get('WHATSAPP_MENSAJE', 'Hola {nombre}, soy {comercial} de Estación Diseño. Te he intentado llamar por tu interés en {estudio}. ¿Cuándo te viene bien que hablemos?'),
+                // Vacío (o el texto antiguo por defecto): el de LeadPresenter::WHATSAPP_TEMPLATE.
+                Env::get('WHATSAPP_MENSAJE'),
+                $this->timezone(),
             ),
             $this->clock(),
             $this->timezone(),

@@ -10,6 +10,7 @@ use Leads\Domain\Lead\Inbox;
 use Leads\Domain\Lead\LeadActionPolicy;
 use Leads\Domain\Lead\LeadOrigin;
 use Leads\Domain\Lead\LeadStatus;
+use Leads\Domain\Mail\TemplateRenderer;
 use Leads\Domain\Shared\Email;
 use Leads\Domain\Shared\PhoneNumber;
 use Leads\Infrastructure\Persistence\DbTime;
@@ -17,10 +18,27 @@ use Leads\Infrastructure\Persistence\DbTime;
 /** Convierte una fila de base de datos en la representación de la API. */
 final class LeadPresenter
 {
+    /**
+     * WhatsApp tras no contestar, como lo escribe Verónica. Variables: {saludo} (buenos
+     * días/buenas tardes según la hora), {nombre}, {comercial}, {empresa}, {sobre_estudio}
+     * («nuestro: MÁSTER…»), {origen_frase} («a través de la página TUMASTER») y {estudio}.
+     */
+    public const WHATSAPP_TEMPLATE = "{saludo}, {nombre}:\n"
+        . 'Soy {comercial}, de {empresa}. Hemos recibido tu solicitud de información sobre {sobre_estudio}{origen_frase}.' . "\n"
+        . 'He intentado contactar contigo por teléfono para explicarte detalles sobre la forma de acceso, metodología, precios '
+        . 'y otros aspectos relacionados con la formación. ¿En qué horario te puedo llamar?';
+    /** El texto que venía por defecto en WHATSAPP_MENSAJE: si el .env aún lo tiene, se usa el nuevo. */
+    private const OLD_DEFAULT = 'Hola {nombre}, soy {comercial} de Estación Diseño. Te he intentado llamar por tu interés en {estudio}. ¿Cuándo te viene bien que hablemos?';
+
+    private readonly string $whatsappTemplate;
+
     public function __construct(
         private readonly LeadActionPolicy $policy,
-        private readonly string $whatsappTemplate,
+        ?string $whatsappTemplate = null,
+        private readonly string $timezone = 'Europe/Madrid',
     ) {
+        $custom = trim((string) $whatsappTemplate);
+        $this->whatsappTemplate = $custom === '' || $custom === self::OLD_DEFAULT ? self::WHATSAPP_TEMPLATE : $custom;
     }
 
     public function present(array $row, \DateTimeImmutable $now, array $viewer): array
@@ -55,7 +73,7 @@ final class LeadPresenter
             'emailValido' => $emailValid,
             'telefono' => $row['telefono'],
             'telefonoValido' => $phone !== null,
-            'whatsappUrl' => $phone?->whatsappUrl($this->whatsappMessage($row, $studies, $viewer)),
+            'whatsappUrl' => $phone?->whatsappUrl($this->whatsappMessage($row, $studies, $viewer, $now)),
             'telUrl' => $phone ? 'tel:+' . $phone->digits() : null,
             'ubicacion' => $row['ubicacion'],
             'interes' => $row['interes_texto'],
@@ -87,14 +105,53 @@ final class LeadPresenter
         ];
     }
 
-    private function whatsappMessage(array $row, array $studies, array $viewer): string
+    private function whatsappMessage(array $row, array $studies, array $viewer, \DateTimeImmutable $now): string
     {
-        $studyNames = implode(', ', array_column($studies, 'nombre'));
+        $names = array_column($studies, 'nombre');
+        $upper = array_map(static fn (string $n): string => mb_strtoupper($n), $names);
+        $template = $this->whatsappTemplate;
+        if ($row['nombre'] === '') {
+            // «Buenos días, {nombre}:» queda «Buenos días:» cuando no sabemos el nombre.
+            $template = (string) preg_replace('/,?\s*\{nombre\}/u', '', $template);
+        }
 
-        return strtr($this->whatsappTemplate, [
-            '{nombre}' => $row['nombre'] !== '' ? $row['nombre'] : '',
+        return strtr($template, [
+            '{saludo}' => self::greeting((int) $now->setTimezone(new \DateTimeZone($this->timezone))->format('G')),
+            '{nombre}' => $row['nombre'],
             '{comercial}' => strtok(Input::text($viewer, 'nombre'), ' ') ?: '',
-            '{estudio}' => $studyNames !== '' ? $studyNames : 'nuestros estudios',
+            '{empresa}' => Company::ofStudies($studies) === Company::ESTACION
+                ? 'ESTACIÓN DISEÑO, Escuela Superior de Diseño y Artes Visuales de Granada'
+                : 'GRUPO EFP',
+            '{sobre_estudio}' => match (count($names)) {
+                0 => 'nuestros estudios',
+                1 => 'nuestro: ' . $upper[0],
+                default => 'nuestros estudios: ' . TemplateRenderer::humanList($upper),
+            },
+            '{origen_frase}' => self::originPhrase(LeadOrigin::tryFrom((string) $row['origen']) ?? LeadOrigin::OTRO),
+            '{estudio}' => $names !== [] ? implode(', ', $names) : 'nuestros estudios',
         ]);
+    }
+
+    private static function greeting(int $hour): string
+    {
+        return match (true) {
+            $hour >= 6 && $hour < 14 => 'Buenos días',
+            $hour >= 14 && $hour < 21 => 'Buenas tardes',
+            default => 'Buenas noches',
+        };
+    }
+
+    /** Por dónde nos pidió la información, como lo diría la comercial; vacío si no lo sabemos. */
+    private static function originPhrase(LeadOrigin $origin): string
+    {
+        return match ($origin) {
+            LeadOrigin::EMAGISTER, LeadOrigin::TUMASTER, LeadOrigin::APRENDEMAS, LeadOrigin::EDUCAWEB
+                => ' a través de la página ' . mb_strtoupper($origin->label()),
+            LeadOrigin::WEB => ' a través de nuestra página web',
+            LeadOrigin::REDES_SOCIALES => ' a través de nuestras redes sociales',
+            LeadOrigin::FERIA => ' en la feria',
+            LeadOrigin::COLEGIOS => ' a través de tu centro educativo',
+            default => '',
+        };
     }
 }

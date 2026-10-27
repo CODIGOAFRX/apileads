@@ -70,6 +70,28 @@ final class LeadService
         return $this->leads->countByInbox($this->clock->now(), Company::ofUser($viewer)?->value);
     }
 
+    /**
+     * Llamadas agendadas de las próximas 24 horas (y las de las 2 últimas que siguen
+     * sin hacerse) que ve este usuario, para que la web avise a su hora y refresque
+     * el listado sin recargar. «mia»: la agendó él, así que el aviso es para él.
+     */
+    public function reminders(array $viewer): array
+    {
+        $now = $this->clock->now();
+        $rows = $this->leads->scheduledCalls($now->modify('-2 hours'), $now->modify('+24 hours'), Company::ofUser($viewer)?->value);
+
+        return [
+            'ahora' => DbTime::toApi(DbTime::toDb($now)),
+            'llamadas' => array_map(static fn (array $row): array => [
+                'id' => (int) $row['id'],
+                'nombre' => trim($row['nombre'] . ' ' . $row['apellidos']) ?: ($row['telefono'] ?? 'Sin nombre'),
+                'telefono' => $row['telefono'],
+                'hora' => DbTime::toApi($row['llamada_agendada']),
+                'mia' => $row['agendada_por'] !== null && (int) $row['agendada_por'] === (int) $viewer['id'],
+            ], $rows),
+        ];
+    }
+
     /** Un usuario limitado a una empresa solo busca (y exporta) los leads de esa. */
     public static function scopedQuery(array $query, array $viewer): array
     {
@@ -270,6 +292,8 @@ final class LeadService
 
         $now = $this->clock->now();
         $transition = $this->workflow->scheduleCall($this->stateOf($lead), $at, $now);
+        // El aviso de esa hora le salta a quien la agenda.
+        $this->leads->save($id, ['agendada_por' => (int) $viewer['id']]);
 
         return $this->commit($id, $transition, $note, $viewer, $now, unlock: true);
     }
@@ -454,7 +478,7 @@ final class LeadService
             'llamada_agendada' => DbTime::toDb($state->scheduledCall),
             'motivo_descarte' => $state->discardReason,
             'actualizado_en' => DbTime::toDb($now),
-        ]);
+        ] + ($state->scheduledCall === null ? ['agendada_por' => null] : []));
         $this->activity->log($id, $userId, $transition->activityType, $transition->summary, $transition->detail, $now);
     }
 

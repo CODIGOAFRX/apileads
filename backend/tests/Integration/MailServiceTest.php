@@ -24,7 +24,8 @@ final class MailServiceTest extends DatabaseTestCase
         $message = $this->mailer->sent[0];
         self::assertSame('eva@example.com', $message->to);
         self::assertSame('Tu máster, Eva', $message->subject);
-        self::assertSame('<p>Hola Eva, info del Máster Ilustración.</p>', $message->html);
+        // Primer correo: la plantilla (sin cierre «Quedamos a tu disposición») y, al final, la pregunta.
+        self::assertStringStartsWith('<p>Hola Eva, info del Máster Ilustración.</p><p>Antes de despedirme', $message->html);
         self::assertSame('marta@test.es', $message->replyTo);
         self::assertSame('CORREO', $lead['historial'][0]['tipo']);
     }
@@ -206,7 +207,7 @@ final class MailServiceTest extends DatabaseTestCase
         $mail->saveTemplate(null, 'Hola {{nombre}}', '<p>Texto definitivo</p>', 'sin-estudio');
         $mail->sendInfo($id, $this->comercial);
         self::assertSame('Hola Eva', $this->mailer->sent[0]->subject);
-        self::assertSame('<p>Texto definitivo</p>', $this->mailer->sent[0]->html);
+        self::assertStringStartsWith('<p>Texto definitivo</p><p>Antes de despedirme', $this->mailer->sent[0]->html);
         self::assertSame('2026-09-15T08:00:00Z', $mail->preview($id, $this->comercial)['ultimoEnvio']);
 
         // La genérica no se ha tocado.
@@ -265,6 +266,22 @@ final class MailServiceTest extends DatabaseTestCase
         $this->clock->advance('+1 second');
         $mail->sendInfo($luis, $this->admin);
         self::assertCount(2, $this->mailer->sent);
+    }
+
+    public function testElPrimerCorreoPreguntaComoNosHaConocido(): void
+    {
+        $mail = $this->app->mail();
+        $eva = $this->lead(['nombre' => 'Eva', 'email' => 'eva@example.com', 'estudioIds' => [2]]);
+
+        $html = $mail->preview($eva, $this->comercial)['html'];
+        self::assertStringContainsString('¿cómo nos has conocido?', $html);
+        self::assertLessThan(strpos($html, 'Quedamos a tu disposición'), strpos($html, '¿cómo nos has conocido?'), 'antes del cierre de la plantilla');
+
+        $mail->sendInfo($eva, $this->comercial);
+        self::assertStringContainsString('¿cómo nos has conocido?', $this->mailer->sent[0]->html);
+
+        $this->clock->advance('+1 day');
+        self::assertStringNotContainsString('¿cómo nos has conocido?', $mail->preview($eva, $this->comercial)['html'], 'solo en el primero');
     }
 
     public function testCadaComercialFirmaSusCorreos(): void

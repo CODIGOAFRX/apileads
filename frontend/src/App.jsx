@@ -8,6 +8,7 @@ import { Icon } from './components/Icon.jsx'
 import { ErrorBoundary } from './components/ErrorBoundary.jsx'
 import { ToastProvider } from './components/Toasts.jsx'
 import { Loading } from './components/ui.jsx'
+import { CallReminders } from './components/CallReminders.jsx'
 import { LeadsPage } from './features/leads/LeadsPage.jsx'
 import { ImportPage } from './features/import/ImportPage.jsx'
 import { SettingsPage } from './features/settings/SettingsPage.jsx'
@@ -25,6 +26,9 @@ export default function App() {
   const [session, setSession] = useState(() => loadSession())
   const [catalog, setCatalog] = useState(null)
   const [page, setPage] = useState('leads')
+  // Lead que abrir al pulsar «Llamar ahora» en un aviso (desde cualquier sección).
+  const [leadToOpen, setLeadToOpen] = useState(null)
+  const openLead = useCallback((id) => { setPage('leads'); setLeadToOpen(id) }, [])
 
   const logout = useCallback(() => {
     clearSession()
@@ -88,13 +92,14 @@ export default function App() {
             {!catalog ? <Loading /> : (
               // key: al cambiar de sección se sale del aviso de error.
               <ErrorBoundary key={page}>
-                {page === 'leads' && <LeadsPage />}
+                {page === 'leads' && <LeadsPage openLeadId={leadToOpen} onLeadOpened={() => setLeadToOpen(null)} />}
                 {page === 'importar' && <ImportPage onDone={() => setPage('leads')} />}
                 {page === 'ajustes' && <SettingsPage />}
                 {page === 'actividad' && session.usuario.rol === 'ADMIN' && <ActivityPage />}
               </ErrorBoundary>
             )}
           </main>
+          <CallReminders onOpen={openLead} />
         </div>
       </ToastProvider>
     </AppContext.Provider>

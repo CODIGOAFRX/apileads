@@ -52,6 +52,7 @@ final class Routes
         $router->post('/api/leads', $c(LeadController::class, 'store'));
         $router->get('/api/leads/contadores', $c(LeadController::class, 'counters'));
         $router->get('/api/leads/exportar', $c(LeadController::class, 'export'));
+        $router->get('/api/leads/avisos', $c(LeadController::class, 'reminders'));
         $router->get('/api/leads/{id}', $c(LeadController::class, 'show'));
         $router->put('/api/leads/{id}', $c(LeadController::class, 'update'));
         $router->post('/api/leads/{id}/bloqueo', $c(LeadController::class, 'lock'));

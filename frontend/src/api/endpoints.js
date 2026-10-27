@@ -10,6 +10,8 @@ export const authApi = {
 export const leadsApi = {
   list: (query) => http.get('/leads', query),
   counters: () => http.get('/leads/contadores'),
+  // Llamadas agendadas próximas, para avisar a su hora.
+  reminders: () => http.get('/leads/avisos'),
   // vista: la comercial abre la ficha (queda en el registro de actividad).
   get: (id, vista = false) => http.get(`/leads/${id}`, { vista }),
   create: (data) => http.post('/leads', data),
