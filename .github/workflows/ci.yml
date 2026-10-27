@@ -13,6 +13,8 @@ jobs:
   backend:
     name: Backend · PHP ${{ matrix.php }}
     runs-on: ubuntu-latest
+    # El servidor (lead.grupoefp.es) va con PHP 8.3: un fallo solo en 8.1 avisa pero no frena el despliegue.
+    continue-on-error: ${{ matrix.php == '8.1' }}
     strategy:
       fail-fast: false
       matrix:
