@@ -61,6 +61,16 @@ enum LeadOrigin: string
         return $this !== self::OTRO;
     }
 
+    /**
+     * Portales de captación: la persona dejó sus datos en el portal y el portal
+     * nos los pasa; todavía no nos conoce, así que no tiene sentido preguntarle
+     * cómo nos ha conocido.
+     */
+    public function isLeadPortal(): bool
+    {
+        return in_array($this, [self::APRENDEMAS, self::EMAGISTER, self::TUMASTER, self::EDUCAWEB], true);
+    }
+
     /** Lo reconoce en un texto libre (columna de un fichero); OTRO si no sabe cuál es, null si está vacío. */
     public static function fromText(?string $value): ?self
     {

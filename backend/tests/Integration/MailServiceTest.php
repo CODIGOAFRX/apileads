@@ -300,6 +300,21 @@ final class MailServiceTest extends DatabaseTestCase
         self::assertStringNotContainsString('¿cómo nos has conocido?', $mail->preview($eva, $this->comercial)['html'], 'solo en el primero');
     }
 
+    public function testALosDeUnPortalDeCaptacionNoSeLesPreguntaComoNosConocieron(): void
+    {
+        $mail = $this->app->mail();
+        foreach (['APRENDEMAS', 'EMAGISTER', 'TUMASTER', 'EDUCAWEB'] as $i => $portal) {
+            $id = $this->lead(['nombre' => 'Eva', 'email' => "eva{$i}@example.com", 'origen' => $portal, 'estudioIds' => [2]]);
+            $html = $mail->preview($id, $this->comercial)['html'];
+            self::assertStringNotContainsString('¿cómo nos has conocido?', $html, $portal);
+            self::assertStringContainsString('Quedamos a tu disposición', $html, 'el resto del correo, igual');
+        }
+        foreach (['REDES_SOCIALES', 'VISITA_CENTRO', 'OTRO'] as $i => $origin) {
+            $id = $this->lead(['nombre' => 'Luis', 'email' => "luis{$i}@example.com", 'origen' => $origin, 'estudioIds' => [2]]);
+            self::assertStringContainsString('¿cómo nos has conocido?', $mail->preview($id, $this->comercial)['html'], $origin);
+        }
+    }
+
     public function testCadaComercialFirmaSusCorreos(): void
     {
         $auth = $this->app->auth();

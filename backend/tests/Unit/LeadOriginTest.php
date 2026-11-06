@@ -17,6 +17,10 @@ final class LeadOriginTest extends TestCase
             array_map(static fn (LeadOrigin $o): string => $o->label(), LeadOrigin::selectable()),
         );
         self::assertFalse(LeadOrigin::OTRO->isSelectable());
+        self::assertSame(
+            ['AprendeMás', 'Emagister', 'TuMaster', 'EducaWeb'],
+            array_values(array_map(static fn (LeadOrigin $o): string => $o->label(), array_filter(LeadOrigin::cases(), static fn (LeadOrigin $o): bool => $o->isLeadPortal()))),
+        );
         self::assertSame(['id' => 'OTRO', 'label' => 'Sin indicar', 'seleccionable' => false], LeadOrigin::catalog()[12]);
     }
 

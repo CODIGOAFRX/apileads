@@ -9,6 +9,7 @@ use Leads\Core\Clock;
 use Leads\Core\HttpException;
 use Leads\Core\Input;
 use Leads\Domain\Lead\ActivityType;
+use Leads\Domain\Lead\LeadOrigin;
 use Leads\Domain\Mail\Attachment;
 use Leads\Domain\Mail\MailException;
 use Leads\Domain\Mail\MailTransport;
@@ -342,7 +343,7 @@ final class MailService
             to: (string) $lead['email'],
             toName: $variables['nombre_completo'],
             subject: $this->renderer->subject($template['asunto'], $variables),
-            html: $this->withHowFoundQuestion($this->renderer->render($template['cuerpo_html'], $variables, true), (int) $lead['id']),
+            html: $this->withHowFoundQuestion($this->renderer->render($template['cuerpo_html'], $variables, true), $lead),
             // Desde su propio buzón, las respuestas ya le llegan a ella.
             replyTo: $from !== null ? null : ($this->replyTo ?? ($viewer['email'] ?? null)),
             from: $from,
@@ -355,10 +356,14 @@ final class MailService
     /**
      * En el primer correo al lead, la pregunta de cómo nos ha conocido: antes de
      * «Quedamos a tu disposición…» (el cierre de las plantillas) o, si no está, al final.
+     * No va a los que llegan de un portal de captación (TuMaster, Emagister…): aún no nos conocen.
      */
-    private function withHowFoundQuestion(string $html, int $leadId): string
+    private function withHowFoundQuestion(string $html, array $lead): string
     {
-        if ($this->mails->lastSentAt($leadId) !== null) {
+        if (LeadOrigin::tryFrom((string) ($lead['origen'] ?? ''))?->isLeadPortal() === true) {
+            return $html;
+        }
+        if ($this->mails->lastSentAt((int) $lead['id']) !== null) {
             return $html;
         }
         if (preg_match('#<p\b[^>]*>\s*Quedamos a tu disposici#iu', $html, $match, PREG_OFFSET_CAPTURE) === 1) {
