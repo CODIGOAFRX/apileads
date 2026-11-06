@@ -355,7 +355,7 @@ final class MailService
 
     /**
      * En el primer correo al lead, la pregunta de cómo nos ha conocido: antes de
-     * «Quedamos a tu disposición…» (el cierre de las plantillas) o, si no está, al final.
+     * «Quedamos (o Quedo) a tu disposición…» (el cierre de las plantillas) o, si no está, al final.
      * No va a los que llegan de un portal de captación (TuMaster, Emagister…): aún no nos conocen.
      */
     private function withHowFoundQuestion(string $html, array $lead): string
@@ -366,7 +366,7 @@ final class MailService
         if ($this->mails->lastSentAt((int) $lead['id']) !== null) {
             return $html;
         }
-        if (preg_match('#<p\b[^>]*>\s*Quedamos a tu disposici#iu', $html, $match, PREG_OFFSET_CAPTURE) === 1) {
+        if (preg_match('#<p\b[^>]*>\s*Qued(?:amos|o) a tu disposici#iu', $html, $match, PREG_OFFSET_CAPTURE) === 1) {
             return substr_replace($html, self::HOW_FOUND_QUESTION . "\n", $match[0][1], 0);
         }
 

@@ -71,6 +71,27 @@ final class MailServiceTest extends DatabaseTestCase
         $mail->preview($id, $this->comercial, 5);
     }
 
+    public function testElTallerDeMangasLlevaSuTextoYSuDossier(): void
+    {
+        $mail = $this->app->mail();
+        $taller = (int) $this->pdo->query("SELECT id FROM estudio WHERE nombre = 'Taller de mangas'")->fetchColumn();
+        $id = $this->lead(['nombre' => 'Carmen', 'email' => 'carmen@example.com', 'origen' => 'REDES_SOCIALES', 'estudioIds' => [$taller]]);
+
+        $preview = $mail->preview($id, $this->comercial);
+        self::assertSame('Taller de Mangas con Javier Martín Galán – 12 y 13 de diciembre', $preview['asunto']);
+        self::assertStringStartsWith('<p>Buenos días, Carmen:</p>', $preview['html']);
+        self::assertStringContainsString('Soy Marta, de <strong>ESTACIÓN DISEÑO', $preview['html']);
+        self::assertStringNotContainsString('{{', $preview['html']);
+        self::assertSame(['Taller de Mangas Javier Martín Galán.pdf'], array_column($preview['adjuntos'], 'nombre'));
+        // La pregunta, antes de «Quedo a tu disposición» y no bajo la firma.
+        self::assertLessThan(strpos($preview['html'], 'Quedo a tu disposición'), strpos($preview['html'], '¿cómo nos has conocido?'));
+
+        $mail->sendInfo($id, $this->comercial);
+        $pdf = $this->mailer->sent[0]->attachments[0];
+        self::assertStringStartsWith('%PDF', $pdf->content);
+        self::assertSame(filesize(dirname(__DIR__, 2) . '/database/correos/dossier-curso-taller-mangas.pdf'), strlen($pdf->content));
+    }
+
     public function testElCorreoDeUnEstudioLlevaSuTextoYSuDossier(): void
     {
         $mail = $this->app->mail();
@@ -129,10 +150,10 @@ final class MailServiceTest extends DatabaseTestCase
         $templates = array_column($mail->templates()['plantillas'], null, 'estudioId');
         self::assertSame('Dossier Audiovisual 26-27.pdf', $templates[3]['adjunto']['nombre']);
         self::assertSame("%PDF-1.4\nprueba", $mail->attachment($templates[3]['adjunto']['id'])['contenido']);
-        self::assertSame(8, (int) $this->pdo->query('SELECT COUNT(*) FROM adjunto')->fetchColumn(), 'el sustituido se borra');
+        self::assertSame(9, (int) $this->pdo->query('SELECT COUNT(*) FROM adjunto')->fetchColumn(), 'el sustituido se borra');
 
         $mail->detachFromTemplate($template['id']);
-        self::assertSame(7, (int) $this->pdo->query('SELECT COUNT(*) FROM adjunto')->fetchColumn());
+        self::assertSame(8, (int) $this->pdo->query('SELECT COUNT(*) FROM adjunto')->fetchColumn());
 
         file_put_contents($file, 'no soy un pdf');
         try {
@@ -431,12 +452,12 @@ final class MailServiceTest extends DatabaseTestCase
         $mail->saveTemplate(3, 'Audiovisual 2', '<p>y</p>');
 
         $templates = $mail->templates()['plantillas'];
-        self::assertCount(10, $templates);
+        self::assertCount(11, $templates);
         self::assertSame([null, 'sin-estudio'], array_slice(array_column($templates, 'clave'), 0, 2));
         self::assertSame([null, null, 1, 2, 3, 4, 5, 6, 7], array_slice(array_column($templates, 'estudioId'), 0, 9));
         self::assertSame('Audiovisual 2', $templates[4]['asunto']);
 
         $mail->deleteTemplate(3);
-        self::assertCount(9, $mail->templates()['plantillas']);
+        self::assertCount(10, $mail->templates()['plantillas']);
     }
 }
