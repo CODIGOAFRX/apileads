@@ -84,6 +84,8 @@ final class LeadPresenter
             'origenLabel' => $origin->label(),
             'campana' => $row['campana'],
             'comentarios' => $row['comentarios'],
+            // Lo último que alguien escribió del lead: se ve en su fila del listado.
+            'ultimaNota' => $row['ultima_nota'] ?? null,
             'extra' => $row['datos_extra'] ? (json_decode($row['datos_extra'], true) ?: []) : [],
             'estado' => $status->value,
             'estadoLabel' => $status->label(),
@@ -151,6 +153,7 @@ final class LeadPresenter
             LeadOrigin::REDES_SOCIALES => ' a través de nuestras redes sociales',
             LeadOrigin::FERIA => ' en la feria',
             LeadOrigin::COLEGIOS => ' a través de tu centro educativo',
+            LeadOrigin::VISITA_CENTRO => ' en tu visita a nuestro centro',
             default => '',
         };
     }

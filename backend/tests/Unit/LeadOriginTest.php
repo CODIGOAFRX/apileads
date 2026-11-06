@@ -10,14 +10,14 @@ use PHPUnit\Framework\TestCase;
 
 final class LeadOriginTest extends TestCase
 {
-    public function testSeEligeUnoDeLosDiez(): void
+    public function testSeEligeUnoDeLosSeleccionables(): void
     {
         self::assertSame(
-            ['Web', 'Redes sociales', 'Referencias', 'Año pasado', 'Feria', 'Colegios', 'AprendeMás', 'Emagister', 'TuMaster', 'EducaWeb'],
+            ['Web', 'Redes sociales', 'Referencias', 'Año pasado', 'Feria', 'Colegios', 'AprendeMás', 'Emagister', 'TuMaster', 'EducaWeb', 'Visita al centro', 'Otros'],
             array_map(static fn (LeadOrigin $o): string => $o->label(), LeadOrigin::selectable()),
         );
         self::assertFalse(LeadOrigin::OTRO->isSelectable());
-        self::assertSame(['id' => 'OTRO', 'label' => 'Sin indicar', 'seleccionable' => false], LeadOrigin::catalog()[10]);
+        self::assertSame(['id' => 'OTRO', 'label' => 'Sin indicar', 'seleccionable' => false], LeadOrigin::catalog()[12]);
     }
 
     public static function texts(): array
@@ -40,6 +40,11 @@ final class LeadOriginTest extends TestCase
             'recomendación' => ['Recomendación de una alumna', LeadOrigin::REFERENCIAS],
             'feria' => ['Stand feria Granada', LeadOrigin::FERIA],
             'jornada' => ['Jornada de puertas abiertas', LeadOrigin::FERIA],
+            'visita al centro' => ['Visita al centro', LeadOrigin::VISITA_CENTRO],
+            'vino en persona' => ['Vino en persona a secretaría', LeadOrigin::VISITA_CENTRO],
+            'visita a una feria es feria' => ['Visita a la feria de Sevilla', LeadOrigin::FERIA],
+            'otros' => ['Otros', LeadOrigin::OTROS],
+            'otro sigue siendo sin indicar' => ['OTRO', LeadOrigin::OTRO],
             'no se sabe' => ['teléfono', LeadOrigin::OTRO],
             'abreviatura dentro de otra palabra no cuenta' => ['figura', LeadOrigin::OTRO],
         ];

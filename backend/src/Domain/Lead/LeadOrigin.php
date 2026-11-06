@@ -7,8 +7,9 @@ namespace Leads\Domain\Lead;
 use Leads\Domain\Shared\Text;
 
 /**
- * De dónde viene el lead. Al darlo de alta se elige uno de los diez primeros;
- * OTRO («Sin indicar») queda solo para leads antiguos o importados sin origen.
+ * De dónde viene el lead. Al darlo de alta se elige uno de los seleccionables
+ * (todos menos OTRO). OTROS («Otros») es un origen conocido que no encaja en
+ * ninguno; OTRO («Sin indicar») queda solo para leads antiguos o importados sin origen.
  */
 enum LeadOrigin: string
 {
@@ -22,6 +23,8 @@ enum LeadOrigin: string
     case EMAGISTER = 'EMAGISTER';
     case TUMASTER = 'TUMASTER';
     case EDUCAWEB = 'EDUCAWEB';
+    case VISITA_CENTRO = 'VISITA_CENTRO';
+    case OTROS = 'OTROS';
     case OTRO = 'OTRO';
 
     /**
@@ -39,8 +42,12 @@ enum LeadOrigin: string
         'ANO_PASADO' => ['ano pasado', 'curso pasado', 'ano anterior', 'curso anterior', 'lead antiguo'],
         'FERIA' => ['feria', 'ferias', 'evento', 'salon', 'jornada', 'puertas abiertas', 'open day'],
         'COLEGIOS' => ['colegio', 'colegios', 'instituto', 'institutos', 'ies', 'charla', 'centro educativo', 'orientador'],
+        // Después de ferias y colegios: «visita a la feria» o «visita del colegio» son de esos.
+        'VISITA_CENTRO' => ['visita', 'visita al centro', 'visita centro', 'visita a la escuela', 'visita escuela', 'vino al centro',
+            'vino a la escuela', 'presencial', 'en persona', 'secretaria', 'recepcion'],
         'WEB' => ['web', 'website', 'pagina web', 'formulario web', 'formulario', 'wordpress', 'landing', 'organic', 'organico',
             'seo', 'google', 'google ads', 'adwords', 'cpc', 'gads'],
+        'OTROS' => ['otros', 'other', 'others'],
     ];
 
     /** Los que se pueden elegir, en el orden en que se muestran. */
@@ -96,6 +103,8 @@ enum LeadOrigin: string
             self::EMAGISTER => 'Emagister',
             self::TUMASTER => 'TuMaster',
             self::EDUCAWEB => 'EducaWeb',
+            self::VISITA_CENTRO => 'Visita al centro',
+            self::OTROS => 'Otros',
             self::OTRO => 'Sin indicar',
         };
     }

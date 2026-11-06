@@ -29,9 +29,10 @@ export const leadsApi = {
   whatsapp: (id) => http.post(`/leads/${id}/whatsapp`),
   // Ha pulsado el número para llamar (enlace tel:).
   dial: (id) => http.post(`/leads/${id}/marcar`),
-  mailPreview: (id) => http.get(`/leads/${id}/correo`),
+  // Un correo por estudio: estudioId dice de cuál (sin él, el primero que aún no ha recibido).
+  mailPreview: (id, estudioId) => http.get(`/leads/${id}/correo`, estudioId ? { estudioId } : undefined),
   // asunto y html solo si la comercial ha retocado este correo.
-  sendMail: (id, asunto, html) => http.post(`/leads/${id}/correo`, { asunto, html }),
+  sendMail: (id, asunto, html, estudioId) => http.post(`/leads/${id}/correo`, { asunto, html, estudioId }),
   export: (query) => http.download('/leads/exportar', query, 'leads.csv'),
 }
 

@@ -23,9 +23,11 @@ use Leads\Infrastructure\Persistence\MailRepository;
 use Leads\Infrastructure\Persistence\ThrottleRepository;
 
 /**
- * Correo de información: elige la plantilla según los estudios de interés del
- * lead, le adjunta el dossier, lo envía desde el buzón de la comercial (o el
- * general si no tiene) y deja constancia en el historial.
+ * Correo de información: un correo por estudio. Si el lead tiene varios estudios
+ * de interés, la comercial elige de cuál le escribe (y puede mandarle después el
+ * del otro, en otro correo): cada correo lleva la plantilla y el dossier de ese
+ * estudio y nada más. Se envía desde el buzón de la comercial (o el general si
+ * no tiene) y queda constancia en el historial.
  */
 final class MailService
 {
@@ -71,13 +73,24 @@ final class MailService
     ) {
     }
 
-    public function preview(int $leadId, array $viewer): array
+    /** $studyId: de cuál de sus estudios se le escribe (por defecto, el primero que aún no ha recibido). */
+    public function preview(int $leadId, array $viewer, ?int $studyId = null): array
     {
         $lead = $this->leads->findOrFail($leadId, $viewer);
-        [$message, $attachmentIds] = $this->compose($lead, $viewer);
+        $study = $this->chosenStudy($lead, $studyId);
+        [$message, $attachmentIds] = $this->compose($lead, $viewer, $study);
         $personal = $this->personalDelivery && $message->from !== null;
 
         return [
+            'estudioId' => $study === null ? null : (int) $study['id'],
+            // Sus estudios, con la fecha en que se le mandó la información de cada uno.
+            'estudios' => array_map(fn (array $s): array => [
+                'id' => (int) $s['id'],
+                'nombre' => $s['nombre'],
+                'color' => $s['color'] ?? null,
+                'ultimoEnvio' => $this->mails->lastSentAt($leadId, (int) $s['id']),
+            ], $lead['estudios'] ?? []),
+            'ultimoEnvioEstudio' => $study === null ? null : $this->mails->lastSentAt($leadId, (int) $study['id']),
             'de' => $message->from,
             'para' => $message->to,
             'asunto' => $message->subject,
@@ -107,18 +120,23 @@ final class MailService
      * $subject y $html permiten retocar este correo concreto antes de enviarlo
      * (p. ej. «la matrícula cierra el viernes») sin cambiar la plantilla.
      */
-    public function sendInfo(int $leadId, array $viewer, ?string $subject = null, ?string $html = null): array
+    public function sendInfo(int $leadId, array $viewer, ?string $subject = null, ?string $html = null, ?int $studyId = null): array
     {
         $lead = $this->leads->findOrFail($leadId, $viewer);
         if (!Email::isValid($lead['email'])) {
             throw new \InvalidArgumentException('Este lead no tiene un correo válido');
         }
+        $study = $this->chosenStudy($lead, $studyId);
+        $chosenId = $study === null ? null : (int) $study['id'];
         $now = $this->clock->now();
-        if ($this->mails->countSentTo($leadId, $now->modify(self::RESEND_GUARD)) > 0) {
-            throw HttpException::conflict('Ya se le ha enviado la información hace un momento');
+        // El doble clic se frena por estudio: el correo del otro estudio sí puede ir justo después.
+        if ($this->mails->countSentTo($leadId, $now->modify(self::RESEND_GUARD), $chosenId) > 0) {
+            throw HttpException::conflict($study === null
+                ? 'Ya se le ha enviado la información hace un momento'
+                : "Ya se le ha enviado la información de {$study['nombre']} hace un momento");
         }
 
-        [$message, $attachmentIds] = $this->compose($lead, $viewer);
+        [$message, $attachmentIds] = $this->compose($lead, $viewer, $study);
         $message = $this->personalize($message, $subject, $html);
         $message = $message->with([
             'html' => $message->html . (self::signature($viewer) ?? ''),
@@ -135,15 +153,16 @@ final class MailService
             if ($previous !== null) {
                 $this->throttle?->release(self::THROTTLE_KEY, $now, $previous);
             }
-            $this->mails->logDelivery($leadId, $userId, $message->to, $message->subject, $e->getMessage(), $now, $message->from);
+            $this->mails->logDelivery($leadId, $userId, $message->to, $message->subject, $e->getMessage(), $now, $message->from, false, $chosenId);
             $this->activity->log($leadId, $userId, ActivityType::CORREO, 'Error al enviar la información', ['error' => $e->getMessage()], $now);
             throw new HttpException('No se pudo enviar el correo: ' . $e->getMessage(), 502);
         }
 
-        $this->mails->logDelivery($leadId, $userId, $message->to, $message->subject, null, $now, $message->from, $simulated);
+        $this->mails->logDelivery($leadId, $userId, $message->to, $message->subject, null, $now, $message->from, $simulated, $chosenId);
         $personalized = $html !== null && trim($html) !== '';
         $warning = $transport instanceof PersonalMailbox ? $transport->warning : null;
         $detail = [
+            'estudio' => $study['nombre'] ?? null,
             'para' => $message->to,
             'de' => $message->from,
             'adjuntos' => array_map(static fn (Attachment $a): string => $a->name, $message->attachments),
@@ -250,10 +269,38 @@ final class MailService
         return ['nombre' => $row['nombre'], 'tipo' => $row['tipo'], 'contenido' => $row['contenido']];
     }
 
-    /** @return array{0: Message, 1: list<int>} el correo (sin adjuntos) y los ids de sus adjuntos */
-    private function compose(array $lead, array $viewer): array
+    /**
+     * El estudio del que va el correo: el pedido (tiene que ser uno de los suyos)
+     * o, si no se dice, el primero que aún no ha recibido; null si no tiene ninguno.
+     */
+    private function chosenStudy(array $lead, ?int $studyId): ?array
     {
         $studies = $lead['estudios'] ?? [];
+        if ($studyId !== null) {
+            foreach ($studies as $study) {
+                if ((int) $study['id'] === $studyId) {
+                    return $study;
+                }
+            }
+            throw new \InvalidArgumentException('Ese estudio no está entre los que le interesan a este lead');
+        }
+        foreach ($studies as $study) {
+            if ($this->mails->lastSentAt((int) $lead['id'], (int) $study['id']) === null) {
+                return $study;
+            }
+        }
+
+        return $studies[0] ?? null;
+    }
+
+    /**
+     * Un solo estudio por correo: su plantilla y su dossier.
+     *
+     * @return array{0: Message, 1: list<int>} el correo (sin adjuntos) y los ids de sus adjuntos
+     */
+    private function compose(array $lead, array $viewer, ?array $study): array
+    {
+        $studies = $study === null ? [] : [$study];
         $names = array_column($studies, 'nombre');
         $sender = Input::text($viewer, 'nombre', 'Equipo de admisiones');
         $variables = [
@@ -265,7 +312,7 @@ final class MailService
         ];
         $variables['estudio'] = $variables['estudios'];
 
-        // Sin estudio: correo propio. Uno: el del estudio. Varios (o sin plantilla): la genérica con sus bloques.
+        // Sin estudio: correo propio. Con estudio: el suyo o, si no tiene plantilla, la genérica.
         $specific = match (count($studies)) {
             0 => $this->mails->templateByKey(MailRepository::NO_STUDY),
             1 => $this->mails->templateFor((int) $studies[0]['id']),

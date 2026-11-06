@@ -38,6 +38,7 @@ function LeadRowView({ lead, onOpen, onChanged, onFollowUp }) {
   }
 
   const location = [lead.ubicacion, lead.origenLabel].filter(Boolean).join(' · ')
+  const note = lastNote(lead)
   const scheduled = lead.llamadaAgendada && (
     <span className="ed-lead__scheduled"><Icon name="calendar" size={11} /> Llamar {formatRelativeTime(lead.llamadaAgendada)}</span>
   )
@@ -129,6 +130,15 @@ function LeadRowView({ lead, onOpen, onChanged, onFollowUp }) {
         )}
       </div>
 
+      {note && (
+        <button type="button" className="ed-lead__note" data-kind={note.kind} onClick={onOpen}
+          title={`${note.text}\n\n${note.meta}`} aria-label={`Última nota de ${displayName(lead)}: ${note.text}`}>
+          <Icon name="note" size={14} />
+          <span className="ed-lead__note-text">{note.text}</span>
+          <span className="ed-lead__note-meta">{note.meta}</span>
+        </button>
+      )}
+
       {calling && (
         <CallMenu
           lead={lead}
@@ -146,6 +156,21 @@ function LeadRowView({ lead, onOpen, onChanged, onFollowUp }) {
       )}
     </article>
   )
+}
+
+/**
+ * Lo último que se escribió del lead, para verlo sin abrir la ficha: la última
+ * nota (o comentario al registrar una llamada, cita…) o, si no hay ninguna,
+ * los comentarios con los que llegó.
+ */
+function lastNote(lead) {
+  const note = lead.ultimaNota
+  if (note?.texto) {
+    const meta = [note.usuario, formatRelative(note.fecha), note.contexto].filter(Boolean).join(' · ')
+    return { kind: 'nota', text: note.texto, meta }
+  }
+  const comments = (lead.comentarios || '').trim()
+  return comments ? { kind: 'comentario', text: comments, meta: 'Comentario del alta' } : null
 }
 
 export const LeadRow = memo(LeadRowView)

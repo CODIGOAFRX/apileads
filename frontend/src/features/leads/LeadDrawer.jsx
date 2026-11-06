@@ -197,7 +197,11 @@ export function LeadDrawer({ id, section, onClose, onChanged }) {
           }} />
       )}
       {FOLLOW_UPS.includes(dialog) && (
-        <FollowUp type={dialog} lead={lead} section={section} onClose={() => setDialog(null)} onSent={(updated) => apply(updated)} />
+        <FollowUp type={dialog} lead={lead} section={section} onClose={() => setDialog(null)} onSent={(updated) => apply(updated)}
+          onProgress={(updated) => {
+            setLead(updated)
+            onChanged(updated)
+          }} />
       )}
       {dialog === 'editar' && (
         <LeadFormModal lead={lead} section={section} onClose={() => setDialog(null)} onSaved={(updated) => apply(updated)} />

@@ -18,14 +18,17 @@ function preview(overrides = {}) {
   return {
     de: 'marta@estaciondiseno.es', para: 'eva@example.com', asunto: 'Información', html: '<p>Hola Eva</p>',
     adjuntos: [{ id: 1, nombre: 'Dossier Grado Diseño Gráfico 26-27.pdf', tamano: 771692 }],
-    ultimoEnvio: null, esperaSegundos: 0, intervaloSegundos: 72, simulado: false, ...overrides,
+    ultimoEnvio: null, esperaSegundos: 0, intervaloSegundos: 72, simulado: false,
+    estudioId: 2, estudios: [{ id: 2, nombre: 'Grado Diseño Gráfico', color: '#F2C94C', ultimoEnvio: null }], ultimoEnvioEstudio: null,
+    ...overrides,
   }
 }
 
-function open() {
+function open(lead = LEAD) {
   const onSent = vi.fn()
-  renderWithApp(<MailModal lead={LEAD} section="pendientes" onClose={() => {}} onSent={onSent} />)
-  return { onSent, user: userEvent.setup() }
+  const onProgress = vi.fn()
+  renderWithApp(<MailModal lead={lead} section="pendientes" onClose={() => {}} onSent={onSent} onProgress={onProgress} />)
+  return { onSent, onProgress, user: userEvent.setup() }
 }
 
 describe('Enviar información por correo', () => {
@@ -75,9 +78,9 @@ describe('Enviar información por correo', () => {
     const { user, onSent } = open()
     await user.click(await screen.findByRole('button', { name: /Enviar correo/ }))
 
-    expect(leadsApi.sendMail).toHaveBeenCalledWith(7, undefined, undefined)
+    expect(leadsApi.sendMail).toHaveBeenCalledWith(7, undefined, undefined, 2)
     expect(onSent).toHaveBeenCalledWith({ id: 7, envio: { simulado: false, aviso: null } })
-    expect(await screen.findByText('Información enviada a eva@example.com')).toBeTruthy()
+    expect(await screen.findByText('Enviada la información de Grado Diseño Gráfico a eva@example.com')).toBeTruthy()
   })
 
   it('un error del servidor se muestra y se puede reintentar', async () => {
@@ -88,5 +91,38 @@ describe('Enviar información por correo', () => {
 
     expect((await screen.findByRole('alert')).textContent).toMatch(/Connection refused/)
     expect(screen.getByRole('button', { name: /Enviar correo/ }).disabled).toBe(false)
+  })
+
+  it('con dos estudios se elige de cuál va y, tras enviarlo, propone el otro en otro correo', async () => {
+    const MODA = { id: 1, nombre: 'Grado Diseño Moda', color: '#E8A0BF', ultimoEnvio: null }
+    const GRAFICO = { id: 2, nombre: 'Grado Diseño Gráfico', color: '#F2C94C', ultimoEnvio: null }
+    const moda = (extra = {}) => preview({
+      estudioId: 1, estudios: [MODA, GRAFICO], adjuntos: [{ id: 3, nombre: 'Dossier Grado Diseño de Moda 26-27.pdf', tamano: 1000 }], ...extra,
+    })
+    const grafico = () => preview({ estudioId: 2, estudios: [MODA, GRAFICO] })
+    leadsApi.mailPreview.mockImplementation((id, estudioId) => Promise.resolve(estudioId === 2 ? grafico() : moda()))
+    leadsApi.sendMail.mockResolvedValue({ id: 7, envio: { simulado: false, aviso: null } })
+    const { user, onSent, onProgress } = open({ ...LEAD, estudios: [{ id: 1 }, { id: 2 }] })
+
+    // Propone el primero; se cambia al otro y carga su correo y su dossier.
+    expect(await screen.findByText(/Dossier Grado Diseño de Moda/)).toBeTruthy()
+    expect(screen.getByRole('radio', { name: /Grado Diseño Moda/ }).getAttribute('aria-checked')).toBe('true')
+    await user.click(screen.getByRole('radio', { name: /Grado Diseño Gráfico/ }))
+    expect(await screen.findByText(/Dossier Grado Diseño Gráfico/)).toBeTruthy()
+    expect(leadsApi.mailPreview).toHaveBeenLastCalledWith(7, 2)
+
+    // Se envía el de Gráfico: la ventana sigue abierta con el de Moda, esperando su turno.
+    leadsApi.mailPreview.mockImplementation(() => Promise.resolve(moda({
+      estudios: [MODA, { ...GRAFICO, ultimoEnvio: '2026-09-15T10:00:00+02:00' }], esperaSegundos: 72,
+    })))
+    await user.click(screen.getByRole('button', { name: /Enviar Grado Diseño Gráfico/ }))
+    expect(leadsApi.sendMail).toHaveBeenCalledWith(7, undefined, undefined, 2)
+    expect(onProgress).toHaveBeenCalledWith({ id: 7, envio: { simulado: false, aviso: null } })
+    expect(onSent).not.toHaveBeenCalled()
+    expect(await screen.findByText(/Dossier Grado Diseño de Moda/)).toBeTruthy()
+    expect(leadsApi.mailPreview).toHaveBeenLastCalledWith(7, 1)
+    expect(document.querySelector('.ed-mailstudy__sent')?.textContent).toMatch(/enviado/)
+    expect(screen.getByRole('button', { name: /Enviar en (72|71) s/ }).disabled).toBe(true)
+    expect(screen.getByRole('button', { name: 'Terminar' })).toBeTruthy()
   })
 })

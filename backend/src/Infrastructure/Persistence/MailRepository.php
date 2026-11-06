@@ -123,11 +123,24 @@ final class MailRepository extends BaseRepository
         $this->execute('DELETE FROM adjunto WHERE id NOT IN (SELECT adjunto_id FROM plantilla_correo WHERE adjunto_id IS NOT NULL)');
     }
 
-    /** $simulated: MAIL_TRANSPORT=log, no ha salido de verdad (no cuenta como enviado). */
-    public function logDelivery(int $leadId, ?int $userId, string $to, string $subject, ?string $error, DateTimeImmutable $at, ?string $from = null, bool $simulated = false): void
-    {
+    /**
+     * $simulated: MAIL_TRANSPORT=log, no ha salido de verdad (no cuenta como enviado).
+     * $studyId: el estudio del que iba el correo (null: sin estudio).
+     */
+    public function logDelivery(
+        int $leadId,
+        ?int $userId,
+        string $to,
+        string $subject,
+        ?string $error,
+        DateTimeImmutable $at,
+        ?string $from = null,
+        bool $simulated = false,
+        ?int $studyId = null,
+    ): void {
         $this->insert('envio_correo', [
             'lead_id' => $leadId,
+            'estudio_id' => $studyId,
             'usuario_id' => $userId,
             'remitente' => $from,
             'destinatario' => $to,
@@ -138,22 +151,32 @@ final class MailRepository extends BaseRepository
         ]);
     }
 
-    public function countSentTo(int $leadId, DateTimeImmutable $since): int
+    /** Correos enviados bien a este lead desde $since; con $studyId, solo los de ese estudio. */
+    public function countSentTo(int $leadId, DateTimeImmutable $since, ?int $studyId = null): int
     {
+        [$study, $params] = self::studyFilter($studyId);
+
         return (int) $this->scalar(
-            "SELECT COUNT(*) FROM envio_correo WHERE lead_id = :id AND estado = 'ENVIADO' AND creado_en >= :since",
-            ['id' => $leadId, 'since' => DbTime::toDb($since)]
+            "SELECT COUNT(*) FROM envio_correo WHERE lead_id = :id AND estado = 'ENVIADO' AND creado_en >= :since{$study}",
+            ['id' => $leadId, 'since' => DbTime::toDb($since)] + $params
         );
     }
 
-    /** Fecha (API) del último correo enviado bien a este lead, o null. */
-    public function lastSentAt(int $leadId): ?string
+    /** Fecha (API) del último correo enviado bien a este lead (con $studyId, de ese estudio), o null. */
+    public function lastSentAt(int $leadId, ?int $studyId = null): ?string
     {
+        [$study, $params] = self::studyFilter($studyId);
         $value = $this->scalar(
-            "SELECT MAX(creado_en) FROM envio_correo WHERE lead_id = :id AND estado = 'ENVIADO'",
-            ['id' => $leadId]
+            "SELECT MAX(creado_en) FROM envio_correo WHERE lead_id = :id AND estado = 'ENVIADO'{$study}",
+            ['id' => $leadId] + $params
         );
 
         return DbTime::toApi($value === null ? null : (string) $value);
+    }
+
+    /** @return array{0: string, 1: array<string, int>} */
+    private static function studyFilter(?int $studyId): array
+    {
+        return $studyId === null ? ['', []] : [' AND estudio_id = :estudio', ['estudio' => $studyId]];
     }
 }

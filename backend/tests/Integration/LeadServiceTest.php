@@ -318,4 +318,32 @@ Soy Marta, de ESTACIÓN DISEÑO, Escuela Superior de Diseño y Artes Visuales de
         self::assertSame([], $service->reminders($this->comercial)['llamadas']);
         self::assertNull($this->pdo->query("SELECT agendada_por FROM leads WHERE id = {$id}")->fetchColumn());
     }
+
+    public function testCadaLeadMuestraLaUltimaNotaEscrita(): void
+    {
+        $service = $this->app->leads();
+        $id = $this->lead(['nombre' => 'Eva', 'telefono' => '612345678', 'estudioIds' => [2]]);
+        $otro = $this->lead(['nombre' => 'Luis', 'telefono' => '633444555']);
+        self::assertNull($service->get($id, $this->comercial)['ultimaNota'], 'sin notas todavía');
+
+        $service->addNote($id, 'Le interesa más el máster', $this->comercial);
+        $this->clock->advance('+1 minute');
+        $service->registerCall($id, 'NO_CONTESTA', 'Llamar por la tarde, trabaja de mañanas', $this->comercial);
+        $this->clock->advance('+1 minute');
+        $service->registerCall($id, 'NO_CONTESTA', null, $this->comercial);
+
+        // La llamada sin comentario no tapa la última nota escrita.
+        $note = $service->get($id, $this->comercial)['ultimaNota'];
+        self::assertIsArray($note);
+        self::assertSame('Llamar por la tarde, trabaja de mañanas', $note['texto']);
+        self::assertSame(['LLAMADA', 'Marta Comercial'], [$note['tipo'], $note['usuario']]);
+        self::assertNotNull($note['contexto']);
+
+        $long = str_repeat('Viene con su madre el jueves. ', 12);
+        $service->addNote($id, $long, $this->comercial);
+        $items = array_column($service->search(['bandeja' => 'todos'], $this->comercial)['items'], null, 'id');
+        self::assertSame(trim($long), $items[$id]['ultimaNota']['texto'], 'la nota larga, entera');
+        self::assertNull($items[$id]['ultimaNota']['contexto']);
+        self::assertNull($items[$otro]['ultimaNota'], 'cada lead, la suya');
+    }
 }

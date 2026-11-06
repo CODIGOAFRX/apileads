@@ -5,16 +5,18 @@ import { Modal } from '../../components/Modal.jsx'
 import { useToast } from '../../components/Toasts.jsx'
 import { Alert, Loading, Spinner } from '../../components/ui.jsx'
 import { EditableHtml, HtmlPreview } from '../../components/HtmlPreview.jsx'
-import { formatBytes, formatDateTime, plural } from '../../lib/format.js'
+import { formatBytes, formatDateTime, formatRelative, plural } from '../../lib/format.js'
 import { displayName } from '../../lib/leads.js'
 
 /**
  * Paso siguiente tras una acción (ver followUpAfter): «mail», «whatsapp» o
  * «mail-whatsapp» (tras no contesta: correo y, al aceptarlo, WhatsApp).
+ * onProgress: el lead ha cambiado pero la ventana sigue abierta (p. ej. tras
+ * mandar el correo de un estudio, queda el del otro).
  */
-export function FollowUp({ type, lead, section, onClose, onSent }) {
+export function FollowUp({ type, lead, section, onClose, onSent, onProgress }) {
   if (type === 'whatsapp') return <WhatsappModal lead={lead} section={section} onClose={onClose} />
-  return <MailModal lead={lead} section={section} andWhatsapp={type === 'mail-whatsapp'} onClose={onClose} onSent={onSent} />
+  return <MailModal lead={lead} section={section} andWhatsapp={type === 'mail-whatsapp'} onClose={onClose} onSent={onSent} onProgress={onProgress} />
 }
 
 function openWhatsapp(lead) {
@@ -34,15 +36,24 @@ function useCountdown() {
 }
 
 /**
- * Vista previa y envío del correo de información según los estudios del lead.
+ * Vista previa y envío del correo de información. Un correo por estudio: si el
+ * lead tiene varios, la comercial elige de cuál le escribe y, al enviarlo, la
+ * ventana pasa al siguiente que aún no ha recibido (en otro correo, con su dossier).
  * Con «andWhatsapp», al aceptar se abre también WhatsApp. Se abre en el mismo
  * clic (antes de esperar al envío) para que el navegador no lo bloquee.
  * Toda la aplicación envía como mucho un correo cada 72 s: si no toca, el
  * botón muestra cuánto falta (no se encola nada).
  */
-export function MailModal({ lead, section, onClose, onSent, andWhatsapp = false }) {
+export function MailModal({ lead, section, onClose, onSent, onProgress, andWhatsapp = false }) {
   const toast = useToast()
   const [preview, setPreview] = useState(null)
+  // Estudio elegido (null = el que proponga el servidor) y sus estudios, que no
+  // desaparecen mientras se carga el correo de otro.
+  const [studyId, setStudyId] = useState(null)
+  const [studies, setStudies] = useState([])
+  // Estudios mandados desde esta ventana (también los simulados, que no constan como enviados).
+  const [sentIds, setSentIds] = useState([])
+  const sentCount = sentIds.length
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
   const [whatsappOpened, setWhatsappOpened] = useState(false)
@@ -52,24 +63,39 @@ export function MailModal({ lead, section, onClose, onSent, andWhatsapp = false 
   const [version, setVersion] = useState(0)
   const [wait, setWait] = useCountdown()
   const edited = (subject !== null && subject !== preview?.asunto) || html !== null
+  const several = studies.length > 1
+  const current = studies.find((s) => s.id === preview?.estudioId)
 
   useEffect(() => {
-    leadsApi.mailPreview(lead.id)
+    let alive = true
+    leadsApi.mailPreview(lead.id, studyId)
       .then((data) => {
+        if (!alive) return
         setPreview(data)
-        setWait(data.esperaSegundos || 0)
+        setStudies(data.estudios || [])
+        setWait((w) => Math.max(w, data.esperaSegundos || 0))
       })
-      .catch((err) => setError(err.message))
-  }, [lead.id, setWait])
+      .catch((err) => alive && setError(err.message))
+    return () => { alive = false }
+  }, [lead.id, studyId, setWait])
 
-  const undoChanges = () => {
+  const resetChanges = () => {
     setSubject(null)
     setHtml(null)
     setVersion((v) => v + 1)
   }
 
+  const chooseStudy = (id) => {
+    if (sending || !preview || id === preview.estudioId) return
+    if (edited && !window.confirm('Has retocado este correo. Si cambias de estudio se pierden los cambios. ¿Seguir?')) return
+    setPreview(null)
+    setError('')
+    resetChanges()
+    setStudyId(id)
+  }
+
   const send = async () => {
-    if (wait > 0) return
+    if (wait > 0 || !preview) return
     if (andWhatsapp && !whatsappOpened) {
       openWhatsapp(lead)
       setWhatsappOpened(true)
@@ -81,13 +107,29 @@ export function MailModal({ lead, section, onClose, onSent, andWhatsapp = false 
         lead.id,
         subject !== null && subject !== preview.asunto ? subject : undefined,
         html ?? undefined,
+        preview.estudioId ?? undefined,
       )
+      const what = current ? `la información de ${current.nombre}` : 'la información'
       if (updated.envio?.simulado) {
         toast.error('Modo pruebas: el correo NO ha salido (MAIL_TRANSPORT=log). Configura tu buzón en Ajustes → Usuarios.')
       } else {
-        toast.ok(`Información enviada a ${preview.para}`)
+        toast.ok(`Enviada ${what} a ${preview.para}`)
       }
       if (updated.envio?.aviso) toast.info(updated.envio.aviso)
+
+      // ¿Le queda algún estudio sin recibir? Se queda abierta con el siguiente.
+      const done = [...sentIds, preview.estudioId]
+      const next = studies.find((s) => !done.includes(s.id) && !s.ultimoEnvio)
+      if (next) {
+        onProgress?.(updated)
+        setSentIds(done)
+        setSending(false)
+        setWait((w) => Math.max(w, preview.intervaloSegundos || 72))
+        setPreview(null)
+        resetChanges()
+        setStudyId(next.id)
+        return
+      }
       onSent(updated)
     } catch (err) {
       // Otra comercial acaba de enviar uno: se muestra la cuenta atrás, no un error.
@@ -102,26 +144,27 @@ export function MailModal({ lead, section, onClose, onSent, andWhatsapp = false 
     onClose()
   }
 
-  const footer = !andWhatsapp ? (
+  const sendLabel = several && current ? `Enviar ${current.nombre}` : 'Enviar correo'
+  const sendButton = (label, autofocus) => (
+    <button type="button" className="ed-btn ed-btn--solid" onClick={send} disabled={!preview || sending || wait > 0} data-autofocus={autofocus || undefined}>
+      {sending ? <Spinner /> : <Icon name={wait > 0 ? 'clock' : 'send'} size={14} />} {wait > 0 ? `Enviar en ${wait} s` : label}
+    </button>
+  )
+
+  const footer = !andWhatsapp || sentCount > 0 ? (
     <>
-      <button type="button" className="ed-btn" onClick={onClose}>Ahora no</button>
-      <button type="button" className="ed-btn ed-btn--solid" onClick={send} disabled={!preview || sending || wait > 0} data-autofocus>
-        {sending ? <Spinner /> : <Icon name={wait > 0 ? 'clock' : 'send'} size={14} />} {wait > 0 ? `Enviar en ${wait} s` : 'Enviar correo'}
-      </button>
+      <button type="button" className="ed-btn" onClick={onClose}>{sentCount > 0 ? 'Terminar' : 'Ahora no'}</button>
+      {sendButton(sendLabel, true)}
     </>
   ) : whatsappOpened ? (
     <>
       <button type="button" className="ed-btn" onClick={onClose}>Cerrar</button>
-      <button type="button" className="ed-btn ed-btn--solid" onClick={send} disabled={!preview || sending || wait > 0}>
-        {sending ? <Spinner /> : <Icon name={wait > 0 ? 'clock' : 'send'} size={14} />} {wait > 0 ? `Reintentar en ${wait} s` : 'Reintentar envío'}
-      </button>
+      {sendButton('Reintentar envío')}
     </>
   ) : (
     <>
       <button type="button" className="ed-btn" onClick={onlyWhatsapp}><Icon name="whatsapp" size={14} /> Solo WhatsApp</button>
-      <button type="button" className="ed-btn ed-btn--solid" onClick={send} disabled={!preview || sending || wait > 0} data-autofocus>
-        {sending ? <Spinner /> : <Icon name={wait > 0 ? 'clock' : 'send'} size={14} />} {wait > 0 ? `Enviar en ${wait} s` : 'Enviar y abrir WhatsApp'}
-      </button>
+      {sendButton(several && current ? `Enviar ${current.nombre} y abrir WhatsApp` : 'Enviar y abrir WhatsApp', true)}
     </>
   )
 
@@ -135,6 +178,31 @@ export function MailModal({ lead, section, onClose, onSent, andWhatsapp = false 
       footer={footer}
     >
       {error && <Alert tone="error">{error}</Alert>}
+      {several && (
+        <div className="ed-mailstudy">
+          <div className="ed-mailstudy__head">
+            <span className="ed-label">¿De qué estudio le escribes?</span>
+            <span className="ed-hint">Le interesan {studies.length}: cada uno va en su propio correo, con su dossier.</span>
+          </div>
+          <div className="ed-studypick ed-mailstudy__pick" role="radiogroup" aria-label="Estudio del correo">
+            {studies.map((study) => {
+              const selected = study.id === (preview?.estudioId ?? studyId)
+              return (
+                <button key={study.id} type="button" role="radio" aria-checked={selected} aria-pressed={selected}
+                  style={{ '--sc': study.color || undefined }} disabled={sending} onClick={() => chooseStudy(study.id)}>
+                  <span className="ed-chip__dot" style={{ background: study.color || undefined }} />
+                  {study.nombre}
+                  {study.ultimoEnvio && (
+                    <span className="ed-mailstudy__sent" title={`Enviado el ${formatDateTime(study.ultimoEnvio)}`}>
+                      <Icon name="check" size={11} strokeWidth={3} /> enviado {formatRelative(study.ultimoEnvio)}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
       {!preview && !error && <Loading>Preparando el correo…</Loading>}
       {preview && (
         <div className="ed-stack">
@@ -157,7 +225,7 @@ export function MailModal({ lead, section, onClose, onSent, andWhatsapp = false 
                     </button>
                   ))}
                 </span>
-              ) : <span className="ed-muted">Sin dossier</span>}
+              ) : <span className="ed-muted">Sin dossier{current ? ` (${current.nombre} no tiene dossier propio)` : ''}</span>}
             </dd>
           </dl>
           {preview.simulado && (
@@ -171,11 +239,13 @@ export function MailModal({ lead, section, onClose, onSent, andWhatsapp = false 
               Para que no nos marquen como spam, la aplicación envía como mucho un correo cada {preview.intervaloSegundos} segundos. Podrás enviar este en {wait} s.
             </Alert>
           )}
-          {preview.ultimoEnvio && <Alert>Ya se le envió información el {formatDateTime(preview.ultimoEnvio)}.</Alert>}
+          {preview.ultimoEnvioEstudio
+            ? <Alert>Ya se le envió la información de {current?.nombre ?? 'este estudio'} el {formatDateTime(preview.ultimoEnvioEstudio)}.</Alert>
+            : preview.ultimoEnvio && !several && <Alert>Ya se le envió información el {formatDateTime(preview.ultimoEnvio)}.</Alert>}
           <div className="ed-row ed-row--between">
             <span className="ed-hint">Puedes escribir en el correo (p. ej. «la matrícula cierra el viernes»): el cambio solo vale para este envío.</span>
             {edited && (
-              <button type="button" className="ed-btn ed-btn--sm ed-btn--ghost" onClick={undoChanges}>
+              <button type="button" className="ed-btn ed-btn--sm ed-btn--ghost" onClick={resetChanges}>
                 <Icon name="reopen" size={13} /> Deshacer cambios
               </button>
             )}

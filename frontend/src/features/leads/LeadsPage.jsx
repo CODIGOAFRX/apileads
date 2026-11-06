@@ -217,7 +217,7 @@ export function LeadsPage({ openLeadId = null, onLeadOpened } = {}) {
       )}
       {followUp && (
         <FollowUp type={followUp.type} lead={followUp.lead} section={inbox} onClose={() => setFollowUp(null)}
-          onSent={(lead) => { setFollowUp(null); onLeadChanged(lead) }} />
+          onSent={(lead) => { setFollowUp(null); onLeadChanged(lead) }} onProgress={(lead) => onLeadChanged(lead)} />
       )}
       {creating && (
         <LeadFormModal

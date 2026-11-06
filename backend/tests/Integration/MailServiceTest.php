@@ -30,29 +30,45 @@ final class MailServiceTest extends DatabaseTestCase
         self::assertSame('CORREO', $lead['historial'][0]['tipo']);
     }
 
-    public function testConVariosEstudiosUsaLaGenericaConLosBloques(): void
+    public function testConVariosEstudiosSeEligeDeCualVaCadaCorreo(): void
     {
         $mail = $this->app->mail();
-        $mail->saveTemplate(1, 'no se usa', '<p>Bloque moda</p>');
-        $id = $this->lead(['email' => 'anon@example.com', 'estudioIds' => [1, 2]]);
+        $id = $this->lead(['nombre' => 'Eva', 'email' => 'eva@example.com', 'estudioIds' => [1, 2]]);
 
+        // Por defecto, el primero; cada correo lleva solo su texto y su dossier.
         $preview = $mail->preview($id, $this->comercial);
+        self::assertSame(1, $preview['estudioId']);
+        self::assertSame([[1, null], [2, null]], array_map(static fn (array $s): array => [$s['id'], $s['ultimoEnvio']], $preview['estudios']));
+        self::assertSame(['Dossier Grado Diseño de Moda 26-27.pdf'], array_column($preview['adjuntos'], 'nombre'));
 
-        self::assertSame('Información sobre Grado Diseño Moda y Grado Diseño Gráfico · Estación Diseño', $preview['asunto']);
-        self::assertStringStartsWith('<p>Buenos días:</p>', $preview['html'], 'sin nombre no queda "Buenos días, :"');
-        self::assertStringContainsString('Soy Marta, del departamento', $preview['html']);
-        // Sin marcas de bloque: la plantilla entera con el nombre del estudio como título.
-        self::assertStringContainsString('<h3 style="margin:24px 0 8px">Grado Diseño Moda</h3><p>Bloque moda</p>', $preview['html']);
-        // Con marcas: solo lo de dentro (sin su saludo ni su firma).
-        self::assertStringContainsString('GRADO EN DISEÑO GRÁFICO</h2>', $preview['html']);
-        self::assertStringNotContainsString('sobre nuestro <strong>Grado en Diseño Gráfico', $preview['html']);
-        self::assertSame(1, substr_count($preview['html'], 'Dpto. de Información y Asesoramiento'));
-        self::assertStringNotContainsString('{{', $preview['html']);
-        // Un dossier por estudio.
-        self::assertSame(
-            ['Dossier Grado Diseño de Moda 26-27.pdf', 'Dossier Grado Diseño Gráfico 26-27.pdf'],
-            array_column($preview['adjuntos'], 'nombre'),
-        );
+        $grafico = $mail->preview($id, $this->comercial, 2);
+        self::assertSame(['Dossier Grado Diseño Gráfico 26-27.pdf'], array_column($grafico['adjuntos'], 'nombre'));
+        self::assertStringContainsString('Grado en Diseño Gráfico', $grafico['html']);
+
+        // Se le manda el de Gráfico y, después y en otro correo, el de Moda.
+        $lead = $mail->sendInfo($id, $this->comercial, null, null, 2);
+        self::assertSame('Grado Diseño Gráfico', $lead['historial'][0]['detalle']['estudio']);
+        $next = $mail->preview($id, $this->comercial);
+        self::assertSame(1, $next['estudioId'], 'propone el que aún no ha recibido');
+        self::assertNotNull($next['estudios'][1]['ultimoEnvio']);
+        self::assertStringNotContainsString('¿cómo nos has conocido?', $next['html'], 'la pregunta solo va en el primero');
+
+        $this->clock->advance('+72 seconds'); // el turno de envío de toda la aplicación
+        $mail->sendInfo($id, $this->comercial, null, null, 1);
+        self::assertCount(2, $this->mailer->sent);
+        self::assertSame(['Dossier Grado Diseño Gráfico 26-27.pdf'], array_map(static fn ($a): string => $a->name, $this->mailer->sent[0]->attachments));
+        self::assertSame(['Dossier Grado Diseño de Moda 26-27.pdf'], array_map(static fn ($a): string => $a->name, $this->mailer->sent[1]->attachments));
+
+        // El doble clic sí se frena en el mismo estudio.
+        try {
+            $mail->sendInfo($id, $this->comercial, null, null, 1);
+            self::fail('Debía bloquear el reenvío inmediato del mismo estudio');
+        } catch (HttpException $e) {
+            self::assertSame(409, $e->status());
+        }
+
+        $this->expectException(\InvalidArgumentException::class);
+        $mail->preview($id, $this->comercial, 5);
     }
 
     public function testElCorreoDeUnEstudioLlevaSuTextoYSuDossier(): void

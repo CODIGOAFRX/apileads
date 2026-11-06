@@ -486,6 +486,36 @@ a { color: inherit; }
 .ed-lead__line svg { flex: none; color: var(--mute); }
 .ed-lead__invalid { color: #B3261E; }
 
+/* Última nota del lead: ocupa todo el ancho de la fila, como un pósit. */
+.ed-lead__note {
+  grid-column: 1 / -1;
+  display: flex; align-items: flex-start; gap: 8px; min-width: 0;
+  width: 100%; margin: 0; padding: 7px 12px;
+  background: var(--yellow); color: var(--ink);
+  border: 1.5px solid var(--ink); border-radius: var(--r-field);
+  font: inherit; font-size: 13px; line-height: 1.35; text-align: left; cursor: pointer;
+}
+.ed-lead__note svg { flex: none; margin-top: 1px; }
+.ed-lead__note-text {
+  flex: 1; min-width: 0; font-weight: 600; white-space: pre-line;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-clamp: 2; overflow: hidden;
+}
+.ed-lead__note-meta { flex: none; max-width: 40%; font-size: 12px; color: rgba(31, 32, 29, .7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Sin notas: lo que escribió al dejar sus datos, más discreto. */
+.ed-lead__note[data-kind="comentario"] { background: var(--bone); border-color: var(--hair); }
+.ed-lead__note[data-kind="comentario"] .ed-lead__note-text { font-weight: 500; }
+@media (max-width: 640px) {
+  .ed-lead__note { flex-wrap: wrap; }
+  .ed-lead__note-meta { max-width: none; flex-basis: 100%; padding-left: 22px; }
+}
+
+/* Correo de un lead con varios estudios: de cuál va este correo. */
+.ed-mailstudy { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; padding: 12px 14px; border: var(--bw) solid var(--ink); border-radius: var(--r-field); background: var(--bone); }
+.ed-mailstudy__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.ed-mailstudy__pick button { font-size: 13px; padding: 6px 13px 6px 6px; }
+.ed-mailstudy__pick button:disabled { cursor: default; opacity: .7; }
+.ed-mailstudy__sent { display: inline-flex; align-items: center; gap: 3px; margin-left: 4px; padding: 1px 7px; border-radius: 999px; background: var(--ink); color: var(--paper); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+
 /* En el móvil los botones van debajo del nombre: no caben a su lado. */
 @media (max-width: 640px) {
   .ed-lead { grid-template-columns: minmax(0, 1fr); }

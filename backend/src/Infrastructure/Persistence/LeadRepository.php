@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Leads\Infrastructure\Persistence;
 
 use DateTimeImmutable;
+use Leads\Domain\Lead\ActivityType;
 use Leads\Domain\Lead\Company;
 use Leads\Domain\Lead\Inbox;
 use Leads\Domain\Lead\LeadSearch;
@@ -64,7 +65,7 @@ final class LeadRepository extends BaseRepository
             return null;
         }
 
-        return $this->withStudies([$row])[0];
+        return $this->withLastNote($this->withStudies([$row]))[0];
     }
 
     /** Busca un lead existente con el mismo correo o teléfono. */
@@ -171,7 +172,7 @@ final class LeadRepository extends BaseRepository
             $params
         );
 
-        return ['items' => $this->withStudies($rows), 'total' => $total];
+        return ['items' => $this->withLastNote($this->withStudies($rows)), 'total' => $total];
     }
 
     /** Cursor sin paginar para exportaciones. */
@@ -355,6 +356,51 @@ final class LeadRepository extends BaseRepository
         }, self::INBOX_SQL[$inbox]);
 
         return [$sql, $params];
+    }
+
+    /**
+     * Añade a cada fila la última nota que se escribió del lead (una sola consulta):
+     * una nota de la ficha o el comentario que se dejó al registrar una llamada,
+     * una cita, un descarte… null si nadie ha escrito nada.
+     */
+    private function withLastNote(array $rows): array
+    {
+        if ($rows === []) {
+            return [];
+        }
+        [$in, $params] = $this->inClause('ln', array_column($rows, 'id'));
+        $notes = $this->all(
+            "SELECT a.lead_id, a.tipo, a.resumen, a.detalle, a.creado_en, u.nombre AS usuario
+             FROM lead_actividad a LEFT JOIN usuario u ON u.id = a.usuario_id
+             WHERE a.id IN (
+                 SELECT MAX(n.id) FROM lead_actividad n
+                 WHERE n.lead_id IN ({$in}) AND (n.tipo = :ln_tipo OR n.detalle LIKE :ln_json)
+                 GROUP BY n.lead_id
+             )",
+            $params + ['ln_tipo' => ActivityType::NOTA, 'ln_json' => '%"nota":%']
+        );
+        $byLead = [];
+        foreach ($notes as $note) {
+            $detail = $note['detalle'] ? (json_decode((string) $note['detalle'], true) ?: []) : [];
+            $isNote = $note['tipo'] === ActivityType::NOTA;
+            $text = trim((string) ($isNote ? ($detail['texto'] ?? $note['resumen']) : ($detail['nota'] ?? '')));
+            if ($text === '') {
+                continue;
+            }
+            $byLead[(int) $note['lead_id']] = [
+                'texto' => $text,
+                'tipo' => $note['tipo'],
+                // De qué iba: «Llamada: no contesta», «Cita agendada»… (nada si es una nota suelta).
+                'contexto' => $isNote ? null : $note['resumen'],
+                'usuario' => $note['usuario'],
+                'fecha' => DbTime::toApi($note['creado_en']),
+            ];
+        }
+        foreach ($rows as &$row) {
+            $row['ultima_nota'] = $byLead[(int) $row['id']] ?? null;
+        }
+
+        return $rows;
     }
 
     /** Añade a cada fila la lista de estudios de interés (una sola consulta). */

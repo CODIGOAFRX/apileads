@@ -131,8 +131,8 @@ final class CatalogServiceTest extends DatabaseTestCase
     public function testElCatalogoIncluyeLosOrigenes(): void
     {
         $catalog = $this->app->catalog()->catalog();
-        self::assertCount(11, $catalog['origenes']);
-        self::assertSame(10, count(array_filter(array_column($catalog['origenes'], 'seleccionable'))));
+        self::assertCount(13, $catalog['origenes']);
+        self::assertSame(12, count(array_filter(array_column($catalog['origenes'], 'seleccionable'))));
     }
 
     public function testUnaComercialCreaUnCursoCortoQueNoExiste(): void

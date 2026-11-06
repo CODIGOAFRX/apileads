@@ -13,7 +13,11 @@ final class MailController extends Controller
 {
     public function preview(Request $request): Response
     {
-        return Response::json($this->app->mail()->preview($request->intParam('id'), $request->user()));
+        return Response::json($this->app->mail()->preview(
+            $request->intParam('id'),
+            $request->user(),
+            $this->optionalId($request->query('estudioId')),
+        ));
     }
 
     public function send(Request $request): Response
@@ -26,6 +30,7 @@ final class MailController extends Controller
             $request->user(),
             is_string($subject) ? Input::toText($subject) : null,
             is_string($html) ? Input::toText($html) : null,
+            $this->optionalId($request->input('estudioId')),
         ));
     }
 
