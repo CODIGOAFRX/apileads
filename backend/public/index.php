@@ -7,6 +7,7 @@ use Leads\Core\Cors;
 use Leads\Core\Env;
 use Leads\Core\Request;
 use Leads\Http\Routes;
+use Leads\Infrastructure\Persistence\Migrator;
 
 $root = dirname(__DIR__);
 require $root . '/vendor/autoload.php';
@@ -25,6 +26,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
 }
 
 $app = new App($root);
+
+// Tras un despliegue, la primera petición aplica las migraciones nuevas: Plesk solo
+// copia los ficheros y nadie tiene que acordarse de lanzar bin/migrate.php.
+try {
+    (new Migrator($app->pdo(), $root . '/database/migrations'))->migrateIfPending();
+} catch (\Throwable $e) {
+    error_log('[apileads] Migraciones pendientes sin aplicar: ' . $e::class . ': ' . $e->getMessage());
+}
+
 $router = Routes::build($app);
 
 try {

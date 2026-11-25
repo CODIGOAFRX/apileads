@@ -494,7 +494,12 @@ final class LeadService
         if ($this->undo === null || $before === null || $after === null || $before === $after) {
             return;
         }
-        $this->undo->record((int) $viewer['id'], $id, $summary, $before, $after, $now);
+        // Deshacer es una ayuda: si falla (p. ej. falta su tabla), el cambio del lead sigue adelante.
+        try {
+            $this->undo->record((int) $viewer['id'], $id, $summary, $before, $after, $now);
+        } catch (\PDOException $e) {
+            error_log('[apileads] No se ha podido guardar para deshacer: ' . $e->getMessage());
+        }
     }
 
     /**

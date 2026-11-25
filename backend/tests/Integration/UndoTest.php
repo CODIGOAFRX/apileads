@@ -8,6 +8,7 @@ use Leads\Core\HttpException;
 use Leads\Core\Request;
 use Leads\Core\Response;
 use Leads\Http\Routes;
+use Leads\Infrastructure\Persistence\Migrator;
 
 final class UndoTest extends DatabaseTestCase
 {
@@ -170,6 +171,41 @@ final class UndoTest extends DatabaseTestCase
         self::assertSame(200, $this->call('POST', '/api/deshacer', $token)->status());
         self::assertSame(200, $this->call('POST', '/api/rehacer', $token)->status());
         self::assertSame(422, $this->call('POST', '/api/rehacer', $token)->status(), 'no queda nada que rehacer');
+    }
+
+    public function testSinLaTablaDeDeshacerLasAccionesSiguenFuncionando(): void
+    {
+        // Lo que pasó en producción: código nuevo desplegado y la migración sin aplicar.
+        $this->pdo->exec('DROP TABLE deshacer');
+        $log = ini_set('error_log', tempnam(sys_get_temp_dir(), 'leads'));
+        try {
+            $id = $this->lead(['nombre' => 'Eva', 'telefono' => '612345678']);
+            $lead = $this->app->leads()->scheduleCall($id, '2026-09-18T08:00', null, $this->comercial);
+            self::assertNotNull($lead['llamadaAgendada']);
+            self::assertSame('NUEVO', $this->app->leads()->cancelScheduledCall($id, $this->comercial)['estado']);
+        } finally {
+            ini_set('error_log', (string) $log);
+        }
+
+        $done = (new Migrator($this->pdo, dirname(__DIR__, 2) . '/database/migrations'))->migrateIfPending();
+        self::assertSame([], $done, 'la migración consta como hecha aunque se borrara la tabla');
+    }
+
+    public function testLaPrimeraPeticionTrasDesplegarAplicaLasMigracionesNuevas(): void
+    {
+        $migrator = new Migrator($this->pdo, dirname(__DIR__, 2) . '/database/migrations');
+        self::assertSame([], $migrator->pending());
+        self::assertSame([], $migrator->migrateIfPending());
+
+        $this->pdo->exec('DROP TABLE deshacer');
+        $this->pdo->exec("DELETE FROM migracion WHERE nombre = '2026_11_25_000016_deshacer'");
+        self::assertSame(['2026_11_25_000016_deshacer'], $migrator->pending());
+        self::assertSame(['2026_11_25_000016_deshacer'], $migrator->migrateIfPending());
+        self::assertSame([], $migrator->pending());
+
+        $id = $this->lead(['nombre' => 'Eva', 'telefono' => '612345678']);
+        $this->app->leads()->scheduleCall($id, '2026-09-18T08:00', null, $this->comercial);
+        self::assertNotNull($this->app->leads()->undoState($this->comercial)['deshacer']);
     }
 
     private function call(string $method, string $path, string $token, array $body = []): Response

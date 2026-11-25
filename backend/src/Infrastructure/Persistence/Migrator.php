@@ -19,6 +19,52 @@ final class Migrator
     ) {
     }
 
+    /**
+     * Lo que se hace en cada petición: si el despliegue ha traído migraciones nuevas,
+     * las aplica. Si no hay ninguna, cuesta una consulta. En MariaDB, un candado
+     * impide que dos peticiones a la vez apliquen la misma migración.
+     *
+     * @return list<string> nombres de las migraciones aplicadas
+     */
+    public function migrateIfPending(): array
+    {
+        if ($this->pending() === []) {
+            return [];
+        }
+        if (!Dialect::for($this->pdo)->isMysql()) {
+            return $this->migrate();
+        }
+
+        $this->pdo->query("SELECT GET_LOCK('apileads_migraciones', 60)");
+        try {
+            return $this->migrate();
+        } finally {
+            $this->pdo->query("SELECT RELEASE_LOCK('apileads_migraciones')");
+        }
+    }
+
+    /** @return list<string> migraciones que hay en la carpeta y no constan como aplicadas */
+    public function pending(): array
+    {
+        try {
+            $applied = $this->pdo->query('SELECT nombre FROM migracion')->fetchAll(PDO::FETCH_COLUMN);
+        } catch (\PDOException) {
+            $applied = [];
+        }
+        $names = array_map(static fn (string $file): string => basename($file, '.php'), $this->files());
+
+        return array_values(array_diff($names, $applied));
+    }
+
+    /** @return list<string> */
+    private function files(): array
+    {
+        $files = glob(rtrim($this->directory, '/') . '/*.php') ?: [];
+        sort($files);
+
+        return $files;
+    }
+
     /** @return list<string> nombres de las migraciones aplicadas en esta ejecución */
     public function migrate(): array
     {
@@ -28,11 +74,8 @@ final class Migrator
         ));
 
         $applied = $this->pdo->query('SELECT nombre FROM migracion')->fetchAll(PDO::FETCH_COLUMN);
-        $files = glob(rtrim($this->directory, '/') . '/*.php') ?: [];
-        sort($files);
-
         $done = [];
-        foreach ($files as $file) {
+        foreach ($this->files() as $file) {
             $name = basename($file, '.php');
             if (in_array($name, $applied, true)) {
                 continue;

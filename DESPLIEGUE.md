@@ -30,7 +30,9 @@ datos. Plesk tira de esa rama:
   → Git → **Pull ahora** y **Desplegar ahora**.
 - Una sola vez, a mano: `httpdocs/backend/.env` (el `env-produccion` de `_plesk/`) y la base de datos
   (pasos 2 y 3 de abajo). El despliegue no toca el `.env`.
-- Migraciones nuevas: tarea programada con `httpdocs/backend/bin/migrate.php` (paso 7 de «Primera instalación»).
+- Migraciones nuevas: se aplican solas en la primera petición tras el despliegue (`public/index.php`). Si
+  alguna falla, queda en el registro de errores de Plesk con «[apileads] Migraciones» y se puede lanzar a mano
+  la tarea programada con `httpdocs/backend/bin/migrate.php` (paso 7 de «Primera instalación»).
 
 ## Subida a Plesk con el paquete preparado (lo más rápido)
 
@@ -113,8 +115,8 @@ clave del servidor y deja en `_plesk/` (fuera de Git, lleva contraseñas):
 ## Actualizaciones
 
 1. Si cambió el frontend: `cd frontend && npm run build` y sube `frontend/dist`.
-2. Si cambió el backend: sube `backend/src` (y `backend/database` si hay migraciones nuevas; entonces
-   ejecuta de nuevo la tarea del paso 7).
+2. Si cambió el backend: sube `backend/src` (y `backend/database` si hay migraciones nuevas: se aplican solas
+   al entrar en la aplicación; la tarea del paso 7 sigue sirviendo para lanzarlas a mano).
    Los dossieres PDF van dentro de la base de datos (tabla `adjunto`): la migración de correos los carga
    desde `backend/database/correos/`, así que esa carpeta tiene que subirse antes de ejecutarla.
 3. Si cambiaron las dependencias PHP: `composer install --no-dev --optimize-autoloader` y sube `backend/vendor`.
