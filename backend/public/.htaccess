@@ -1,0 +1,5 @@
+# Solo para Docker/local, donde este directorio es la raíz del servidor.
+RewriteEngine On
+SetEnvIf Authorization "(.+)" HTTP_AUTHORIZATION=$1
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [END]
