@@ -60,6 +60,7 @@ final class Routes
         $router->delete('/api/leads/{id}/bloqueo', $c(LeadController::class, 'unlock'));
         $router->post('/api/leads/{id}/llamada', $c(LeadController::class, 'call'));
         $router->post('/api/leads/{id}/llamada-agendada', $c(LeadController::class, 'scheduleCall'));
+        $router->delete('/api/leads/{id}/llamada-agendada', $c(LeadController::class, 'cancelScheduledCall'));
         $router->post('/api/leads/{id}/interesado', $c(LeadController::class, 'interested'));
         $router->post('/api/leads/{id}/cita', $c(LeadController::class, 'appointment'));
         $router->post('/api/leads/{id}/matricula', $c(LeadController::class, 'enroll'));
@@ -69,6 +70,11 @@ final class Routes
         $router->post('/api/leads/{id}/whatsapp', $c(LeadController::class, 'whatsapp'));
         $router->get('/api/leads/{id}/correo', $c(MailController::class, 'preview'));
         $router->post('/api/leads/{id}/correo', $c(MailController::class, 'send'));
+
+        // Deshacer y rehacer el último cambio de un lead (cada usuario, los suyos)
+        $router->get('/api/deshacer', $c(LeadController::class, 'undoState'));
+        $router->post('/api/deshacer', $c(LeadController::class, 'undo'));
+        $router->post('/api/rehacer', $c(LeadController::class, 'redo'));
 
         // Importación
         $router->get('/api/importaciones', $c(ImportController::class, 'history'));

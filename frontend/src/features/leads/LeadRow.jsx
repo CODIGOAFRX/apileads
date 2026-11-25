@@ -6,12 +6,14 @@ import { CompanyTag, Spinner, StatusTag, StudyList } from '../../components/ui.j
 import { formatRelative, formatRelativeTime } from '../../lib/format.js'
 import { displayName, followUp, followUpAfter } from '../../lib/leads.js'
 import { CallMenu } from './CallMenu.jsx'
+import { travel } from '../../components/UndoRedo.jsx'
 
 function LeadRowView({ lead, onOpen, onChanged, onFollowUp }) {
   const toast = useToast()
   const callButton = useRef(null)
   const [calling, setCalling] = useState(false)
   const [marking, setMarking] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
   const can = (action) => lead.acciones.includes(action)
   const lockedByOther = lead.bloqueo && !lead.bloqueo.esMio
 
@@ -34,6 +36,24 @@ function LeadRowView({ lead, onOpen, onChanged, onFollowUp }) {
       toast.error(err)
     } finally {
       setMarking(false)
+    }
+  }
+
+  // Sin confirmación: el aviso trae «Deshacer» por si se pulsa sin querer.
+  const cancelScheduled = async () => {
+    setCancelling(true)
+    try {
+      const updated = await leadsApi.cancelScheduledCall(lead.id)
+      window.dispatchEvent(new CustomEvent('leads:reminders'))
+      onChanged(updated)
+      toast.ok(`Llamada a ${displayName(updated)} cancelada: ya no avisará`, {
+        label: 'Deshacer',
+        onClick: () => travel(false).then((r) => toast.ok(`Deshecho: ${r.descripcion} (${r.nombre})`)).catch(toast.error),
+      })
+    } catch (err) {
+      toast.error(err)
+    } finally {
+      setCancelling(false)
     }
   }
 
@@ -113,6 +133,12 @@ function LeadRowView({ lead, onOpen, onChanged, onFollowUp }) {
           <button type="button" className="ed-icon-btn ed-icon-btn--ok" onClick={markInterested} disabled={marking}
             title="Marcar como interesado (sin llamar)" aria-label={`Marcar a ${displayName(lead)} como interesado`}>
             {marking ? <Spinner /> : <Icon name="check" strokeWidth={3} />}
+          </button>
+        )}
+        {can('cancelar-agendada') && (
+          <button type="button" className="ed-icon-btn ed-icon-btn--danger" onClick={cancelScheduled} disabled={cancelling}
+            title="Cancelar la llamada agendada (ya no hace falta)" aria-label={`Cancelar la llamada agendada con ${displayName(lead)}`}>
+            {cancelling ? <Spinner /> : <Icon name="calendarX" />}
           </button>
         )}
         {can('reabrir') && (

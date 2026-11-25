@@ -72,6 +72,29 @@ final class LeadWorkflow
         );
     }
 
+    /**
+     * La llamada agendada ya no hace falta (p. ej. el lead llamó antes por su cuenta):
+     * deja de avisar. Un interesado sigue en interesados; el resto vuelve a pendientes
+     * para registrar lo que se habló.
+     */
+    public function cancelScheduledCall(LeadState $state): Transition
+    {
+        $this->assertOpen($state);
+        if ($state->scheduledCall === null) {
+            throw new \InvalidArgumentException('Este lead no tiene ninguna llamada agendada');
+        }
+
+        return new Transition(
+            $state->with([
+                'status' => $state->status === LeadStatus::AGENDADO ? LeadStatus::NUEVO : $state->status,
+                'scheduledCall' => null,
+            ]),
+            ActivityType::CAMBIO_ESTADO,
+            'Llamada agendada cancelada (era el ' . $this->calendar->local($state->scheduledCall)->format('d/m/Y \a \l\a\s H:i') . ')',
+            ['cancelada' => $state->scheduledCall->format(DATE_ATOM)],
+        );
+    }
+
     /** Se sabe que le interesa sin haberle llamado (p. ej. ha contestado por WhatsApp). */
     public function markInterested(LeadState $state): Transition
     {

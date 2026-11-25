@@ -25,6 +25,7 @@ use Leads\Infrastructure\Persistence\ActivityRepository;
 use Leads\Infrastructure\Persistence\CatalogRepository;
 use Leads\Infrastructure\Persistence\DbTime;
 use Leads\Infrastructure\Persistence\LeadRepository;
+use Leads\Infrastructure\Persistence\UndoRepository;
 
 /**
  * Casos de uso sobre leads: consulta, alta, edición, flujo de llamadas e ingesta
@@ -35,6 +36,9 @@ final class LeadService
     public const INGEST_CREATED = 'creado';
     public const INGEST_MERGED = 'fusionado';
 
+    /** Hasta cuándo se puede deshacer un cambio (una jornada de trabajo). */
+    private const UNDO_HOURS = 12;
+
     public function __construct(
         private readonly LeadRepository $leads,
         private readonly ActivityRepository $activity,
@@ -44,6 +48,7 @@ final class LeadService
         private readonly LeadPresenter $presenter,
         private readonly Clock $clock,
         private readonly string $timezone = 'Europe/Madrid',
+        private readonly ?UndoRepository $undo = null,
     ) {
     }
 
@@ -171,10 +176,13 @@ final class LeadService
         }
 
         $this->leads->transactional(function () use ($id, $values, $input, $changed, $viewer, $now): void {
+            $before = $this->leads->snapshot($id);
             $this->leads->save($id, $values);
             $this->leads->replaceStudies($id, $input->studyIds);
             if ($changed !== []) {
-                $this->activity->log($id, (int) $viewer['id'], ActivityType::EDITADO, 'Datos editados: ' . implode(', ', $changed), ['campos' => $changed], $now);
+                $summary = 'Datos editados: ' . implode(', ', $changed);
+                $this->activity->log($id, (int) $viewer['id'], ActivityType::EDITADO, $summary, ['campos' => $changed], $now);
+                $this->rememberForUndo($id, $viewer, $summary, $before, $now);
             }
         });
 
@@ -292,10 +300,18 @@ final class LeadService
 
         $now = $this->clock->now();
         $transition = $this->workflow->scheduleCall($this->stateOf($lead), $at, $now);
-        // El aviso de esa hora le salta a quien la agenda.
-        $this->leads->save($id, ['agendada_por' => (int) $viewer['id']]);
 
-        return $this->commit($id, $transition, $note, $viewer, $now, unlock: true);
+        // El aviso de esa hora le salta a quien la agenda.
+        return $this->commit($id, $transition, $note, $viewer, $now, unlock: true, extra: ['agendada_por' => (int) $viewer['id']]);
+    }
+
+    /** La llamada agendada ya no hace falta (el lead llamó antes, ya se habló con él…). */
+    public function cancelScheduledCall(int $id, array $viewer): array
+    {
+        $lead = $this->findOrFail($id, $viewer);
+        $this->assertNotLockedByOther($lead, $viewer);
+
+        return $this->commit($id, $this->workflow->cancelScheduledCall($this->stateOf($lead)), null, $viewer, $this->clock->now());
     }
 
     /** Botón rápido de interés, sin registrar ninguna llamada. */
@@ -449,24 +465,134 @@ final class LeadService
         );
     }
 
-    private function commit(int $id, Transition $transition, ?string $note, array $viewer, DateTimeImmutable $now, bool $unlock = false): array
+    /** Aplica una acción del flujo comercial y la deja lista para deshacer. $extra: más columnas que guardar con el estado. */
+    private function commit(int $id, Transition $transition, ?string $note, array $viewer, DateTimeImmutable $now, bool $unlock = false, array $extra = []): array
     {
-        $this->leads->transactional(function () use ($id, $transition, $note, $viewer, $now, $unlock): void {
+        $this->leads->transactional(function () use ($id, $transition, $note, $viewer, $now, $unlock, $extra): void {
+            $before = $this->leads->snapshot($id);
             $detail = $transition->detail;
             $note = trim((string) $note);
             if ($note !== '') {
                 $detail['nota'] = $note;
             }
-            $this->applyTransition($id, new Transition($transition->state, $transition->activityType, $transition->summary, $detail), (int) $viewer['id'], $now);
+            $this->applyTransition($id, new Transition($transition->state, $transition->activityType, $transition->summary, $detail), (int) $viewer['id'], $now, $extra);
             if ($unlock) {
                 $this->leads->unlock($id, (int) $viewer['id']);
             }
+            $this->rememberForUndo($id, $viewer, $transition->summary, $before, $now);
         });
 
         return $this->get($id, $viewer);
     }
 
-    private function applyTransition(int $id, Transition $transition, ?int $userId, DateTimeImmutable $now): void
+    // ── Deshacer y rehacer ──────────────────────────────────────────────────
+
+    /** Guarda cómo estaba el lead antes del cambio y cómo ha quedado, si ha cambiado algo. */
+    private function rememberForUndo(int $id, array $viewer, string $summary, ?array $before, DateTimeImmutable $now): void
+    {
+        $after = $this->leads->snapshot($id);
+        if ($this->undo === null || $before === null || $after === null || $before === $after) {
+            return;
+        }
+        $this->undo->record((int) $viewer['id'], $id, $summary, $before, $after, $now);
+    }
+
+    /**
+     * Qué se puede deshacer y rehacer ahora (lo último que hizo este usuario).
+     *
+     * @return array{deshacer: ?array, rehacer: ?array}
+     */
+    public function undoState(array $viewer): array
+    {
+        if ($this->undo === null) {
+            return ['deshacer' => null, 'rehacer' => null];
+        }
+        $since = $this->undoSince();
+
+        return [
+            'deshacer' => $this->describeUndo($this->undo->lastUndoable((int) $viewer['id'], $since)),
+            'rehacer' => $this->describeUndo($this->undo->firstRedoable((int) $viewer['id'], $since)),
+        ];
+    }
+
+    /** Deshace el último cambio de este usuario. */
+    public function undoLast(array $viewer): array
+    {
+        return $this->travel($viewer, redo: false);
+    }
+
+    /** Vuelve a hacer lo último que se deshizo. */
+    public function redoLast(array $viewer): array
+    {
+        return $this->travel($viewer, redo: true);
+    }
+
+    private function travel(array $viewer, bool $redo): array
+    {
+        $undo = $this->undo ?? throw new \InvalidArgumentException('Deshacer no está disponible');
+        $userId = (int) $viewer['id'];
+        $since = $this->undoSince();
+        $entry = $redo ? $undo->firstRedoable($userId, $since) : $undo->lastUndoable($userId, $since);
+        if ($entry === null) {
+            throw new \InvalidArgumentException($redo ? 'No hay nada que rehacer' : 'No hay nada que deshacer');
+        }
+        $id = (int) $entry['lead_id'];
+        $name = $this->undoName($entry);
+        $description = (string) $entry['descripcion'];
+        $now = $this->clock->now();
+
+        try {
+            $this->findOrFail($id, $viewer);
+        } catch (HttpException $e) {
+            $undo->delete((int) $entry['id']);
+            throw $e;
+        }
+
+        // Solo si el lead sigue exactamente como lo dejó ese cambio: si alguien lo ha
+        // tocado después, deshacerlo pisaría su trabajo.
+        $expected = $redo ? $entry['antes'] : $entry['despues'];
+        $target = $redo ? $entry['despues'] : $entry['antes'];
+        if ($this->leads->snapshot($id) != $expected) {
+            $undo->delete((int) $entry['id']);
+            throw HttpException::conflict(
+                "{$name} ha cambiado después de «{$description}» y ya no se puede " . ($redo ? 'rehacer' : 'deshacer') . '. Revisa su ficha.'
+            );
+        }
+
+        $this->leads->transactional(function () use ($undo, $entry, $id, $target, $redo, $description, $userId, $now): void {
+            $this->leads->restore($id, $target, $now);
+            $undo->markUndone((int) $entry['id'], $redo ? null : $now);
+            $this->activity->log($id, $userId, ActivityType::CAMBIO_ESTADO, ($redo ? 'Rehecho: ' : 'Deshecho: ') . $description, [], $now);
+        });
+
+        return [
+            'lead' => $this->get($id, $viewer),
+            'descripcion' => $description,
+            'nombre' => $name,
+        ] + $this->undoState($viewer);
+    }
+
+    private function undoSince(): DateTimeImmutable
+    {
+        return $this->clock->now()->modify('-' . self::UNDO_HOURS . ' hours');
+    }
+
+    private function describeUndo(?array $entry): ?array
+    {
+        return $entry === null ? null : [
+            'descripcion' => $entry['descripcion'],
+            'leadId' => (int) $entry['lead_id'],
+            'nombre' => $this->undoName($entry),
+            'fecha' => DbTime::toApi($entry['creado_en']),
+        ];
+    }
+
+    private function undoName(array $entry): string
+    {
+        return trim($entry['nombre'] . ' ' . $entry['apellidos']) ?: ($entry['telefono'] ?? 'Sin nombre');
+    }
+
+    private function applyTransition(int $id, Transition $transition, ?int $userId, DateTimeImmutable $now, array $extra = []): void
     {
         $state = $transition->state;
         $this->leads->save($id, [
@@ -478,7 +604,7 @@ final class LeadService
             'llamada_agendada' => DbTime::toDb($state->scheduledCall),
             'motivo_descarte' => $state->discardReason,
             'actualizado_en' => DbTime::toDb($now),
-        ] + ($state->scheduledCall === null ? ['agendada_por' => null] : []));
+        ] + ($state->scheduledCall === null ? ['agendada_por' => null] : []) + $extra);
         $this->activity->log($id, $userId, $transition->activityType, $transition->summary, $transition->detail, $now);
     }
 

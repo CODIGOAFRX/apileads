@@ -103,7 +103,7 @@ final class LeadPresenter
             'fechaOrigen' => DbTime::toApi($row['fecha_origen']),
             'entrada' => DbTime::toApi($row['ultima_entrada']),
             'creado' => DbTime::toApi($row['creado_en']),
-            'acciones' => $this->policy->availableActions($status, $phone !== null, $emailValid),
+            'acciones' => $this->policy->availableActions($status, $phone !== null, $emailValid, $scheduledCall !== null),
         ];
     }
 

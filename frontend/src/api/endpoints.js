@@ -20,6 +20,8 @@ export const leadsApi = {
   unlock: (id) => http.delete(`/leads/${id}/bloqueo`),
   call: (id, resultado, nota) => http.post(`/leads/${id}/llamada`, { resultado, nota }),
   scheduleCall: (id, fecha, nota) => http.post(`/leads/${id}/llamada-agendada`, { fecha, nota }),
+  // Ya no hace falta (el lead llamó antes…): deja de avisar.
+  cancelScheduledCall: (id) => http.delete(`/leads/${id}/llamada-agendada`),
   interested: (id) => http.post(`/leads/${id}/interesado`),
   appointment: (id, fecha, nota) => http.post(`/leads/${id}/cita`, { fecha, nota }),
   enroll: (id, nota) => http.post(`/leads/${id}/matricula`, { nota }),
@@ -34,6 +36,13 @@ export const leadsApi = {
   // asunto y html solo si la comercial ha retocado este correo.
   sendMail: (id, asunto, html, estudioId) => http.post(`/leads/${id}/correo`, { asunto, html, estudioId }),
   export: (query) => http.download('/leads/exportar', query, 'leads.csv'),
+}
+
+// Deshacer y rehacer el último cambio de un lead (cada usuario, los suyos).
+export const undoApi = {
+  state: () => http.get('/deshacer'),
+  undo: () => http.post('/deshacer'),
+  redo: () => http.post('/rehacer'),
 }
 
 export const activityApi = {

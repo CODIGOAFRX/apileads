@@ -91,6 +91,7 @@ export function LeadFormModal({ lead, section, onClose, onSaved, onOpenExisting 
       onClose={onClose}
       section={section}
       wide
+      closeOnEscape={false}
       footer={(
         <>
           <button type="button" className="ed-btn" onClick={onClose}>Cancelar</button>

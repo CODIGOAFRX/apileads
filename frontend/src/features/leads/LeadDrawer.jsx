@@ -120,6 +120,16 @@ export function LeadDrawer({ id, section, onClose, onChanged }) {
         {can('matricular') && (
           <button type="button" className="ed-btn" onClick={() => setDialog('matricula')}><Icon name="award" size={14} /> Matriculado</button>
         )}
+        {can('cancelar-agendada') && (
+          <button type="button" className="ed-btn" title="Ya no hace falta: deja de avisar"
+            onClick={() => run(async () => {
+              const updated = await leadsApi.cancelScheduledCall(id)
+              window.dispatchEvent(new CustomEvent('leads:reminders'))
+              return updated
+            }, 'Llamada agendada cancelada: ya no avisará')}>
+            <Icon name="calendarX" size={14} /> Cancelar llamada agendada
+          </button>
+        )}
         {can('descartar') && (
           <button type="button" className="ed-btn ed-btn--danger" onClick={() => setDialog('descarte')}><Icon name="ban" size={14} /> Descartar</button>
         )}

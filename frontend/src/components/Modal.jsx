@@ -6,18 +6,20 @@ import { cn } from '../lib/cn.js'
 let openDialogs = 0
 
 /**
- * Cierra con Escape (solo el diálogo de más arriba), bloquea el scroll de la
- * página y devuelve el foco al elemento que abrió el diálogo.
+ * Cierra con Escape (solo el diálogo de más arriba, y si closeOnEscape), bloquea el
+ * scroll de la página y devuelve el foco al elemento que abrió el diálogo.
  */
-function useDialog(onClose) {
+function useDialog(onClose, closeOnEscape = true) {
   const ref = useRef(null)
   const closeRef = useRef(onClose)
   closeRef.current = onClose
+  const escapeRef = useRef(closeOnEscape)
+  escapeRef.current = closeOnEscape
 
   useEffect(() => {
     const previous = document.activeElement
     const onKey = (event) => {
-      if (event.key !== 'Escape') return
+      if (event.key !== 'Escape' || !escapeRef.current) return
       const dialogs = document.querySelectorAll('[role="dialog"]')
       if (dialogs[dialogs.length - 1] === ref.current) closeRef.current()
     }
@@ -37,10 +39,15 @@ function useDialog(onClose) {
   return ref
 }
 
-export function Modal({ title, label, onClose, children, footer, wide = false, section }) {
-  const ref = useDialog(onClose)
+/**
+ * Un clic fuera del diálogo no lo cierra: casi todos son formularios y se perdía lo
+ * escrito. Se cierra con la X, con sus botones o con Escape (closeOnEscape={false}
+ * en los formularios largos, para que solo se cierren con la X o «Cancelar»).
+ */
+export function Modal({ title, label, onClose, children, footer, wide = false, section, closeOnEscape = true }) {
+  const ref = useDialog(onClose, closeOnEscape)
   return createPortal(
-    <div className="ed-overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()} data-section={section}>
+    <div className="ed-overlay" data-section={section}>
       <div ref={ref} className={cn('ed-modal', wide && 'ed-modal--wide')} role="dialog" aria-modal="true" aria-label={title}>
         <div className="ed-modal__head">
           <div className="ed-grow">

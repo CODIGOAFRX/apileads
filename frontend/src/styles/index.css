@@ -138,6 +138,9 @@ a { color: inherit; }
 .ed-header__sep { width: 2px; height: 32px; background: rgba(31, 32, 29, .25); }
 .ed-header__title { font-size: 30px; }
 .ed-header__nav { display: flex; align-items: center; gap: 8px; }
+/* Deshacer y rehacer: pegados, separados de las secciones por un filete. */
+.ed-undo { display: flex; gap: 4px; padding-left: 8px; margin-left: 2px; border-left: var(--bw) solid var(--ink); }
+.ed-undo .ed-icon-btn:disabled { cursor: default; }
 @media (max-width: 720px) {
   .ed-header__sep, .ed-header__title, .ed-hide-sm { display: none !important; }
 }
@@ -524,7 +527,8 @@ a { color: inherit; }
 
 @media (min-width: 1280px) {
   .ed-list__head, .ed-lead {
-    grid-template-columns: 110px minmax(170px, 1.3fr) minmax(200px, 1.2fr) minmax(160px, 1fr) 150px 216px;
+    /* Acciones: hasta seis botones (con «Cancelar llamada agendada»). */
+    grid-template-columns: 110px minmax(170px, 1.3fr) minmax(190px, 1.2fr) minmax(150px, 1fr) 150px 258px;
   }
   .ed-list__head { display: grid; gap: 16px; }
   .ed-lead__entry, .ed-lead__contact, .ed-lead__studies, .ed-lead__status { display: block; }
@@ -744,6 +748,8 @@ a { color: inherit; }
 .ed-toast--error { background: var(--coral); }
 .ed-toast--info { background: var(--cyan); }
 .ed-toast button { margin-left: auto; }
+.ed-toast .ed-toast__action { flex: none; margin-top: -4px; margin-bottom: -4px; }
+.ed-toast .ed-toast__action + button { margin-left: 0; }
 
 .ed-spinner {
   width: 18px; height: 18px; flex: none;

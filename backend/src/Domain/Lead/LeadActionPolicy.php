@@ -18,9 +18,10 @@ final class LeadActionPolicy
     public const MATRICULAR = 'matricular';
     public const DESCARTAR = 'descartar';
     public const REABRIR = 'reabrir';
+    public const CANCELAR_AGENDADA = 'cancelar-agendada';
 
     /** @return list<string> */
-    public function availableActions(LeadStatus $status, bool $hasPhone, bool $hasValidEmail): array
+    public function availableActions(LeadStatus $status, bool $hasPhone, bool $hasValidEmail, bool $hasScheduledCall = false): array
     {
         if (!$status->isOpen()) {
             return [self::REABRIR];
@@ -41,6 +42,9 @@ final class LeadActionPolicy
         } else {
             // Marcar interés sin llamar (p. ej. porque ha contestado por WhatsApp).
             $actions[] = self::INTERESADO;
+        }
+        if ($hasScheduledCall) {
+            $actions[] = self::CANCELAR_AGENDADA;
         }
         $actions[] = self::DESCARTAR;
 

@@ -68,6 +68,48 @@ final class LeadRepository extends BaseRepository
         return $this->withLastNote($this->withStudies([$row]))[0];
     }
 
+    /**
+     * Lo que se puede cambiar de un lead desde la aplicación (datos, estado del flujo y
+     * estudios), para poder deshacerlo. Quedan fuera la reserva, las fechas de alta y
+     * entrada y el historial, que nunca se reescribe.
+     */
+    private const SNAPSHOT_COLUMNS = [
+        'nombre', 'apellidos', 'email', 'email_normalizado', 'telefono', 'telefono_digitos', 'ubicacion',
+        'interes_texto', 'origen', 'campana', 'comentarios', 'datos_extra', 'centro_id',
+        'nombre_busqueda', 'texto_busqueda',
+        'estado', 'intentos_sin_respuesta', 'proxima_llamada', 'ultima_llamada', 'cita_en',
+        'motivo_descarte', 'llamada_agendada', 'agendada_por',
+    ];
+
+    /**
+     * Foto del lead para deshacer. Los valores van como texto (o null) para que dos
+     * fotos del mismo lead se comparen igual con SQLite y con MariaDB.
+     *
+     * @return array{columnas: array<string, ?string>, estudios: list<int>}|null
+     */
+    public function snapshot(int $id): ?array
+    {
+        $row = $this->one('SELECT ' . implode(', ', self::SNAPSHOT_COLUMNS) . ' FROM leads WHERE id = :id', ['id' => $id]);
+        if ($row === null) {
+            return null;
+        }
+        $studies = $this->studyIds($id);
+        sort($studies);
+
+        return [
+            'columnas' => array_map(static fn (mixed $v): ?string => $v === null ? null : (string) $v, $row),
+            'estudios' => $studies,
+        ];
+    }
+
+    /** Deja el lead como estaba en la foto. */
+    public function restore(int $id, array $snapshot, DateTimeImmutable $now): void
+    {
+        $values = array_intersect_key($snapshot['columnas'] ?? [], array_flip(self::SNAPSHOT_COLUMNS));
+        $this->save($id, $values + ['actualizado_en' => DbTime::toDb($now)]);
+        $this->replaceStudies($id, array_map('intval', $snapshot['estudios'] ?? []));
+    }
+
     /** Busca un lead existente con el mismo correo o teléfono. */
     public function findDuplicate(?string $email, ?string $phoneDigits, ?int $excludeId = null): ?array
     {

@@ -92,6 +92,27 @@ final class LeadController extends Controller
         ));
     }
 
+    public function cancelScheduledCall(Request $request): Response
+    {
+        return Response::json($this->app->leads()->cancelScheduledCall($request->intParam('id'), $request->user()));
+    }
+
+    /** Qué puede deshacer y rehacer ahora quien llama. */
+    public function undoState(Request $request): Response
+    {
+        return Response::json($this->app->leads()->undoState($request->user()));
+    }
+
+    public function undo(Request $request): Response
+    {
+        return Response::json($this->app->leads()->undoLast($request->user()));
+    }
+
+    public function redo(Request $request): Response
+    {
+        return Response::json($this->app->leads()->redoLast($request->user()));
+    }
+
     public function interested(Request $request): Response
     {
         return Response::json($this->app->leads()->markInterested($request->intParam('id'), $request->user()));

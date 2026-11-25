@@ -23,6 +23,20 @@ const checked = (name) => radio(name).getAttribute('aria-checked')
 describe('Alta de un lead', () => {
   beforeEach(() => vi.clearAllMocks())
 
+  it('no se cierra al hacer clic fuera ni con Escape: solo con la X o Cancelar', async () => {
+    const onClose = vi.fn()
+    const { user } = open({ onClose })
+    await user.type(screen.getByLabelText('Nombre'), 'Eva')
+
+    await user.pointer({ keys: '[MouseLeft]', target: document.querySelector('.ed-overlay') })
+    await user.keyboard('{Escape}')
+    expect(onClose).not.toHaveBeenCalled()
+    expect(screen.getByLabelText('Nombre').value).toBe('Eva')
+
+    await user.click(screen.getByRole('button', { name: 'Cerrar' }))
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
   it('ofrece los diez orígenes y solo se puede elegir uno', async () => {
     const { user } = open()
     const options = within(screen.getByRole('radiogroup', { name: 'Origen' })).getAllByRole('radio')

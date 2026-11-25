@@ -9,6 +9,7 @@ import { ErrorBoundary } from './components/ErrorBoundary.jsx'
 import { ToastProvider } from './components/Toasts.jsx'
 import { Loading } from './components/ui.jsx'
 import { CallReminders } from './components/CallReminders.jsx'
+import { UndoRedo } from './components/UndoRedo.jsx'
 import { LeadsPage } from './features/leads/LeadsPage.jsx'
 import { ImportPage } from './features/import/ImportPage.jsx'
 import { SettingsPage } from './features/settings/SettingsPage.jsx'
@@ -80,6 +81,7 @@ export default function App() {
                     <span className="ed-hide-sm">{p.label}</span>
                   </button>
                 ))}
+                <UndoRedo />
                 <span className="ed-tag ed-tag--acc ed-hide-sm" title={session.usuario.email}>{session.usuario.nombre.split(' ')[0]}</span>
                 <button type="button" className="ed-icon-btn" onClick={logout} title="Cerrar sesión" aria-label="Cerrar sesión">
                   <Icon name="logout" />

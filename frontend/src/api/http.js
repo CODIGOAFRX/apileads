@@ -79,7 +79,10 @@ async function send(method, path, body, isForm = false) {
     headers: headers(body && !isForm ? { 'Content-Type': 'application/json' } : {}),
     body: body ? (isForm ? body : JSON.stringify(body)) : undefined,
   }, isForm ? UPLOAD_TIMEOUT_MS : TIMEOUT_MS)
-  return handle(response)
+  const result = await handle(response)
+  // Algo ha cambiado en el servidor: los botones de deshacer y rehacer se ponen al día.
+  if (method !== 'GET' && typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('api:changed'))
+  return result
 }
 
 export const http = {

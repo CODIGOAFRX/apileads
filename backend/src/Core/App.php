@@ -36,6 +36,7 @@ use Leads\Infrastructure\Persistence\LoginAttemptRepository;
 use Leads\Infrastructure\Persistence\MailAccountRepository;
 use Leads\Infrastructure\Persistence\MailRepository;
 use Leads\Infrastructure\Persistence\ThrottleRepository;
+use Leads\Infrastructure\Persistence\UndoRepository;
 use Leads\Infrastructure\Persistence\UserRepository;
 use Leads\Infrastructure\Security\JwtService;
 use Leads\Infrastructure\Security\SecretBox;
@@ -140,6 +141,7 @@ final class App
             ),
             $this->clock(),
             $this->timezone(),
+            new UndoRepository($this->pdo()),
         ));
     }
 
