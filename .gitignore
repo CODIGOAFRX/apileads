@@ -23,6 +23,7 @@ Claude outputs/
 Thumbs.db
 .vscode/sftp.json
 .claude/
+skills-lock.json
 _tmp/
 
 # Paquete para el servidor (lleva contraseñas)
